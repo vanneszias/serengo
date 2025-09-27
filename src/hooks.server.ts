@@ -9,8 +9,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 	// Skip CSRF check for GET/HEAD requests
 	if (method !== 'GET' && method !== 'HEAD') {
 		// For development, allow requests without origin header or from localhost
-		if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
-			// Allow in development
+		if (
+			!origin ||
+			origin.includes('localhost') ||
+			origin.includes('127.0.0.1') ||
+			origin.includes('demo.ziasvannes.tech')
+		) {
+			// Allow in development and demo
 		}
 		// In production, you would add: else if (origin !== 'yourdomain.com') { return new Response('Forbidden', { status: 403 }); }
 	}

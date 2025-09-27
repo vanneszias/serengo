@@ -1,43 +1,18 @@
-# Use Node.js 18 alpine as base image
-FROM node:18-alpine AS base
-
-# Set working directory
+FROM node:20-alpine AS builder
 WORKDIR /app
-
-# Copy package files
 COPY package.json ./
-
-# Install dependencies
 RUN npm install
-
-# Copy source code
 COPY . .
+RUN DATABASE_URL="postgres://user:pass@localhost:5432/db" npm run build
 
-# Build the application
-RUN npm run build
-
-# Production stage
-FROM node:18-alpine AS production
-
+FROM node:20-alpine AS runner
 WORKDIR /app
+COPY --from=builder /app ./
 
-# Copy package files
-COPY package.json ./
 
-# Install only production dependencies
-RUN npm install --only=production
 
-# Copy built application from build stage
-COPY --from=base /app/build ./build
-COPY --from=base /app/static ./static
-COPY --from=base /app/package.json ./
-
-# Expose port
-EXPOSE 3000
-
-# Set environment
 ENV NODE_ENV=production
-ENV PORT=3000
+EXPOSE 3000
 
 # Start the application
 CMD ["node", "build"]
