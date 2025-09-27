@@ -13,9 +13,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 			!origin ||
 			origin.includes('localhost') ||
 			origin.includes('127.0.0.1') ||
-			origin.includes('demo.ziasvannes.tech')
+			origin.includes('serengo.ziasvannes.tech')
 		) {
-			// Allow in development and demo
+			// Allow in development and serengo.ziasvannes.tech
 		}
 		// In production, you would add: else if (origin !== 'yourdomain.com') { return new Response('Forbidden', { status: 403 }); }
 	}
