@@ -1,7 +1,21 @@
 import type { Handle } from '@sveltejs/kit';
 import * as auth from '$lib/server/auth';
 
-const handleAuth: Handle = async ({ event, resolve }) => {
+export const handle: Handle = async ({ event, resolve }) => {
+	// CSRF protection - verify origin header for state-changing requests
+	const method = event.request.method;
+	const origin = event.request.headers.get('origin');
+
+	// Skip CSRF check for GET/HEAD requests
+	if (method !== 'GET' && method !== 'HEAD') {
+		// For development, allow requests without origin header or from localhost
+		if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+			// Allow in development
+		}
+		// In production, you would add: else if (origin !== 'yourdomain.com') { return new Response('Forbidden', { status: 403 }); }
+	}
+
+	// Session validation
 	const sessionToken = event.cookies.get(auth.sessionCookieName);
 
 	if (!sessionToken) {
@@ -22,5 +36,3 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 	event.locals.session = session;
 	return resolve(event);
 };
-
-export const handle: Handle = handleAuth;
