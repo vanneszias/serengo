@@ -1,26 +1,26 @@
- services:
-   db:
-     image: postgres
-     restart: always
-     ports:
-       - 5432:5432
-     env_file:
-       - .env
-     environment:
-       POSTGRES_USER: ${POSTGRES_USER:-root}
-       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
-       POSTGRES_DB: ${POSTGRES_DB:-local}
-     volumes:
-       - pgdata:/var/lib/postgresql/data
-   app:
-     build: .
-     ports:
-       - 3000:3000
-     env_file:
-       - .env
-     environment:
-       DATABASE_URL: postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-mysecretpassword}@db:5432/${POSTGRES_DB:-local}
-     depends_on:
-       - db
+services:
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-root}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mysecretpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-local}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  app:
+    build: .
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-root}:${POSTGRES_PASSWORD:-mysecretpassword}@db:5432/${POSTGRES_DB:-local}
+    depends_on:
+      - db
 volumes:
   pgdata:
