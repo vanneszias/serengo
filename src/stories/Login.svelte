@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
-	import './login.css';
+	import '../routes/login/login.css';
 
-	let { form }: { form: ActionData } = $props();
+	let { onSubmit = () => {}, errorMessage = '' }: { onSubmit?: (action: string) => void; errorMessage?: string } = $props();
+
+	function handleSubmit(event: Event & { currentTarget: EventTarget & HTMLFormElement }) {
+		event.preventDefault();
+		const formData = new FormData(event.currentTarget);
+		const action = (event.submitter as HTMLButtonElement)?.formAction?.includes('register') ? 'register' : 'login';
+		onSubmit(action);
+	}
 </script>
 
 <div class="login-container">
 	<h1 class="login-title">Serengo</h1>
 
-	<form class="login-form" method="post" action="?/login" use:enhance>
+	<form class="login-form" on:submit={handleSubmit}>
 		<div class="input-group">
 			<input
 				class="input-field"
@@ -36,7 +41,7 @@
 		</div>
 	</form>
 
-	{#if form?.message}
-		<p class="error-message">{form.message}</p>
+	{#if errorMessage}
+		<p class="error-message">{errorMessage}</p>
 	{/if}
 </div>
