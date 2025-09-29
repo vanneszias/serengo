@@ -9,7 +9,6 @@
 
 <style>
 	.home-container {
-		min-height: 100vh;
 		background-color: #f8f8f8;
 	}
 

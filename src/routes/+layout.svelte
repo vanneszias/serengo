@@ -2,11 +2,11 @@
 	import '../app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Header } from '$lib';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
 	let { children, data } = $props();
 
-	let isLoginRoute = $derived($page.url.pathname.startsWith('/login'));
+	let isLoginRoute = $derived(page.url.pathname.startsWith('/login'));
 	let showHeader = $derived(!isLoginRoute && data?.user);
 </script>
 

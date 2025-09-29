@@ -4,6 +4,6 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit()],
 	preview: {
-		allowedHosts: ['serengo.ziasvannes.tech']
+		allowedHosts: ['ziasvannes.tech']
 	}
 });

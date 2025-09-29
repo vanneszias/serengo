@@ -10,13 +10,6 @@
 
 	let { username, id, isOpen, onClose }: Props = $props();
 
-	// Close panel when clicking outside
-	function handleBackdropClick(event: MouseEvent) {
-		if (event.target === event.currentTarget) {
-			onClose();
-		}
-	}
-
 	// Close panel on escape key
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
@@ -28,7 +21,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if isOpen}
-	<div class="backdrop" onclick={handleBackdropClick} role="presentation">
+	<div class="backdrop" role="presentation">
 		<div class="panel">
 			<div class="panel-header">
 				<h2>Profile</h2>
@@ -67,29 +60,17 @@
 {/if}
 
 <style>
-	.backdrop {
-		position: fixed;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(0, 0, 0, 0.5);
-		display: flex;
-		align-items: flex-start;
-		justify-content: flex-end;
-		z-index: 1000;
-		padding: 60px 16px 16px 16px;
-	}
-
 	.panel {
+		position: absolute;
+		top: calc(100% + 8px);
+		right: 0;
 		background: white;
 		border-radius: 12px;
 		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-		width: 100%;
-		max-width: 320px;
-		max-height: calc(100vh - 80px);
+		width: 320px;
 		overflow: hidden;
 		animation: slideIn 0.3s ease-out;
+		z-index: 1000;
 	}
 
 	@keyframes slideIn {
@@ -191,12 +172,8 @@
 	}
 
 	@media (max-width: 480px) {
-		.backdrop {
-			padding: 40px 12px 12px 12px;
-		}
-
 		.panel {
-			max-width: 100%;
+			width: 280px;
 		}
 
 		.user-item {

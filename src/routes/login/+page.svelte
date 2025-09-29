@@ -10,7 +10,7 @@
 	<h1 class="login-title">Serengo</h1>
 
 	<form class="login-form" method="post" action="?/login" use:enhance>
-		<Input name="username" type="text" placeholder="Username or Email" required />
+		<Input name="username" type="text" placeholder="Username" required />
 
 		<Input name="password" type="password" placeholder="Password" required />
 
@@ -56,6 +56,5 @@
 	.button-group {
 		display: flex;
 		gap: 1rem;
-		margin-top: 1rem;
 	}
 </style>
