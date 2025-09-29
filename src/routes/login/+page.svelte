@@ -31,7 +31,7 @@
 		padding: 4rem 2rem;
 		background-color: #f8f8f8;
 		align-items: center;
-		justify-content: flex-start;
+		justify-content: center;
 		max-width: 400px;
 		margin: 0 auto;
 	}
@@ -40,7 +40,7 @@
 		font-family: 'Washington', serif;
 		font-size: 3.5rem;
 		color: #000000;
-		margin-bottom: 6rem;
+		margin-bottom: 2rem;
 		text-align: center;
 		font-weight: normal;
 		letter-spacing: -0.02em;
@@ -57,21 +57,5 @@
 		display: flex;
 		gap: 1rem;
 		margin-top: 1rem;
-	}
-
-	/* Mobile responsiveness */
-	@media (max-width: 480px) {
-		.login-container {
-			padding: 3rem 1.5rem;
-		}
-
-		.login-title {
-			font-size: 3rem;
-			margin-bottom: 4rem;
-		}
-
-		.button-group {
-			margin-top: 2rem;
-		}
 	}
 </style>
