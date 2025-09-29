@@ -25,8 +25,7 @@
 
 ## Testing
 
-- **Stories**: Storybook for component testing
-- **No unit tests**: Focus on Storybook stories for component validation
+- **No testing framework**: Components are tested manually during development
 
 ## Database
 
