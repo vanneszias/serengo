@@ -45,7 +45,8 @@
 	"dependencies": {
 		"@node-rs/argon2": "^2.0.2",
 		"@sveltejs/adapter-vercel": "^5.10.2",
-		"postgres": "^3.4.5"
+		"postgres": "^3.4.5",
+		"svelte-maplibre": "^1.2.1"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

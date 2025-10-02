@@ -1,9 +1,10 @@
 <script lang="ts">
+	import { Map } from '$lib';
 </script>
 
 <div class="home-container">
 	<main class="main-content">
-		<!-- Future content will go here -->
+		<Map />
 	</main>
 </div>
 

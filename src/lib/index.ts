@@ -6,3 +6,4 @@ export { default as ProfileIcon } from './components/ProfileIcon.svelte';
 export { default as ProfilePanel } from './components/ProfilePanel.svelte';
 export { default as Header } from './components/Header.svelte';
 export { default as Modal } from './components/Modal.svelte';
+export { default as Map } from './components/Map.svelte';
