@@ -8,13 +8,15 @@
 		DropdownMenuTrigger
 	} from './dropdown-menu';
 	import { Avatar, AvatarFallback } from './avatar';
+	import { Skeleton } from './skeleton';
 
 	interface Props {
 		username: string;
 		id: string;
+		loading?: boolean;
 	}
 
-	let { username, id }: Props = $props();
+	let { username, id, loading = false }: Props = $props();
 
 	// Get the first letter of username for avatar
 	const initial = username.charAt(0).toUpperCase();
@@ -22,37 +24,65 @@
 
 <DropdownMenu>
 	<DropdownMenuTrigger class="profile-trigger">
-		<Avatar class="profile-avatar">
-			<AvatarFallback class="profile-avatar-fallback">
-				{initial}
-			</AvatarFallback>
-		</Avatar>
+		{#if loading}
+			<Skeleton class="h-10 w-10 rounded-full" />
+		{:else}
+			<Avatar class="profile-avatar">
+				<AvatarFallback class="profile-avatar-fallback">
+					{initial}
+				</AvatarFallback>
+			</Avatar>
+		{/if}
 	</DropdownMenuTrigger>
 
 	<DropdownMenuContent align="end" class="profile-dropdown-content">
-		<div class="profile-header">
-			<span class="profile-title">Profile</span>
-		</div>
+		{#if loading}
+			<div class="profile-header">
+				<Skeleton class="h-4 w-16" />
+			</div>
 
-		<DropdownMenuSeparator />
+			<DropdownMenuSeparator />
 
-		<div class="user-info-item">
-			<span class="info-label">Username</span>
-			<span class="info-value">{username}</span>
-		</div>
+			<div class="user-info-item">
+				<Skeleton class="mb-1 h-3 w-12" />
+				<Skeleton class="h-3 w-20" />
+			</div>
 
-		<div class="user-info-item">
-			<span class="info-label">User ID</span>
-			<span class="info-value">{id}</span>
-		</div>
+			<div class="user-info-item">
+				<Skeleton class="mb-1 h-3 w-12" />
+				<Skeleton class="h-3 w-24" />
+			</div>
 
-		<DropdownMenuSeparator />
+			<DropdownMenuSeparator />
 
-		<form method="post" action="/logout" use:enhance>
-			<DropdownMenuItem variant="destructive" class="logout-item">
-				<button type="submit" class="logout-button">Sign out</button>
-			</DropdownMenuItem>
-		</form>
+			<div class="logout-item-skeleton">
+				<Skeleton class="h-8 w-full rounded" />
+			</div>
+		{:else}
+			<div class="profile-header">
+				<span class="profile-title">Profile</span>
+			</div>
+
+			<DropdownMenuSeparator />
+
+			<div class="user-info-item">
+				<span class="info-label">Username</span>
+				<span class="info-value">{username}</span>
+			</div>
+
+			<div class="user-info-item">
+				<span class="info-label">User ID</span>
+				<span class="info-value">{id}</span>
+			</div>
+
+			<DropdownMenuSeparator />
+
+			<form method="post" action="/logout" use:enhance>
+				<DropdownMenuItem variant="destructive" class="logout-item">
+					<button type="submit" class="logout-button">Sign out</button>
+				</DropdownMenuItem>
+			</form>
+		{/if}
 	</DropdownMenuContent>
 </DropdownMenu>
 
@@ -127,6 +157,11 @@
 	}
 
 	:global(.logout-item) {
+		padding: 0;
+		margin: 4px;
+	}
+
+	.logout-item-skeleton {
 		padding: 0;
 		margin: 4px;
 	}

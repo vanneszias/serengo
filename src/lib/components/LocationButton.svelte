@@ -6,6 +6,7 @@
 		locationError,
 		isLocationLoading
 	} from '$lib/stores/location';
+	import { Skeleton } from './skeleton';
 
 	interface Props {
 		class?: string;
@@ -55,11 +56,9 @@
 >
 	<span class="icon {iconClass()}">
 		{#if $isLocationLoading}
-			<svg viewBox="0 0 24 24" class="spin">
-				<path
-					d="M12,4a8,8 0 0,1 7.89,6.7 1.53,1.53 0 0,0 1.49,1.3 1.5,1.5 0 0,0 1.48-1.75 11,11 0 0,0-21.72,0A1.5,1.5 0 0,0 2.62,11.25 1.53,1.53 0 0,0 4.11,10.7 8,8 0 0,1 12,4Z"
-				/>
-			</svg>
+			<div class="loading-skeleton">
+				<Skeleton class="h-5 w-5 rounded-full" />
+			</div>
 		{:else if $locationStatus === 'success'}
 			<svg viewBox="0 0 24 24">
 				<path
@@ -189,9 +188,12 @@
 		height: 24px;
 	}
 
-	.icon.loading svg {
-		color: #3b82f6;
-		fill: #3b82f6;
+	.loading-skeleton {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+		height: 20px;
 	}
 
 	.icon.success svg {

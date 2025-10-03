@@ -8,6 +8,9 @@ export { default as Modal } from './components/Modal.svelte';
 export { default as Map } from './components/Map.svelte';
 export { default as LocationButton } from './components/LocationButton.svelte';
 
+// Skeleton Loading Components
+export { Skeleton, SkeletonVariants } from './components/skeleton';
+
 // Location utilities and stores
 export { geolocationService } from './utils/geolocation';
 export {

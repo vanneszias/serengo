@@ -9,6 +9,7 @@
 		locationActions
 	} from '$lib/stores/location';
 	import LocationButton from './LocationButton.svelte';
+	import { Skeleton } from '$lib/components/skeleton';
 
 	interface Props {
 		style?: StyleSpecification;
@@ -45,6 +46,22 @@
 		autoCenter = true
 	}: Props = $props();
 
+	let mapLoaded = $state(false);
+	let styleLoaded = $state(false);
+	let isIdle = $state(false);
+
+	// Handle comprehensive map loading events
+	function handleStyleLoad() {
+		styleLoaded = true;
+	}
+
+	function handleIdle() {
+		isIdle = true;
+	}
+
+	// Map is considered fully ready when it's loaded, style is loaded, and it's idle
+	const mapReady = $derived(mapLoaded && styleLoaded && isIdle);
+
 	// Reactive center and zoom based on location or props
 	const mapCenter = $derived(
 		$coordinates && (autoCenter || $shouldZoomToLocation)
@@ -75,24 +92,43 @@
 </script>
 
 <div class="map-container {className}">
-	<MapLibre {style} center={mapCenter} zoom={mapZoom()}>
-		{#if $coordinates}
-			<Marker lngLat={[$coordinates.longitude, $coordinates.latitude]}>
-				<div class="location-marker">
-					<div class="marker-pulse"></div>
-					<div class="marker-outer">
-						<div class="marker-inner"></div>
-					</div>
-				</div>
-			</Marker>
-		{/if}
-	</MapLibre>
-
-	{#if showLocationButton}
-		<div class="location-controls">
-			<LocationButton variant="icon" size="medium" showLabel={false} />
+	{#if !mapReady}
+		<div class="map-skeleton">
+			<Skeleton class="h-full w-full rounded-xl" />
+			<div class="skeleton-overlay">
+				<Skeleton class="mb-2 h-4 w-16" />
+				<Skeleton class="h-3 w-24" />
+			</div>
 		</div>
 	{/if}
+
+	<div class="map-wrapper" class:hidden={!mapReady}>
+		<MapLibre
+			{style}
+			center={mapCenter}
+			zoom={mapZoom()}
+			bind:loaded={mapLoaded}
+			onstyleload={handleStyleLoad}
+			onidle={handleIdle}
+		>
+			{#if $coordinates}
+				<Marker lngLat={[$coordinates.longitude, $coordinates.latitude]}>
+					<div class="location-marker">
+						<div class="marker-pulse"></div>
+						<div class="marker-outer">
+							<div class="marker-inner"></div>
+						</div>
+					</div>
+				</Marker>
+			{/if}
+		</MapLibre>
+
+		{#if showLocationButton}
+			<div class="location-controls">
+				<LocationButton variant="icon" size="medium" showLabel={false} />
+			</div>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -100,6 +136,28 @@
 		position: relative;
 		height: 400px;
 		width: 100%;
+	}
+
+	.map-skeleton {
+		position: relative;
+		width: 100%;
+		height: 100%;
+	}
+
+	.skeleton-overlay {
+		position: absolute;
+		top: 20px;
+		left: 20px;
+		z-index: 10;
+	}
+
+	.map-wrapper {
+		width: 100%;
+		height: 100%;
+	}
+
+	.map-wrapper.hidden {
+		display: none;
 	}
 
 	.map-container :global(.maplibregl-map) {
