@@ -12,6 +12,7 @@ interface LocationState {
 	error: LocationError | null;
 	isWatching: boolean;
 	lastUpdated: Date | null;
+	shouldZoomToLocation: boolean;
 }
 
 const initialState: LocationState = {
@@ -19,7 +20,8 @@ const initialState: LocationState = {
 	status: 'idle',
 	error: null,
 	isWatching: false,
-	lastUpdated: null
+	lastUpdated: null,
+	shouldZoomToLocation: false
 };
 
 // Main location store
@@ -36,6 +38,10 @@ export const isLocationLoading = derived(
 export const hasLocationAccess = derived(
 	locationStore,
 	($location) => $location.coordinates !== null
+);
+export const shouldZoomToLocation = derived(
+	locationStore,
+	($location) => $location.shouldZoomToLocation
 );
 
 // Location actions
@@ -58,7 +64,8 @@ export const locationActions = {
 				coordinates,
 				status: 'success',
 				error: null,
-				lastUpdated: new Date()
+				lastUpdated: new Date(),
+				shouldZoomToLocation: true
 			}));
 
 			return coordinates;
@@ -169,6 +176,16 @@ export const locationActions = {
 
 		const ageInMinutes = (Date.now() - currentState.lastUpdated.getTime()) / (1000 * 60);
 		return ageInMinutes > maxAgeMinutes;
+	},
+
+	/**
+	 * Clear the zoom trigger flag
+	 */
+	clearZoomTrigger(): void {
+		locationStore.update((state) => ({
+			...state,
+			shouldZoomToLocation: false
+		}));
 	}
 };
 
@@ -182,14 +199,17 @@ export const getMapCenter = derived(coordinates, ($coordinates) => {
 });
 
 // Utility function to get appropriate zoom level based on accuracy
-export const getMapZoom = derived(coordinates, ($coordinates) => {
+export const getMapZoom = derived([coordinates, shouldZoomToLocation], ([$coordinates, $shouldZoom]) => {
 	if ($coordinates?.accuracy) {
+		// More aggressive zoom levels when location button is clicked
+		const baseZoom = $shouldZoom ? 2 : 0; // Add 2 zoom levels when triggered by button
+
 		// Adjust zoom based on accuracy (lower accuracy = lower zoom)
-		if ($coordinates.accuracy < 10) return 18; // Very accurate
-		if ($coordinates.accuracy < 50) return 16; // Good accuracy
-		if ($coordinates.accuracy < 100) return 14; // Moderate accuracy
-		if ($coordinates.accuracy < 500) return 12; // Low accuracy
-		return 10; // Very low accuracy
+		if ($coordinates.accuracy < 10) return Math.min(20, 18 + baseZoom); // Very accurate
+		if ($coordinates.accuracy < 50) return Math.min(19, 16 + baseZoom); // Good accuracy
+		if ($coordinates.accuracy < 100) return Math.min(18, 14 + baseZoom); // Moderate accuracy
+		if ($coordinates.accuracy < 500) return Math.min(16, 12 + baseZoom); // Low accuracy
+		return Math.min(15, 10 + baseZoom); // Very low accuracy
 	}
-	return 13; // Default zoom level
+	return $shouldZoom ? 16 : 13; // More aggressive default when triggered by button
 });

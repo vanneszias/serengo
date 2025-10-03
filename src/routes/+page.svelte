@@ -13,7 +13,6 @@
 <style>
 	.home-container {
 		background-color: #f8f8f8;
-		min-height: 100vh;
 	}
 
 	.main-content {
@@ -29,7 +28,7 @@
 		background: white;
 		border-radius: 12px;
 		overflow: hidden;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	}
 
 	.map-section :global(.map-container) {

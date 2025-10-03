@@ -1,7 +1,13 @@
 <script lang="ts">
-	import { MapLibre } from 'svelte-maplibre';
+	import { MapLibre, Marker } from 'svelte-maplibre';
 	import type { StyleSpecification } from 'svelte-maplibre';
-	import { coordinates, getMapCenter, getMapZoom } from '$lib/stores/location';
+	import {
+		coordinates,
+		getMapCenter,
+		getMapZoom,
+		shouldZoomToLocation,
+		locationActions
+	} from '$lib/stores/location';
 	import LocationButton from './LocationButton.svelte';
 
 	interface Props {
@@ -41,16 +47,46 @@
 
 	// Reactive center and zoom based on location or props
 	const mapCenter = $derived(
-		$coordinates && autoCenter
+		$coordinates && (autoCenter || $shouldZoomToLocation)
 			? ([$coordinates.longitude, $coordinates.latitude] as [number, number])
 			: center || $getMapCenter
 	);
 
-	const mapZoom = $derived($coordinates && autoCenter ? zoom || $getMapZoom : zoom || 13);
+	const mapZoom = $derived(() => {
+		if ($shouldZoomToLocation && $coordinates) {
+			// Force zoom to calculated level when location button is clicked
+			return $getMapZoom;
+		}
+		if ($coordinates && autoCenter) {
+			return $getMapZoom;
+		}
+		return zoom || 13;
+	});
+
+	// Effect to clear zoom trigger after it's been used
+	$effect(() => {
+		if ($shouldZoomToLocation) {
+			// Use a timeout to ensure the map has updated before clearing the trigger
+			setTimeout(() => {
+				locationActions.clearZoomTrigger();
+			}, 100);
+		}
+	});
 </script>
 
 <div class="map-container {className}">
-	<MapLibre {style} center={mapCenter} zoom={mapZoom} />
+	<MapLibre {style} center={mapCenter} zoom={mapZoom()}>
+		{#if $coordinates}
+			<Marker lngLat={[$coordinates.longitude, $coordinates.latitude]}>
+				<div class="location-marker">
+					<div class="marker-pulse"></div>
+					<div class="marker-outer">
+						<div class="marker-inner"></div>
+					</div>
+				</div>
+			</Marker>
+		{/if}
+	</MapLibre>
 
 	{#if showLocationButton}
 		<div class="location-controls">
