@@ -14,6 +14,9 @@ const config = {
 		adapter: adapter(),
 		csrf: {
 			trustedOrigins: ['http://localhost:3000', 'https://serengo.ziasvannes.tech']
+		},
+		alias: {
+		  "@/*": "./src/lib/*"
 		}
 	}
 };

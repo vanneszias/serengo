@@ -7,3 +7,8 @@ export { default as ProfilePanel } from './components/ProfilePanel.svelte';
 export { default as Header } from './components/Header.svelte';
 export { default as Modal } from './components/Modal.svelte';
 export { default as Map } from './components/Map.svelte';
+export { default as LocationButton } from './components/LocationButton.svelte';
+
+// Location utilities and stores
+export { geolocationService } from './utils/geolocation';
+export { locationActions, locationStore, coordinates, locationStatus, locationError, isLocationLoading, hasLocationAccess, getMapCenter, getMapZoom } from './stores/location';
