@@ -1,128 +1,170 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import Modal from './Modal.svelte';
+	import {
+		DropdownMenu,
+		DropdownMenuContent,
+		DropdownMenuItem,
+		DropdownMenuSeparator,
+		DropdownMenuTrigger
+	} from './dropdown-menu';
+	import { Avatar, AvatarFallback } from './avatar';
 
 	interface Props {
 		username: string;
 		id: string;
-		isOpen: boolean;
-		onClose: () => void;
 	}
 
-	let { username, id, isOpen, onClose }: Props = $props();
+	let { username, id }: Props = $props();
 
-	// Create a bindable showModal that syncs with isOpen
-	let showModal = $derived(false);
-
-	// Sync showModal with isOpen prop
-	$effect(() => {
-		showModal = isOpen;
-	});
-
-	// Handle modal close and sync back to parent
-	$effect(() => {
-		if (!showModal && isOpen) {
-			onClose();
-		}
-	});
+	// Get the first letter of username for avatar
+	const initial = username.charAt(0).toUpperCase();
 </script>
 
-<Modal bind:showModal positioning="dropdown">
-	{#snippet header()}
-		<h2>Profile</h2>
-	{/snippet}
+<DropdownMenu>
+	<DropdownMenuTrigger class="profile-trigger">
+		<Avatar class="profile-avatar">
+			<AvatarFallback class="profile-avatar-fallback">
+				{initial}
+			</AvatarFallback>
+		</Avatar>
+	</DropdownMenuTrigger>
 
-	<div class="panel-content">
-		<div class="user-item">
-			<span class="label">Username</span>
-			<span class="value">{username}</span>
+	<DropdownMenuContent align="end" class="profile-dropdown-content">
+		<div class="profile-header">
+			<span class="profile-title">Profile</span>
 		</div>
 
-		<div class="user-item">
-			<span class="label">User ID</span>
-			<span class="value">{id}</span>
+		<DropdownMenuSeparator />
+
+		<div class="user-info-item">
+			<span class="info-label">Username</span>
+			<span class="info-value">{username}</span>
 		</div>
 
-		<div class="panel-actions">
-			<form method="post" action="/logout" use:enhance>
-				<button type="submit" class="signout-button"> Sign out </button>
-			</form>
+		<div class="user-info-item">
+			<span class="info-label">User ID</span>
+			<span class="info-value">{id}</span>
 		</div>
-	</div>
-</Modal>
+
+		<DropdownMenuSeparator />
+
+		<form method="post" action="/logout" use:enhance>
+			<DropdownMenuItem variant="destructive" class="logout-item">
+				<button type="submit" class="logout-button">Sign out</button>
+			</DropdownMenuItem>
+		</form>
+	</DropdownMenuContent>
+</DropdownMenu>
 
 <style>
-	.panel-content {
+	:global(.profile-trigger) {
+		background: none;
+		border: none;
 		padding: 0;
+		cursor: pointer;
+		border-radius: 50%;
+		transition: transform 0.2s ease;
+		outline: none;
+	}
+
+	:global(.profile-trigger:hover) {
+		transform: scale(1.05);
+	}
+
+	:global(.profile-trigger:active) {
+		transform: scale(0.95);
+	}
+
+	:global(.profile-avatar) {
+		width: 40px;
+		height: 40px;
+	}
+
+	:global(.profile-avatar-fallback) {
+		background: black;
+		color: white;
+		font-weight: 600;
+		font-size: 16px;
+		border: 2px solid #fff;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	}
+
+	:global(.profile-dropdown-content) {
+		min-width: 200px;
+		max-width: 240px;
+		padding: 4px;
+	}
+
+	.profile-header {
+		padding: 8px 12px;
+	}
+
+	.profile-title {
+		font-size: 14px;
+		font-weight: 600;
+		color: #333;
+	}
+
+	.user-info-item {
 		display: flex;
 		flex-direction: column;
+		gap: 2px;
+		padding: 8px 12px;
 	}
 
-	.user-item {
-		padding: 16px 20px;
-		border-bottom: 1px solid #e5e5e5;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-	}
-
-	.user-item:last-of-type {
-		border-bottom: none;
-	}
-
-	.label {
-		font-size: 14px;
+	.info-label {
+		font-size: 12px;
 		color: #666;
 		font-weight: 500;
 	}
 
-	.value {
-		font-size: 14px;
+	.info-value {
+		font-size: 13px;
 		color: #333;
 		font-family: monospace;
 		font-weight: 500;
+		word-break: break-all;
 	}
 
-	.panel-actions {
-		padding: 20px;
-		border-top: 1px solid #e5e5e5;
+	:global(.logout-item) {
+		padding: 0;
+		margin: 4px;
 	}
 
-	.signout-button {
-		background-color: #dc3545;
-		color: white;
+	.logout-button {
+		background: none;
 		border: none;
-		border-radius: 6px;
-		padding: 8px 16px;
-		font-size: 14px;
-		font-weight: 500;
 		width: 100%;
+		padding: 6px 8px;
+		font-size: 13px;
+		font-weight: 500;
 		cursor: pointer;
-		transition: background-color 0.2s ease;
-	}
-
-	.signout-button:hover {
-		background-color: #c82333;
-	}
-
-	.signout-button:active {
-		background-color: #bd2130;
-	}
-
-	:global(.modal h2) {
-		font-size: 18px;
-		font-weight: 600;
-		color: #333;
-		margin: 0;
+		color: inherit;
+		text-align: left;
+		border-radius: 4px;
 	}
 
 	@media (max-width: 480px) {
-		.user-item {
-			padding: 14px 16px;
+		:global(.profile-avatar) {
+			width: 36px;
+			height: 36px;
 		}
 
-		.panel-actions {
-			padding: 16px;
+		:global(.profile-avatar-fallback) {
+			font-size: 14px;
+		}
+
+		:global(.profile-dropdown-content) {
+			min-width: 180px;
+			max-width: 200px;
+		}
+
+		.profile-header {
+			padding: 6px 10px;
+		}
+
+		.user-info-item {
+			padding: 6px 10px;
 		}
 	}
 </style>

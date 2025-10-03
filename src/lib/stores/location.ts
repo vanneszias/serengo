@@ -199,17 +199,20 @@ export const getMapCenter = derived(coordinates, ($coordinates) => {
 });
 
 // Utility function to get appropriate zoom level based on accuracy
-export const getMapZoom = derived([coordinates, shouldZoomToLocation], ([$coordinates, $shouldZoom]) => {
-	if ($coordinates?.accuracy) {
-		// More aggressive zoom levels when location button is clicked
-		const baseZoom = $shouldZoom ? 2 : 0; // Add 2 zoom levels when triggered by button
+export const getMapZoom = derived(
+	[coordinates, shouldZoomToLocation],
+	([$coordinates, $shouldZoom]) => {
+		if ($coordinates?.accuracy) {
+			// More aggressive zoom levels when location button is clicked
+			const baseZoom = $shouldZoom ? 2 : 0; // Add 2 zoom levels when triggered by button
 
-		// Adjust zoom based on accuracy (lower accuracy = lower zoom)
-		if ($coordinates.accuracy < 10) return Math.min(20, 18 + baseZoom); // Very accurate
-		if ($coordinates.accuracy < 50) return Math.min(19, 16 + baseZoom); // Good accuracy
-		if ($coordinates.accuracy < 100) return Math.min(18, 14 + baseZoom); // Moderate accuracy
-		if ($coordinates.accuracy < 500) return Math.min(16, 12 + baseZoom); // Low accuracy
-		return Math.min(15, 10 + baseZoom); // Very low accuracy
+			// Adjust zoom based on accuracy (lower accuracy = lower zoom)
+			if ($coordinates.accuracy < 10) return Math.min(20, 18 + baseZoom); // Very accurate
+			if ($coordinates.accuracy < 50) return Math.min(19, 16 + baseZoom); // Good accuracy
+			if ($coordinates.accuracy < 100) return Math.min(18, 14 + baseZoom); // Moderate accuracy
+			if ($coordinates.accuracy < 500) return Math.min(16, 12 + baseZoom); // Low accuracy
+			return Math.min(15, 10 + baseZoom); // Very low accuracy
+		}
+		return $shouldZoom ? 16 : 13; // More aggressive default when triggered by button
 	}
-	return $shouldZoom ? 16 : 13; // More aggressive default when triggered by button
-});
+);
