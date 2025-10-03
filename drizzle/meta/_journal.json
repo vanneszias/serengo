@@ -15,6 +15,13 @@
       "when": 1758905260578,
       "tag": "0001_complete_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1759502119139,
+      "tag": "0002_robust_firedrake",
+      "breakpoints": true
     }
   ]
 }

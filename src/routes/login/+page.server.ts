@@ -36,6 +36,10 @@ export const actions: Actions = {
 			return fail(400, { message: 'Incorrect username or password' });
 		}
 
+		if (!existingUser.passwordHash) {
+			return fail(400, { message: 'Please sign in with Google for this account' });
+		}
+
 		const validPassword = await verify(existingUser.passwordHash, password, {
 			memoryCost: 19456,
 			timeCost: 2,

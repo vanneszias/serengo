@@ -82,3 +82,26 @@ export function deleteSessionTokenCookie(event: RequestEvent) {
 		path: '/'
 	});
 }
+
+export async function getUserFromGoogleId(googleId: string) {
+	const [user] = await db.select().from(table.user).where(eq(table.user.googleId, googleId));
+	return user || null;
+}
+
+export async function createUser(googleId: string, name: string) {
+	const userId = generateUserId();
+	const user: table.User = {
+		id: userId,
+		username: name,
+		googleId,
+		passwordHash: null,
+		age: null
+	};
+	await db.insert(table.user).values(user);
+	return user;
+}
+
+function generateUserId(): string {
+	const bytes = crypto.getRandomValues(new Uint8Array(15));
+	return encodeBase64url(bytes);
+}
