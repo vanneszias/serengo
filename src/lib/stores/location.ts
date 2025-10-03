@@ -1,5 +1,10 @@
 import { writable, derived } from 'svelte/store';
-import { geolocationService, type LocationCoordinates, type LocationError, type LocationStatus } from '$lib/utils/geolocation';
+import {
+	geolocationService,
+	type LocationCoordinates,
+	type LocationError,
+	type LocationStatus
+} from '$lib/utils/geolocation';
 
 interface LocationState {
 	coordinates: LocationCoordinates | null;
@@ -24,8 +29,14 @@ export const locationStore = writable<LocationState>(initialState);
 export const coordinates = derived(locationStore, ($location) => $location.coordinates);
 export const locationStatus = derived(locationStore, ($location) => $location.status);
 export const locationError = derived(locationStore, ($location) => $location.error);
-export const isLocationLoading = derived(locationStore, ($location) => $location.status === 'loading');
-export const hasLocationAccess = derived(locationStore, ($location) => $location.coordinates !== null);
+export const isLocationLoading = derived(
+	locationStore,
+	($location) => $location.status === 'loading'
+);
+export const hasLocationAccess = derived(
+	locationStore,
+	($location) => $location.coordinates !== null
+);
 
 // Location actions
 export const locationActions = {
@@ -33,7 +44,7 @@ export const locationActions = {
 	 * Get current position once
 	 */
 	async getCurrentLocation(options?: PositionOptions): Promise<LocationCoordinates | null> {
-		locationStore.update(state => ({
+		locationStore.update((state) => ({
 			...state,
 			status: 'loading',
 			error: null
@@ -42,7 +53,7 @@ export const locationActions = {
 		try {
 			const coordinates = await geolocationService.getCurrentPosition(options);
 
-			locationStore.update(state => ({
+			locationStore.update((state) => ({
 				...state,
 				coordinates,
 				status: 'success',
@@ -54,7 +65,7 @@ export const locationActions = {
 		} catch (error) {
 			const locationError = error as LocationError;
 
-			locationStore.update(state => ({
+			locationStore.update((state) => ({
 				...state,
 				status: 'error',
 				error: locationError,
@@ -70,7 +81,7 @@ export const locationActions = {
 	 */
 	startWatching(options?: PositionOptions): void {
 		if (!geolocationService.isSupported()) {
-			locationStore.update(state => ({
+			locationStore.update((state) => ({
 				...state,
 				status: 'error',
 				error: {
@@ -81,7 +92,7 @@ export const locationActions = {
 			return;
 		}
 
-		locationStore.update(state => ({
+		locationStore.update((state) => ({
 			...state,
 			status: 'loading',
 			isWatching: true,
@@ -90,7 +101,7 @@ export const locationActions = {
 
 		geolocationService.watchPosition(
 			(coordinates) => {
-				locationStore.update(state => ({
+				locationStore.update((state) => ({
 					...state,
 					coordinates,
 					status: 'success',
@@ -99,7 +110,7 @@ export const locationActions = {
 				}));
 			},
 			(error) => {
-				locationStore.update(state => ({
+				locationStore.update((state) => ({
 					...state,
 					status: 'error',
 					error,
@@ -116,7 +127,7 @@ export const locationActions = {
 	stopWatching(): void {
 		geolocationService.clearWatch();
 
-		locationStore.update(state => ({
+		locationStore.update((state) => ({
 			...state,
 			isWatching: false
 		}));
@@ -134,7 +145,7 @@ export const locationActions = {
 	 * Set coordinates manually (useful for testing or setting default location)
 	 */
 	setCoordinates(coordinates: LocationCoordinates): void {
-		locationStore.update(state => ({
+		locationStore.update((state) => ({
 			...state,
 			coordinates,
 			status: 'success',
@@ -149,7 +160,7 @@ export const locationActions = {
 	isLocationStale(maxAgeMinutes: number = 5): boolean {
 		let currentState: LocationState = initialState;
 
-		const unsubscribe = locationStore.subscribe(state => {
+		const unsubscribe = locationStore.subscribe((state) => {
 			currentState = state;
 		});
 		unsubscribe();

@@ -11,4 +11,14 @@ export { default as LocationButton } from './components/LocationButton.svelte';
 
 // Location utilities and stores
 export { geolocationService } from './utils/geolocation';
-export { locationActions, locationStore, coordinates, locationStatus, locationError, isLocationLoading, hasLocationAccess, getMapCenter, getMapZoom } from './stores/location';
+export {
+	locationActions,
+	locationStore,
+	coordinates,
+	locationStatus,
+	locationError,
+	isLocationLoading,
+	hasLocationAccess,
+	getMapCenter,
+	getMapZoom
+} from './stores/location';

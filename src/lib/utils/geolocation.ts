@@ -180,10 +180,7 @@ export class GeolocationService {
 	/**
 	 * Calculate distance between two coordinates in kilometers
 	 */
-	static calculateDistance(
-		coord1: LocationCoordinates,
-		coord2: LocationCoordinates
-	): number {
+	static calculateDistance(coord1: LocationCoordinates, coord2: LocationCoordinates): number {
 		const R = 6371; // Earth's radius in kilometers
 		const dLat = this.toRadians(coord2.latitude - coord1.latitude);
 		const dLon = this.toRadians(coord2.longitude - coord1.longitude);

@@ -16,7 +16,7 @@ const config = {
 			trustedOrigins: ['http://localhost:3000', 'https://serengo.ziasvannes.tech']
 		},
 		alias: {
-		  "@/*": "./src/lib/*"
+			'@/*': './src/lib/*'
 		}
 	}
 };
