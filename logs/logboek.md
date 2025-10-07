@@ -2,15 +2,31 @@
 
 ## Oktober 2025
 
-### 7 Oktober 2025 (Maandag) - 1 uur
+### 7 Oktober 2025 (Maandag) - 4 uren
 
 **Werk uitgevoerd:**
 
+- **Grote SEO, PWA en performance optimalisaties**
 - Logo padding gefixed
 - Favicon bestanden opgeruimd (verwijderd oude favicon bestanden)
 - Manifest.json geoptimaliseerd
+- Sitemap.xml automatisch gegenereerd
+- Service worker uitgebreid voor caching
+- Meta tags en Open Graph voor SEO
+- Background afbeelding gecomprimeerd (50% kleiner)
+- Performance logs/PDFs opgeslagen voor vergelijking
+- Vite config optimalisaties
+- Build issues opgelost
 
-**Commits:** 1 commit (5f0cae6)
+**Commits:** 3 commits (8d3922e, 716c05c, 5f0cae6)
+
+**Details:**
+
+- Complete SEO optimalisatie met meta tags
+- PWA verbeteringen en caching strategie
+- Performance optimalisaties door image compression
+- Automatische sitemap generatie
+- Service worker caching voor offline functionaliteit
 
 ---
 
@@ -147,9 +163,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 33 uren
+**Totale geschatte uren:** 36 uren
 **Werkdagen:** 6 dagen
-**Gemiddelde uren per dag:** 5.5 uur
+**Gemiddelde uren per dag:** 6 uur
 
 ### Project Milestones:
 
@@ -158,7 +174,7 @@
 3. **28 Sept**: UI/UX complete overhaul
 4. **29 Sept**: Component architectuur verbetering
 5. **2-3 Okt**: Maps en location features
-6. **7 Okt**: Optimalisaties
+6. **7 Okt**: SEO, PWA en performance optimalisaties
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
@@ -171,3 +187,5 @@
 - ✅ Database (PostgreSQL + Drizzle ORM)
 - ✅ Toast notifications
 - ✅ Loading states en error handling
+- ✅ SEO optimalisatie (meta tags, Open Graph, sitemap)
+- ✅ Performance optimalisaties (image compression, caching)
