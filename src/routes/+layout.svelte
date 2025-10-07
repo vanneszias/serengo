@@ -14,6 +14,20 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<!-- Performance optimizations -->
+	<link
+		rel="preload"
+		href="/fonts/Washington.ttf"
+		as="font"
+		type="font/ttf"
+		crossorigin="anonymous"
+	/>
+	<link rel="dns-prefetch" href="//tile.openstreetmap.org" />
+	<link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin="anonymous" />
+	<!-- Resource hints for login page background -->
+	{#if isLoginRoute}
+		<link rel="preload" href="/cafe-bg-compressed.jpg" as="image" />
+	{/if}
 </svelte:head>
 
 <Toaster />

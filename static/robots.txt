@@ -1,3 +1,13 @@
-# allow crawling everything by default
+# Serengo - meet the unexpected.
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+Disallow: /logout
+Disallow: /_app/
+Disallow: /.svelte-kit/
+
+# Sitemap location
+Sitemap: https://serengo.ziasvannes.tech/sitemap.xml
+
+# Crawl delay for polite crawling
+Crawl-delay: 1

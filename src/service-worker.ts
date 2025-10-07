@@ -15,33 +15,70 @@ import { build, files, version } from '$service-worker';
 // This gives `self` the correct types
 const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
 
-// Create a unique cache name for this deployment
+// Create cache names for this deployment
 const CACHE = `cache-${version}`;
+const RUNTIME_CACHE = `runtime-${version}`;
+const IMAGE_CACHE = `images-${version}`;
 
 const ASSETS = [
 	...build, // the app itself
 	...files // everything in `static`
 ];
 
+// Assets to precache for better performance
+const CRITICAL_ASSETS = [
+	'/cafe-bg-compressed.jpg',
+	'/fonts/Washington.ttf',
+	'/logo.svg'
+];
+
 self.addEventListener('install', (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
 		const cache = await caches.open(CACHE);
+		const imageCache = await caches.open(IMAGE_CACHE);
+
+		// Cache core assets
 		await cache.addAll(ASSETS);
+
+		// Precache critical assets with error handling
+		await Promise.allSettled(
+			CRITICAL_ASSETS.map(async (asset) => {
+				try {
+					const response = await fetch(asset);
+					if (response.ok) {
+						if (asset.includes('jpg') || asset.includes('jpeg') || asset.includes('png') || asset.includes('webp')) {
+							await imageCache.put(asset, response);
+						} else {
+							await cache.put(asset, response);
+						}
+					}
+				} catch (error) {
+					console.warn(`Failed to cache ${asset}:`, error);
+				}
+			})
+		);
 	}
 
 	event.waitUntil(addFilesToCache());
+	// Skip waiting to activate immediately
+	self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
+		const currentCaches = [CACHE, RUNTIME_CACHE, IMAGE_CACHE];
 		for (const key of await caches.keys()) {
-			if (key !== CACHE) await caches.delete(key);
+			if (!currentCaches.includes(key)) {
+				await caches.delete(key);
+			}
 		}
 	}
 
 	event.waitUntil(deleteOldCaches());
+	// Claim clients immediately
+	self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
@@ -51,6 +88,8 @@ self.addEventListener('fetch', (event) => {
 	async function respond() {
 		const url = new URL(event.request.url);
 		const cache = await caches.open(CACHE);
+		const runtimeCache = await caches.open(RUNTIME_CACHE);
+		const imageCache = await caches.open(IMAGE_CACHE);
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
@@ -58,6 +97,50 @@ self.addEventListener('fetch', (event) => {
 
 			if (response) {
 				return response;
+			}
+		}
+
+		// Handle images with cache-first strategy
+		if (url.pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i)) {
+			const cachedResponse = await imageCache.match(event.request);
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+
+			try {
+				const response = await fetch(event.request);
+				if (response.ok) {
+					imageCache.put(event.request, response.clone());
+				}
+				return response;
+			} catch {
+				// Return a fallback image or the cached version
+				return cachedResponse || new Response('Image not available', { status: 404 });
+			}
+		}
+
+		// Handle fonts with cache-first strategy
+		if (url.pathname.match(/\.(woff|woff2|ttf|otf)$/i)) {
+			const cachedResponse = await cache.match(event.request);
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+		}
+
+		// Handle API and dynamic content with network-first strategy
+		if (url.pathname.startsWith('/api/') || url.searchParams.has('_data')) {
+			try {
+				const response = await fetch(event.request);
+				if (response.ok) {
+					runtimeCache.put(event.request, response.clone());
+				}
+				return response;
+			} catch (err) {
+				const cachedResponse = await runtimeCache.match(event.request);
+				if (cachedResponse) {
+					return cachedResponse;
+				}
+				throw err;
 			}
 		}
 
@@ -73,15 +156,19 @@ self.addEventListener('fetch', (event) => {
 			}
 
 			if (response.status === 200) {
-				cache.put(event.request, response.clone());
+				runtimeCache.put(event.request, response.clone());
 			}
 
 			return response;
 		} catch (err) {
-			const response = await cache.match(event.request);
+			// Try all caches for fallback
+			const cachedResponse =
+				await cache.match(event.request) ||
+				await runtimeCache.match(event.request) ||
+				await imageCache.match(event.request);
 
-			if (response) {
-				return response;
+			if (cachedResponse) {
+				return cachedResponse;
 			}
 
 			// if there's no cache, then just error out

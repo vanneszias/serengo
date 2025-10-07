@@ -2,6 +2,26 @@
 	import { Map } from '$lib';
 </script>
 
+<svelte:head>
+	<title>Serengo - Meet the Unexpected</title>
+	<meta
+		name="description"
+		content="Discover unexpected places and experiences with Serengo's interactive map. Find hidden gems and explore your surroundings like never before."
+	/>
+	<meta property="og:title" content="Serengo - Meet the Unexpected" />
+	<meta
+		property="og:description"
+		content="Discover unexpected places and experiences with Serengo's interactive map. Find hidden gems and explore your surroundings like never before."
+	/>
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Serengo - Meet the Unexpected" />
+	<meta
+		name="twitter:description"
+		content="Discover unexpected places and experiences with Serengo's interactive map. Find hidden gems and explore your surroundings like never before."
+	/>
+</svelte:head>
+
 <div class="home-container">
 	<main class="main-content">
 		<div class="map-section">
