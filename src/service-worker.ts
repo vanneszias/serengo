@@ -26,11 +26,7 @@ const ASSETS = [
 ];
 
 // Assets to precache for better performance
-const CRITICAL_ASSETS = [
-	'/cafe-bg-compressed.jpg',
-	'/fonts/Washington.ttf',
-	'/logo.svg'
-];
+const CRITICAL_ASSETS = ['/cafe-bg-compressed.jpg', '/fonts/Washington.ttf', '/logo.svg'];
 
 self.addEventListener('install', (event) => {
 	// Create a new cache and add all files to it
@@ -47,7 +43,12 @@ self.addEventListener('install', (event) => {
 				try {
 					const response = await fetch(asset);
 					if (response.ok) {
-						if (asset.includes('jpg') || asset.includes('jpeg') || asset.includes('png') || asset.includes('webp')) {
+						if (
+							asset.includes('jpg') ||
+							asset.includes('jpeg') ||
+							asset.includes('png') ||
+							asset.includes('webp')
+						) {
 							await imageCache.put(asset, response);
 						} else {
 							await cache.put(asset, response);
@@ -163,9 +164,9 @@ self.addEventListener('fetch', (event) => {
 		} catch (err) {
 			// Try all caches for fallback
 			const cachedResponse =
-				await cache.match(event.request) ||
-				await runtimeCache.match(event.request) ||
-				await imageCache.match(event.request);
+				(await cache.match(event.request)) ||
+				(await runtimeCache.match(event.request)) ||
+				(await imageCache.match(event.request));
 
 			if (cachedResponse) {
 				return cachedResponse;
