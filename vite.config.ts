@@ -7,14 +7,7 @@ export default defineConfig({
 	preview: { allowedHosts: ['ziasvannes.tech'] },
 	build: {
 		target: 'es2020',
-		cssCodeSplit: true,
-		rollupOptions: {
-			output: {
-				manualChunks: {
-					maplibre: ['maplibre-gl', 'svelte-maplibre']
-				}
-			}
-		}
+		cssCodeSplit: true
 	},
 	optimizeDeps: {
 		include: ['maplibre-gl', 'svelte-maplibre']
