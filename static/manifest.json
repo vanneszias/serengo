@@ -1,7 +1,7 @@
 {
   "short_name": "Serengo",
-  "name": "Serengo - meet the unexpected.",
-  "description": "Discover unexpected places and experiences with Serengo's interactive map. Find hidden gems and explore your surroundings like never before.",
+  "name": "Serengo",
+  "description": "Serengo - meet the unexpected.",
   "icons": [
     {
       "src": "/logo.svg",
