@@ -2,23 +2,25 @@
 
 ## Oktober 2025
 
-### 7 Oktober 2025 (Maandag) - 4 uren
+### 7 Oktober 2025 (Maandag) - 5 uren
 
 **Werk uitgevoerd:**
 
 - **Grote SEO, PWA en performance optimalisaties**
 - Logo padding gefixed
 - Favicon bestanden opgeruimd (verwijderd oude favicon bestanden)
-- Manifest.json geoptimaliseerd
+- Manifest.json geoptimaliseerd en naming fixes
 - Sitemap.xml automatisch gegenereerd
 - Service worker uitgebreid voor caching
 - Meta tags en Open Graph voor SEO
 - Background afbeelding gecomprimeerd (50% kleiner)
-- Performance logs/PDFs opgeslagen voor vergelijking
+- Performance logs/PDFs opgeslagen (voor én na optimalisaties)
 - Vite config optimalisaties
 - Build issues opgelost
+- CSP (Content Security Policy) issues gefixed
+- Lighthouse performance logs toegevoegd
 
-**Commits:** 3 commits (8d3922e, 716c05c, 5f0cae6)
+**Commits:** 6 commits (c8bae0c, b2d1457, 63f7e0c, a806664, 8d3922e, 716c05c, 5f0cae6)
 
 **Details:**
 
@@ -27,6 +29,8 @@
 - Performance optimalisaties door image compression
 - Automatische sitemap generatie
 - Service worker caching voor offline functionaliteit
+- CSP security verbeteringen
+- Performance monitoring met Lighthouse logs (voor/na vergelijking)
 
 ---
 
@@ -163,9 +167,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 36 uren
+**Totale geschatte uren:** 37 uren
 **Werkdagen:** 6 dagen
-**Gemiddelde uren per dag:** 6 uur
+**Gemiddelde uren per dag:** 6.2 uur
 
 ### Project Milestones:
 
