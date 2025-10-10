@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { db } from '$lib/server/db';
 import { find, findMedia, user } from '$lib/server/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
+import { getSignedR2Url } from '$lib/server/r2';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	if (!locals.user) {
@@ -105,11 +106,42 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			{} as Record<string, typeof media>
 		);
 
-		// Combine finds with their media
-		const findsWithMedia = finds.map((findItem) => ({
-			...findItem,
-			media: mediaByFind[findItem.id] || []
-		}));
+		// Combine finds with their media and generate signed URLs
+		const findsWithMedia = await Promise.all(
+			finds.map(async (findItem) => {
+				const findMedia = mediaByFind[findItem.id] || [];
+
+				// Generate signed URLs for all media items
+				const mediaWithSignedUrls = await Promise.all(
+					findMedia.map(async (mediaItem) => {
+						// Extract path from URL if it's still a full URL, otherwise use as-is
+						const path = mediaItem.url.startsWith('https://')
+							? mediaItem.url.split('/').slice(3).join('/')
+							: mediaItem.url;
+
+						const thumbnailPath = mediaItem.thumbnailUrl?.startsWith('https://')
+							? mediaItem.thumbnailUrl.split('/').slice(3).join('/')
+							: mediaItem.thumbnailUrl;
+
+						const [signedUrl, signedThumbnailUrl] = await Promise.all([
+							getSignedR2Url(path, 24 * 60 * 60), // 24 hours
+							thumbnailPath ? getSignedR2Url(thumbnailPath, 24 * 60 * 60) : Promise.resolve(null)
+						]);
+
+						return {
+							...mediaItem,
+							url: signedUrl,
+							thumbnailUrl: signedThumbnailUrl
+						};
+					})
+				);
+
+				return {
+					...findItem,
+					media: mediaWithSignedUrls
+				};
+			})
+		);
 
 		return {
 			finds: findsWithMedia

@@ -48,7 +48,7 @@ export async function uploadToR2(file: File, path: string, contentType: string):
 		})
 	);
 
-	return `${R2_PUBLIC_URL}/${path}`;
+	return path;
 }
 
 export async function deleteFromR2(path: string): Promise<void> {

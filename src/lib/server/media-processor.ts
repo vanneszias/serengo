@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { uploadToR2 } from './r2';
+import { uploadToR2, getSignedR2Url } from './r2';
 
 const THUMBNAIL_SIZE = 400;
 const MAX_IMAGE_SIZE = 1920;
@@ -41,9 +41,15 @@ export async function processAndUploadImage(
 		type: 'image/jpeg'
 	});
 
-	const [url, thumbnailUrl] = await Promise.all([
+	const [imagePath, thumbPath] = await Promise.all([
 		uploadToR2(imageFile, `${filename}.jpg`, 'image/jpeg'),
 		uploadToR2(thumbFile, `${filename}-thumb.jpg`, 'image/jpeg')
+	]);
+
+	// Generate signed URLs (24 hour expiration for images)
+	const [url, thumbnailUrl] = await Promise.all([
+		getSignedR2Url(imagePath, 24 * 60 * 60), // 24 hours
+		getSignedR2Url(thumbPath, 24 * 60 * 60) // 24 hours
 	]);
 
 	return { url, thumbnailUrl };
@@ -58,7 +64,10 @@ export async function processAndUploadVideo(
 	const filename = `finds/${findId}/video-${index}-${timestamp}.mp4`;
 
 	// Upload video directly (no processing on server to save resources)
-	const url = await uploadToR2(file, filename, 'video/mp4');
+	const videoPath = await uploadToR2(file, filename, 'video/mp4');
+
+	// Generate signed URL for video (24 hour expiration)
+	const url = await getSignedR2Url(videoPath, 24 * 60 * 60);
 
 	// For video thumbnail, generate on client-side or use placeholder
 	// This keeps server-side processing minimal
