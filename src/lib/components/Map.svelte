@@ -11,6 +11,28 @@
 	import LocationButton from './LocationButton.svelte';
 	import { Skeleton } from '$lib/components/skeleton';
 
+	interface Find {
+		id: string;
+		title: string;
+		description?: string;
+		latitude: string;
+		longitude: string;
+		locationName?: string;
+		category?: string;
+		isPublic: number;
+		createdAt: Date;
+		userId: string;
+		user: {
+			id: string;
+			username: string;
+		};
+		media?: Array<{
+			type: string;
+			url: string;
+			thumbnailUrl: string;
+		}>;
+	}
+
 	interface Props {
 		style?: StyleSpecification;
 		center?: [number, number];
@@ -18,6 +40,8 @@
 		class?: string;
 		showLocationButton?: boolean;
 		autoCenter?: boolean;
+		finds?: Find[];
+		onFindClick?: (find: Find) => void;
 	}
 
 	let {
@@ -43,7 +67,9 @@
 		zoom,
 		class: className = '',
 		showLocationButton = true,
-		autoCenter = true
+		autoCenter = true,
+		finds = [],
+		onFindClick
 	}: Props = $props();
 
 	let mapLoaded = $state(false);
@@ -121,6 +147,33 @@
 					</div>
 				</Marker>
 			{/if}
+
+			{#each finds as find (find.id)}
+				<Marker lngLat={[parseFloat(find.longitude), parseFloat(find.latitude)]}>
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<div
+						class="find-marker"
+						role="button"
+						tabindex="0"
+						onclick={() => onFindClick?.(find)}
+						title={find.title}
+					>
+						<div class="find-marker-icon">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+								<path
+									d="M12 2L13.09 8.26L19 9.27L13.09 10.28L12 16.54L10.91 10.28L5 9.27L10.91 8.26L12 2Z"
+									fill="currentColor"
+								/>
+							</svg>
+						</div>
+						{#if find.media && find.media.length > 0}
+							<div class="find-marker-preview">
+								<img src={find.media[0].thumbnailUrl} alt={find.title} />
+							</div>
+						{/if}
+					</div>
+				</Marker>
+			{/each}
 		</MapLibre>
 
 		{#if showLocationButton}
@@ -219,6 +272,55 @@
 			transform: scale(2.5);
 			opacity: 0;
 		}
+	}
+
+	/* Find marker styles */
+	:global(.find-marker) {
+		width: 40px;
+		height: 40px;
+		cursor: pointer;
+		position: relative;
+		transform: translate(-50%, -50%);
+		transition: all 0.2s ease;
+	}
+
+	:global(.find-marker:hover) {
+		transform: translate(-50%, -50%) scale(1.1);
+		z-index: 100;
+	}
+
+	:global(.find-marker-icon) {
+		width: 32px;
+		height: 32px;
+		background: #ff6b35;
+		border: 3px solid white;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: white;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		position: relative;
+		z-index: 2;
+	}
+
+	:global(.find-marker-preview) {
+		position: absolute;
+		top: -8px;
+		right: -8px;
+		width: 20px;
+		height: 20px;
+		border-radius: 50%;
+		overflow: hidden;
+		border: 2px solid white;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+		z-index: 3;
+	}
+
+	:global(.find-marker-preview img) {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	@media (max-width: 768px) {
