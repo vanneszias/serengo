@@ -182,14 +182,14 @@
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
-- ✅ Gebruikersauthenticatie (Lucia + Google OAuth)
-- ✅ Responsive UI met custom componenten
-- ✅ Real-time locatie tracking
-- ✅ Interactive maps (MapLibre GL JS)
-- ✅ PWA functionaliteit
-- ✅ Docker deployment
-- ✅ Database (PostgreSQL + Drizzle ORM)
-- ✅ Toast notifications
-- ✅ Loading states en error handling
-- ✅ SEO optimalisatie (meta tags, Open Graph, sitemap)
-- ✅ Performance optimalisaties (image compression, caching)
+- [x] Gebruikersauthenticatie (Lucia + Google OAuth)
+- [x] Responsive UI met custom componenten
+- [x] Real-time locatie tracking
+- [x] Interactive maps (MapLibre GL JS)
+- [x] PWA functionaliteit
+- [x] Docker deployment
+- [x] Database (PostgreSQL + Drizzle ORM)
+- [x] Toast notifications
+- [x] Loading states en error handling
+- [x] SEO optimalisatie (meta tags, Open Graph, sitemap)
+- [x] Performance optimalisaties (image compression, caching)
