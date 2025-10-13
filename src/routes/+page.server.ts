@@ -1,150 +1,40 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { db } from '$lib/server/db';
-import { find, findMedia, user } from '$lib/server/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
-import { getSignedR2Url } from '$lib/server/r2';
 
-export const load: PageServerLoad = async ({ locals, url }) => {
+export const load: PageServerLoad = async ({ locals, url, fetch, request }) => {
 	if (!locals.user) {
-	return redirect(302, '/login');
+		return redirect(302, '/login');
 	}
 
-	// Get query parameters for location-based filtering
+	// Build API URL with query parameters
+	const apiUrl = new URL('/api/finds', url.origin);
+
+	// Forward location filtering parameters
 	const lat = url.searchParams.get('lat');
 	const lng = url.searchParams.get('lng');
-	const radius = url.searchParams.get('radius') || '50'; // Default 50km radius
+	const radius = url.searchParams.get('radius') || '50';
+
+	if (lat) apiUrl.searchParams.set('lat', lat);
+	if (lng) apiUrl.searchParams.set('lng', lng);
+	apiUrl.searchParams.set('radius', radius);
+	apiUrl.searchParams.set('includePrivate', 'true'); // Include user's private finds
+	apiUrl.searchParams.set('order', 'desc'); // Newest first
 
 	try {
-		// Build where conditions
-		const baseCondition = sql`(${find.isPublic} = 1 OR ${find.userId} = ${locals.user.id})`;
-		let whereConditions = baseCondition;
-
-		// Add location filtering if coordinates provided
-		if (lat && lng) {
-			const radiusKm = parseFloat(radius);
-			// Simple bounding box query for MVP (can upgrade to proper distance calculation later)
-			const latOffset = radiusKm / 111; // Approximate degrees per km for latitude
-			const lngOffset = radiusKm / (111 * Math.cos((parseFloat(lat) * Math.PI) / 180));
-
-			const locationConditions = and(
-				baseCondition,
-				sql`${find.latitude} BETWEEN ${parseFloat(lat) - latOffset} AND ${
-					parseFloat(lat) + latOffset
-				}`,
-				sql`${find.longitude} BETWEEN ${parseFloat(lng) - lngOffset} AND ${
-					parseFloat(lng) + lngOffset
-				}`
-			);
-
-			if (locationConditions) {
-				whereConditions = locationConditions;
+		const response = await fetch(apiUrl.toString(), {
+			headers: {
+				Cookie: request.headers.get('Cookie') || ''
 			}
+		});
+
+		if (!response.ok) {
+			throw new Error(`API request failed: ${response.status}`);
 		}
 
-		// Get all finds with filtering
-		const finds = await db
-			.select({
-				id: find.id,
-				title: find.title,
-				description: find.description,
-				latitude: find.latitude,
-				longitude: find.longitude,
-				locationName: find.locationName,
-				category: find.category,
-				isPublic: find.isPublic,
-				createdAt: find.createdAt,
-				userId: find.userId,
-				username: user.username
-			})
-			.from(find)
-			.innerJoin(user, eq(find.userId, user.id))
-			.where(whereConditions)
-			.orderBy(desc(find.createdAt))
-			.limit(100);
-
-		// Get media for all finds
-		const findIds = finds.map((f) => f.id);
-		let media: Array<{
-			id: string;
-			findId: string;
-			type: string;
-			url: string;
-			thumbnailUrl: string | null;
-			orderIndex: number | null;
-		}> = [];
-
-		if (findIds.length > 0) {
-			media = await db
-				.select({
-					id: findMedia.id,
-					findId: findMedia.findId,
-					type: findMedia.type,
-					url: findMedia.url,
-					thumbnailUrl: findMedia.thumbnailUrl,
-					orderIndex: findMedia.orderIndex
-				})
-				.from(findMedia)
-				.where(
-					sql`${findMedia.findId} IN (${sql.join(
-						findIds.map((id) => sql`${id}`),
-						sql`, `
-					)})`
-				)
-				.orderBy(findMedia.orderIndex);
-		}
-
-		// Group media by find
-		const mediaByFind = media.reduce(
-			(acc, item) => {
-				if (!acc[item.findId]) {
-					acc[item.findId] = [];
-				}
-				acc[item.findId].push(item);
-				return acc;
-			},
-			{} as Record<string, typeof media>
-		);
-
-		// Combine finds with their media and generate signed URLs
-		const findsWithMedia = await Promise.all(
-			finds.map(async (findItem) => {
-				const findMedia = mediaByFind[findItem.id] || [];
-
-				// Generate signed URLs for all media items
-				const mediaWithSignedUrls = await Promise.all(
-					findMedia.map(async (mediaItem) => {
-						// Extract path from URL if it's still a full URL, otherwise use as-is
-						const path = mediaItem.url.startsWith('https://')
-							? mediaItem.url.split('/').slice(3).join('/')
-							: mediaItem.url;
-
-						const thumbnailPath = mediaItem.thumbnailUrl?.startsWith('https://')
-							? mediaItem.thumbnailUrl.split('/').slice(3).join('/')
-							: mediaItem.thumbnailUrl;
-
-						const [signedUrl, signedThumbnailUrl] = await Promise.all([
-							getSignedR2Url(path, 24 * 60 * 60), // 24 hours
-							thumbnailPath ? getSignedR2Url(thumbnailPath, 24 * 60 * 60) : Promise.resolve(null)
-						]);
-
-						return {
-							...mediaItem,
-							url: signedUrl,
-							thumbnailUrl: signedThumbnailUrl
-						};
-					})
-				);
-
-				return {
-					...findItem,
-					media: mediaWithSignedUrls
-				};
-			})
-		);
+		const finds = await response.json();
 
 		return {
-			finds: findsWithMedia
+			finds
 		};
 	} catch (err) {
 		console.error('Error loading finds:', err);

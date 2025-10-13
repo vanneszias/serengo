@@ -17,7 +17,7 @@
 		locationName?: string;
 		category?: string;
 		isPublic: number;
-		createdAt: Date;
+		createdAt: string; // Will be converted to Date type, but is a string from api
 		userId: string;
 		username: string;
 		media: Array<{
@@ -83,6 +83,7 @@
 	let finds = $derived(
 		(data.finds || ([] as ServerFind[])).map((serverFind: ServerFind) => ({
 			...serverFind,
+			createdAt: new Date(serverFind.createdAt), // Convert string to Date
 			user: {
 				id: serverFind.userId,
 				username: serverFind.username

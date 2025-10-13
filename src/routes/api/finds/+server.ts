@@ -2,8 +2,9 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { find, findMedia, user } from '$lib/server/db/schema';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
+import { getSignedR2Url } from '$lib/server/r2';
 
 function generateFindId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(15));
@@ -17,60 +18,145 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 	const lat = url.searchParams.get('lat');
 	const lng = url.searchParams.get('lng');
-	const radius = url.searchParams.get('radius') || '10';
+	const radius = url.searchParams.get('radius') || '50';
+	const includePrivate = url.searchParams.get('includePrivate') === 'true';
+	const order = url.searchParams.get('order') || 'desc';
 
-	if (!lat || !lng) {
-		throw error(400, 'Latitude and longitude are required');
-	}
+	try {
+		// Build where conditions
+		const baseCondition = includePrivate
+			? sql`(${find.isPublic} = 1 OR ${find.userId} = ${locals.user.id})`
+			: sql`${find.isPublic} = 1`;
 
-	// Query finds within radius (simplified - in production use PostGIS)
-	// For MVP, using a simple bounding box approach
-	const latNum = parseFloat(lat);
-	const lngNum = parseFloat(lng);
-	const radiusNum = parseFloat(radius);
+		let whereConditions = baseCondition;
 
-	// Rough conversion: 1 degree ≈ 111km
-	const latDelta = radiusNum / 111;
-	const lngDelta = radiusNum / (111 * Math.cos((latNum * Math.PI) / 180));
+		// Add location filtering if coordinates provided
+		if (lat && lng) {
+			const radiusKm = parseFloat(radius);
+			const latOffset = radiusKm / 111;
+			const lngOffset = radiusKm / (111 * Math.cos((parseFloat(lat) * Math.PI) / 180));
 
-	const finds = await db
-		.select({
-			find: find,
-			user: {
-				id: user.id,
-				username: user.username
+			const locationConditions = and(
+				baseCondition,
+				sql`${find.latitude} BETWEEN ${parseFloat(lat) - latOffset} AND ${
+					parseFloat(lat) + latOffset
+				}`,
+				sql`${find.longitude} BETWEEN ${parseFloat(lng) - lngOffset} AND ${
+					parseFloat(lng) + lngOffset
+				}`
+			);
+
+			if (locationConditions) {
+				whereConditions = locationConditions;
 			}
-		})
-		.from(find)
-		.innerJoin(user, eq(find.userId, user.id))
-		.where(
-			and(
-				eq(find.isPublic, 1),
-				// Simple bounding box filter
-				sql`CAST(${find.latitude} AS NUMERIC) BETWEEN ${latNum - latDelta} AND ${latNum + latDelta}`,
-				sql`CAST(${find.longitude} AS NUMERIC) BETWEEN ${lngNum - lngDelta} AND ${lngNum + lngDelta}`
-			)
-		)
-		.orderBy(find.createdAt);
+		}
 
-	// Get media for each find
-	const findsWithMedia = await Promise.all(
-		finds.map(async (item) => {
-			const media = await db
-				.select()
+		// Get all finds with filtering
+		const finds = await db
+			.select({
+				id: find.id,
+				title: find.title,
+				description: find.description,
+				latitude: find.latitude,
+				longitude: find.longitude,
+				locationName: find.locationName,
+				category: find.category,
+				isPublic: find.isPublic,
+				createdAt: find.createdAt,
+				userId: find.userId,
+				username: user.username
+			})
+			.from(find)
+			.innerJoin(user, eq(find.userId, user.id))
+			.where(whereConditions)
+			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt)
+			.limit(100);
+
+		// Get media for all finds
+		const findIds = finds.map((f) => f.id);
+		let media: Array<{
+			id: string;
+			findId: string;
+			type: string;
+			url: string;
+			thumbnailUrl: string | null;
+			orderIndex: number | null;
+		}> = [];
+
+		if (findIds.length > 0) {
+			media = await db
+				.select({
+					id: findMedia.id,
+					findId: findMedia.findId,
+					type: findMedia.type,
+					url: findMedia.url,
+					thumbnailUrl: findMedia.thumbnailUrl,
+					orderIndex: findMedia.orderIndex
+				})
 				.from(findMedia)
-				.where(eq(findMedia.findId, item.find.id))
+				.where(
+					sql`${findMedia.findId} IN (${sql.join(
+						findIds.map((id) => sql`${id}`),
+						sql`, `
+					)})`
+				)
 				.orderBy(findMedia.orderIndex);
+		}
 
-			return {
-				...item.find,
-				user: item.user,
-				media: media
-			};
-		})
-	);
+		// Group media by find
+		const mediaByFind = media.reduce(
+			(acc, item) => {
+				if (!acc[item.findId]) {
+					acc[item.findId] = [];
+				}
+				acc[item.findId].push(item);
+				return acc;
+			},
+			{} as Record<string, typeof media>
+		);
 
-	return json(findsWithMedia);
+		// Combine finds with their media and generate signed URLs
+		const findsWithMedia = await Promise.all(
+			finds.map(async (findItem) => {
+				const findMedia = mediaByFind[findItem.id] || [];
+
+				// Generate signed URLs for all media items
+				const mediaWithSignedUrls = await Promise.all(
+					findMedia.map(async (mediaItem) => {
+						// Extract path from URL if it's still a full URL, otherwise use as-is
+						const path = mediaItem.url.startsWith('https://')
+							? mediaItem.url.split('/').slice(3).join('/')
+							: mediaItem.url;
+
+						const thumbnailPath = mediaItem.thumbnailUrl?.startsWith('https://')
+							? mediaItem.thumbnailUrl.split('/').slice(3).join('/')
+							: mediaItem.thumbnailUrl;
+
+						const [signedUrl, signedThumbnailUrl] = await Promise.all([
+							getSignedR2Url(path, 24 * 60 * 60), // 24 hours
+							thumbnailPath ? getSignedR2Url(thumbnailPath, 24 * 60 * 60) : Promise.resolve(null)
+						]);
+
+						return {
+							...mediaItem,
+							url: signedUrl,
+							thumbnailUrl: signedThumbnailUrl
+						};
+					})
+				);
+
+				return {
+					...findItem,
+					media: mediaWithSignedUrls
+				};
+			})
+		);
+
+		return json(findsWithMedia);
+	} catch (err) {
+		console.error('Error loading finds:', err);
+		throw error(500, 'Failed to load finds');
+	}
 };
 
 export const POST: RequestHandler = async ({ request, locals }) => {
