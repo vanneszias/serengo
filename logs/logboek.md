@@ -2,6 +2,49 @@
 
 ## Oktober 2025
 
+### 13 Oktober 2025 (Zondag) - 4 uren
+
+**Werk uitgevoerd:**
+
+- **API architectuur verbetering**
+- Finds weergave op homepage geïmplementeerd
+- API logic verplaatst van page servers naar dedicated API routes
+- Code organisatie en separation of concerns verbeterd
+- Homepage uitgebreid met Finds functionaliteit
+
+**Commits:** 2 commits (b95c7da, 88ed74f)
+
+**Details:**
+
+- Betere API structuur volgens SvelteKit best practices
+- Finds integratie op hoofdpagina
+- Code cleanup en organisatie
+- Improved separation tussen frontend en API logic
+
+---
+
+### 10 Oktober 2025 (Donderdag) - 6 uren
+
+**Werk uitgevoerd:**
+
+- **Finds feature implementatie**
+- Media upload functionaliteit met Cloudflare R2 storage
+- Signed URLs voor veilige media toegang
+- R2 bucket configuratie en integratie
+- Overscroll behavior verbeteringen
+- Code refactoring en cleanup
+
+**Commits:** 3 commits (c454b66, e0f5595, 1d858e4)
+
+**Details:**
+
+- Complete media upload systeem met R2
+- Veilige URL signing voor uploaded bestanden
+- Finds feature als kernfunctionaliteit
+- Storage optimalisaties
+
+---
+
 ### 7 Oktober 2025 (Maandag) - 5 uren
 
 **Werk uitgevoerd:**
@@ -167,9 +210,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 37 uren
-**Werkdagen:** 6 dagen
-**Gemiddelde uren per dag:** 6.2 uur
+**Totale geschatte uren:** 47 uren
+**Werkdagen:** 8 dagen
+**Gemiddelde uren per dag:** 5.9 uur
 
 ### Project Milestones:
 
@@ -179,6 +222,8 @@
 4. **29 Sept**: Component architectuur verbetering
 5. **2-3 Okt**: Maps en location features
 6. **7 Okt**: SEO, PWA en performance optimalisaties
+7. **10 Okt**: Finds feature en media upload systeem
+8. **13 Okt**: API architectuur verbetering
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
@@ -193,3 +238,7 @@
 - [x] Loading states en error handling
 - [x] SEO optimalisatie (meta tags, Open Graph, sitemap)
 - [x] Performance optimalisaties (image compression, caching)
+- [x] Finds feature met media upload
+- [x] Cloudflare R2 storage integratie
+- [x] Signed URLs voor veilige media toegang
+- [x] API architectuur verbetering
