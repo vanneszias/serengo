@@ -123,18 +123,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				// Generate signed URLs for all media items
 				const mediaWithSignedUrls = await Promise.all(
 					findMedia.map(async (mediaItem) => {
-						// Extract path from URL if it's still a full URL, otherwise use as-is
-						const path = mediaItem.url.startsWith('https://')
-							? mediaItem.url.split('/').slice(3).join('/')
-							: mediaItem.url;
-
-						const thumbnailPath = mediaItem.thumbnailUrl?.startsWith('https://')
-							? mediaItem.thumbnailUrl.split('/').slice(3).join('/')
-							: mediaItem.thumbnailUrl;
-
+						// URLs in database are now paths, generate signed URLs directly
 						const [signedUrl, signedThumbnailUrl] = await Promise.all([
-							getSignedR2Url(path, 24 * 60 * 60), // 24 hours
-							thumbnailPath ? getSignedR2Url(thumbnailPath, 24 * 60 * 60) : Promise.resolve(null)
+							getSignedR2Url(mediaItem.url, 24 * 60 * 60), // 24 hours
+							mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
+								? getSignedR2Url(mediaItem.thumbnailUrl, 24 * 60 * 60)
+								: Promise.resolve(mediaItem.thumbnailUrl) // Keep static placeholder paths as-is
 						]);
 
 						return {
