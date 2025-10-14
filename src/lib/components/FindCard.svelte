@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Button } from '$lib/components/button';
 	import { Badge } from '$lib/components/badge';
+	import LikeButton from '$lib/components/LikeButton.svelte';
+	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 
 	interface FindCardProps {
 		id: string;
@@ -16,11 +18,23 @@
 			url: string;
 			thumbnailUrl: string;
 		}>;
+		likeCount?: number;
+		isLiked?: boolean;
 		onExplore?: (id: string) => void;
 	}
 
-	let { id, title, description, category, locationName, user, media, onExplore }: FindCardProps =
-		$props();
+	let {
+		id,
+		title,
+		description,
+		category,
+		locationName,
+		user,
+		media,
+		likeCount = 0,
+		isLiked = false,
+		onExplore
+	}: FindCardProps = $props();
 
 	function handleExplore() {
 		onExplore?.(id);
@@ -43,9 +57,14 @@
 					class="media-image"
 				/>
 			{:else}
-				<video src={media[0].url} poster={media[0].thumbnailUrl} muted class="media-video">
-					<track kind="captions" />
-				</video>
+				<VideoPlayer
+					src={media[0].url}
+					poster={media[0].thumbnailUrl}
+					muted={true}
+					autoplay={false}
+					controls={false}
+					class="media-video"
+				/>
 			{/if}
 		{:else}
 			<div class="no-media">
@@ -110,6 +129,9 @@
 					<span class="author-text">@{user.username}</span>
 				</div>
 			</div>
+			<div class="like-container">
+				<LikeButton findId={id} {isLiked} {likeCount} size="sm" />
+			</div>
 		</div>
 	</div>
 
@@ -137,11 +159,15 @@
 		overflow: hidden;
 	}
 
-	.media-image,
-	.media-video {
+	.media-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	:global(.media-video) {
+		width: 100%;
+		height: 100%;
 	}
 
 	.no-media {
@@ -193,6 +219,10 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+	}
+
+	.like-container {
+		flex-shrink: 0;
 	}
 
 	.location-info {

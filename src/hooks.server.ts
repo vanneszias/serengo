@@ -51,6 +51,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			"style-src 'self' 'unsafe-inline' fonts.googleapis.com; " +
 			"font-src 'self' fonts.gstatic.com; " +
 			"img-src 'self' data: blob: *.openstreetmap.org *.tile.openstreetmap.org *.r2.cloudflarestorage.com; " +
+			"media-src 'self' *.r2.cloudflarestorage.com; " +
 			"connect-src 'self' *.openstreetmap.org; " +
 			"frame-ancestors 'none'; " +
 			"base-uri 'self'; " +

@@ -26,7 +26,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(400, `Must upload between 1 and ${MAX_FILES} files`);
 	}
 
-	const uploadedMedia: Array<{ type: string; url: string; thumbnailUrl: string }> = [];
+	const uploadedMedia: Array<{
+		type: string;
+		url: string;
+		thumbnailUrl: string;
+		fallbackUrl?: string;
+		fallbackThumbnailUrl?: string;
+	}> = [];
 
 	for (let i = 0; i < files.length; i++) {
 		const file = files[i];

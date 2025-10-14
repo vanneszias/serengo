@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { find, findMedia, user } from '$lib/server/db/schema';
+import { find, findMedia, user, findLike } from '$lib/server/db/schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
 import { getSignedR2Url } from '$lib/server/r2';
@@ -51,7 +51,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			}
 		}
 
-		// Get all finds with filtering
+		// Get all finds with filtering, like counts, and user's liked status
 		const finds = await db
 			.select({
 				id: find.id,
@@ -64,11 +64,19 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				isPublic: find.isPublic,
 				createdAt: find.createdAt,
 				userId: find.userId,
-				username: user.username
+				username: user.username,
+				likeCount: sql<number>`COALESCE(COUNT(DISTINCT ${findLike.id}), 0)`,
+				isLikedByUser: sql<boolean>`CASE WHEN EXISTS(
+					SELECT 1 FROM ${findLike}
+					WHERE ${findLike.findId} = ${find.id}
+					AND ${findLike.userId} = ${locals.user.id}
+				) THEN 1 ELSE 0 END`
 			})
 			.from(find)
 			.innerJoin(user, eq(find.userId, user.id))
+			.leftJoin(findLike, eq(find.id, findLike.findId))
 			.where(whereConditions)
+			.groupBy(find.id, user.username)
 			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt)
 			.limit(100);
 
@@ -141,7 +149,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 				return {
 					...findItem,
-					media: mediaWithSignedUrls
+					media: mediaWithSignedUrls,
+					isLikedByUser: Boolean(findItem.isLikedByUser)
 				};
 			})
 		);

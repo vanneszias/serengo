@@ -10,6 +10,8 @@
 		user: {
 			username: string;
 		};
+		likeCount?: number;
+		isLiked?: boolean;
 		media?: Array<{
 			type: string;
 			url: string;
@@ -58,6 +60,8 @@
 					locationName={find.locationName}
 					user={find.user}
 					media={find.media}
+					likeCount={find.likeCount}
+					isLiked={find.isLiked}
 					onExplore={handleFindExplore}
 				/>
 			{/each}

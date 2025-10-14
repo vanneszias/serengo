@@ -1,5 +1,7 @@
 <script lang="ts">
 	import Modal from '$lib/components/Modal.svelte';
+	import LikeButton from '$lib/components/LikeButton.svelte';
+	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 
 	interface Find {
 		id: string;
@@ -19,6 +21,8 @@
 			url: string;
 			thumbnailUrl: string;
 		}>;
+		likeCount?: number;
+		isLiked?: boolean;
 	}
 
 	interface Props {
@@ -112,15 +116,11 @@
 						{#if find.media[currentMediaIndex].type === 'photo'}
 							<img src={find.media[currentMediaIndex].url} alt={find.title} class="media-image" />
 						{:else}
-							<video
+							<VideoPlayer
 								src={find.media[currentMediaIndex].url}
-								controls
-								class="media-video"
 								poster={find.media[currentMediaIndex].thumbnailUrl}
-							>
-								<track kind="captions" />
-								Your browser does not support the video tag.
-							</video>
+								class="media-video"
+							/>
 						{/if}
 
 						{#if find.media.length > 1}
@@ -186,6 +186,14 @@
 				{/if}
 
 				<div class="actions">
+					<LikeButton
+						findId={find.id}
+						isLiked={find.isLiked || false}
+						likeCount={find.likeCount || 0}
+						size="default"
+						class="like-action"
+					/>
+
 					<button class="button primary" onclick={getDirections}>
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
 							<path
@@ -210,16 +218,6 @@
 							/>
 							<polyline
 								points="16,6 12,2 8,6"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-							<line
-								x1="12"
-								y1="2"
-								x2="12"
-								y2="15"
 								stroke="currentColor"
 								stroke-width="2"
 								stroke-linecap="round"
@@ -293,11 +291,15 @@
 		background: #f5f5f5;
 	}
 
-	.media-image,
-	.media-video {
+	.media-image {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+	}
+
+	:global(.media-video) {
+		width: 100%;
+		height: 100%;
 	}
 
 	.media-nav {
@@ -381,6 +383,10 @@
 		gap: 8px;
 		flex: 1;
 		justify-content: center;
+	}
+
+	.actions :global(.like-action) {
+		flex: 0 0 auto;
 	}
 
 	@media (max-width: 640px) {

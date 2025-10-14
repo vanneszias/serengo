@@ -20,6 +20,8 @@
 		createdAt: string; // Will be converted to Date type, but is a string from api
 		userId: string;
 		username: string;
+		likeCount?: number;
+		isLikedByUser?: boolean;
 		media: Array<{
 			id: string;
 			findId: string;
@@ -46,6 +48,8 @@
 			id: string;
 			username: string;
 		};
+		likeCount?: number;
+		isLiked?: boolean;
 		media?: Array<{
 			type: string;
 			url: string;
@@ -67,6 +71,8 @@
 			id: string;
 			username: string;
 		};
+		likeCount?: number;
+		isLiked?: boolean;
 		media?: Array<{
 			type: string;
 			url: string;
@@ -88,6 +94,8 @@
 				id: serverFind.userId,
 				username: serverFind.username
 			},
+			likeCount: serverFind.likeCount,
+			isLiked: serverFind.isLikedByUser,
 			media: serverFind.media?.map(
 				(m: { type: string; url: string; thumbnailUrl: string | null }) => ({
 					type: m.type,
@@ -118,6 +126,8 @@
 			category: find.category,
 			createdAt: find.createdAt.toISOString(),
 			user: find.user,
+			likeCount: find.likeCount,
+			isLiked: find.isLiked,
 			media: find.media?.map((m) => ({
 				type: m.type,
 				url: m.url,

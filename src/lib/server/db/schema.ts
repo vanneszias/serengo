@@ -45,6 +45,8 @@ export const findMedia = pgTable('find_media', {
 	type: text('type').notNull(), // 'photo' or 'video'
 	url: text('url').notNull(),
 	thumbnailUrl: text('thumbnail_url'),
+	fallbackUrl: text('fallback_url'), // JPEG fallback for WebP images
+	fallbackThumbnailUrl: text('fallback_thumbnail_url'), // JPEG fallback for WebP thumbnails
 	orderIndex: integer('order_index').default(0),
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
 });

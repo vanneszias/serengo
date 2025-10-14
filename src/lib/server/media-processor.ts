@@ -8,15 +8,29 @@ export async function processAndUploadImage(
 	file: File,
 	findId: string,
 	index: number
-): Promise<{ url: string; thumbnailUrl: string }> {
+): Promise<{
+	url: string;
+	thumbnailUrl: string;
+	fallbackUrl?: string;
+	fallbackThumbnailUrl?: string;
+}> {
 	const buffer = Buffer.from(await file.arrayBuffer());
 
 	// Generate unique filename
 	const timestamp = Date.now();
 	const filename = `finds/${findId}/image-${index}-${timestamp}`;
 
-	// Process full-size image (resize if too large, optimize)
-	const processedImage = await sharp(buffer)
+	// Process full-size image in WebP format (with JPEG fallback)
+	const processedWebP = await sharp(buffer)
+		.resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
+			fit: 'inside',
+			withoutEnlargement: true
+		})
+		.webp({ quality: 85, effort: 4 })
+		.toBuffer();
+
+	// Generate JPEG fallback for older browsers
+	const processedJPEG = await sharp(buffer)
 		.resize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE, {
 			fit: 'inside',
 			withoutEnlargement: true
@@ -24,8 +38,17 @@ export async function processAndUploadImage(
 		.jpeg({ quality: 85, progressive: true })
 		.toBuffer();
 
-	// Generate thumbnail
-	const thumbnail = await sharp(buffer)
+	// Generate thumbnail in WebP format
+	const thumbnailWebP = await sharp(buffer)
+		.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
+			fit: 'cover',
+			position: 'centre'
+		})
+		.webp({ quality: 80, effort: 4 })
+		.toBuffer();
+
+	// Generate JPEG thumbnail fallback
+	const thumbnailJPEG = await sharp(buffer)
 		.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, {
 			fit: 'cover',
 			position: 'centre'
@@ -33,38 +56,70 @@ export async function processAndUploadImage(
 		.jpeg({ quality: 80 })
 		.toBuffer();
 
-	// Upload both to R2
-	const imageFile = new File([new Uint8Array(processedImage)], `${filename}.jpg`, {
+	// Upload all variants to R2
+	const webpFile = new File([new Uint8Array(processedWebP)], `${filename}.webp`, {
+		type: 'image/webp'
+	});
+	const jpegFile = new File([new Uint8Array(processedJPEG)], `${filename}.jpg`, {
 		type: 'image/jpeg'
 	});
-	const thumbFile = new File([new Uint8Array(thumbnail)], `${filename}-thumb.jpg`, {
+	const thumbWebPFile = new File([new Uint8Array(thumbnailWebP)], `${filename}-thumb.webp`, {
+		type: 'image/webp'
+	});
+	const thumbJPEGFile = new File([new Uint8Array(thumbnailJPEG)], `${filename}-thumb.jpg`, {
 		type: 'image/jpeg'
 	});
 
-	const [imagePath, thumbPath] = await Promise.all([
-		uploadToR2(imageFile, `${filename}.jpg`, 'image/jpeg'),
-		uploadToR2(thumbFile, `${filename}-thumb.jpg`, 'image/jpeg')
+	const [webpPath, jpegPath, thumbWebPPath, thumbJPEGPath] = await Promise.all([
+		uploadToR2(webpFile, `${filename}.webp`, 'image/webp'),
+		uploadToR2(jpegFile, `${filename}.jpg`, 'image/jpeg'),
+		uploadToR2(thumbWebPFile, `${filename}-thumb.webp`, 'image/webp'),
+		uploadToR2(thumbJPEGFile, `${filename}-thumb.jpg`, 'image/jpeg')
 	]);
 
-	// Return the R2 paths (not signed URLs) - signed URLs will be generated when needed
-	return { url: imagePath, thumbnailUrl: thumbPath };
+	// Return WebP URLs as primary, JPEG as fallback (client can choose based on browser support)
+	return {
+		url: webpPath,
+		thumbnailUrl: thumbWebPPath,
+		fallbackUrl: jpegPath,
+		fallbackThumbnailUrl: thumbJPEGPath
+	};
 }
 
 export async function processAndUploadVideo(
 	file: File,
 	findId: string,
 	index: number
-): Promise<{ url: string; thumbnailUrl: string }> {
+): Promise<{
+	url: string;
+	thumbnailUrl: string;
+	fallbackUrl?: string;
+	fallbackThumbnailUrl?: string;
+}> {
 	const timestamp = Date.now();
-	const filename = `finds/${findId}/video-${index}-${timestamp}.mp4`;
+	const baseFilename = `finds/${findId}/video-${index}-${timestamp}`;
 
-	// Upload video directly (no processing on server to save resources)
-	const videoPath = await uploadToR2(file, filename, 'video/mp4');
+	// Convert to MP4 if needed for better compatibility
+	let videoPath: string;
 
-	// For video thumbnail, generate on client-side or use placeholder
-	// This keeps server-side processing minimal
-	const thumbnailUrl = `/video-placeholder.jpg`; // Use static placeholder
+	if (file.type === 'video/mp4') {
+		// Upload MP4 directly
+		videoPath = await uploadToR2(file, `${baseFilename}.mp4`, 'video/mp4');
+	} else {
+		// For other formats, upload as-is for now (future: convert with ffmpeg)
+		const extension = file.type === 'video/quicktime' ? '.mov' : '.mp4';
+		videoPath = await uploadToR2(file, `${baseFilename}${extension}`, file.type);
+	}
 
-	// Return the R2 path (not signed URL) - signed URLs will be generated when needed
-	return { url: videoPath, thumbnailUrl };
+	// Create a simple thumbnail using a static placeholder for now
+	// TODO: Implement proper video thumbnail extraction with ffmpeg or client-side canvas
+	const thumbnailUrl = '/video-placeholder.svg';
+
+	return {
+		url: videoPath,
+		thumbnailUrl,
+		// For videos, we can return the same URL as fallback since MP4 has broad support
+		fallbackUrl: videoPath,
+		fallbackThumbnailUrl: thumbnailUrl
+	};
 }
