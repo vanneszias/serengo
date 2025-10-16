@@ -1,8 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { find, findMedia, user, findLike } from '$lib/server/db/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { find, findMedia, user, findLike, friendship } from '$lib/server/db/schema';
+import { eq, and, sql, desc, or } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
 import { getSignedR2Url } from '$lib/server/r2';
 
@@ -22,11 +22,47 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const includePrivate = url.searchParams.get('includePrivate') === 'true';
 	const order = url.searchParams.get('order') || 'desc';
 
+	const includeFriends = url.searchParams.get('includeFriends') === 'true';
+
 	try {
-		// Build where conditions
-		const baseCondition = includePrivate
-			? sql`(${find.isPublic} = 1 OR ${find.userId} = ${locals.user.id})`
-			: sql`${find.isPublic} = 1`;
+		// Get user's friends if needed
+		let friendIds: string[] = [];
+		if (includeFriends || includePrivate) {
+			const friendships = await db
+				.select({
+					userId: friendship.userId,
+					friendId: friendship.friendId
+				})
+				.from(friendship)
+				.where(
+					and(
+						eq(friendship.status, 'accepted'),
+						or(eq(friendship.userId, locals.user!.id), eq(friendship.friendId, locals.user!.id))
+					)
+				);
+
+			friendIds = friendships.map((f) => (f.userId === locals.user!.id ? f.friendId : f.userId));
+		}
+
+		// Build privacy conditions
+		const conditions = [sql`${find.isPublic} = 1`]; // Always include public finds
+
+		if (includePrivate) {
+			// Include user's own finds (both public and private)
+			conditions.push(sql`${find.userId} = ${locals.user!.id}`);
+		}
+
+		if (includeFriends && friendIds.length > 0) {
+			// Include friends' finds (both public and private)
+			conditions.push(
+				sql`${find.userId} IN (${sql.join(
+					friendIds.map((id) => sql`${id}`),
+					sql`, `
+				)})`
+			);
+		}
+
+		const baseCondition = sql`(${sql.join(conditions, sql` OR `)})`;
 
 		let whereConditions = baseCondition;
 

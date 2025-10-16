@@ -18,6 +18,7 @@ export const load: PageServerLoad = async ({ locals, url, fetch, request }) => {
 	if (lng) apiUrl.searchParams.set('lng', lng);
 	apiUrl.searchParams.set('radius', radius);
 	apiUrl.searchParams.set('includePrivate', 'true'); // Include user's private finds
+	apiUrl.searchParams.set('includeFriends', 'true'); // Include friends' finds
 	apiUrl.searchParams.set('order', 'desc'); // Newest first
 
 	try {

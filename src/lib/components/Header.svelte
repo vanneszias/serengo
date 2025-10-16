@@ -12,7 +12,7 @@
 
 <header class="app-header">
 	<div class="header-content">
-		<h1 class="app-title">Serengo</h1>
+		<h1 class="app-title"><a href="/">Serengo</a></h1>
 		<div class="profile-container">
 			<ProfilePanel
 				username={user.username}

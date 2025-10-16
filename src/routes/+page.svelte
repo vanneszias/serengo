@@ -3,6 +3,7 @@
 	import FindsList from '$lib/components/FindsList.svelte';
 	import CreateFindModal from '$lib/components/CreateFindModal.svelte';
 	import FindPreview from '$lib/components/FindPreview.svelte';
+	import FindsFilter from '$lib/components/FindsFilter.svelte';
 	import type { PageData } from './$types';
 	import { coordinates } from '$lib/stores/location';
 	import { Button } from '$lib/components/button';
@@ -87,9 +88,10 @@
 
 	let showCreateModal = $state(false);
 	let selectedFind: FindPreviewData | null = $state(null);
+	let currentFilter = $state('all');
 
-	// Reactive finds list - convert server format to component format
-	let finds = $derived(
+	// All finds - convert server format to component format
+	let allFinds = $derived(
 		(data.finds || ([] as ServerFind[])).map((serverFind: ServerFind) => ({
 			...serverFind,
 			createdAt: new Date(serverFind.createdAt), // Convert string to Date
@@ -109,6 +111,27 @@
 			)
 		})) as MapFind[]
 	);
+
+	// Filtered finds based on current filter
+	let finds = $derived.by(() => {
+		if (!data.user) return allFinds;
+
+		switch (currentFilter) {
+			case 'public':
+				return allFinds.filter((find) => find.isPublic === 1);
+			case 'friends':
+				return allFinds.filter((find) => find.isPublic === 0 && find.userId !== data.user!.id);
+			case 'mine':
+				return allFinds.filter((find) => find.userId === data.user!.id);
+			case 'all':
+			default:
+				return allFinds;
+		}
+	});
+
+	function handleFilterChange(filter: string) {
+		currentFilter = filter;
+	}
 
 	function handleFindCreated(event: CustomEvent) {
 		// For now, just close modal and refresh page as in original implementation
@@ -195,6 +218,9 @@
 
 		<div class="finds-section">
 			<div class="finds-header">
+				<div class="finds-title-section">
+					<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+				</div>
 				<FindsList {finds} onFindExplore={handleFindExplore} />
 				<Button onclick={openCreateModal} class="create-find-button">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
@@ -268,6 +294,13 @@
 		position: relative;
 	}
 
+	.finds-title-section {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 20px;
+	}
+
 	:global(.create-find-button) {
 		position: absolute;
 		top: 0;
@@ -307,6 +340,12 @@
 
 		.finds-section {
 			padding: 16px;
+		}
+
+		.finds-title-section {
+			flex-direction: column;
+			gap: 12px;
+			align-items: stretch;
 		}
 
 		:global(.create-find-button) {

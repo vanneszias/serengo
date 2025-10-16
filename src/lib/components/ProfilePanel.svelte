@@ -84,6 +84,10 @@
 				Profile Picture
 			</DropdownMenuItem>
 
+			<DropdownMenuItem class="friends-item">
+				<a href="/friends" class="friends-link">Friends</a>
+			</DropdownMenuItem>
+
 			<DropdownMenuSeparator />
 
 			<div class="user-info-item">
@@ -194,6 +198,25 @@
 
 	:global(.profile-picture-item:hover) {
 		background: #f5f5f5;
+	}
+
+	:global(.friends-item) {
+		cursor: pointer;
+		font-weight: 500;
+		color: #333;
+		padding: 0;
+	}
+
+	:global(.friends-item:hover) {
+		background: #f5f5f5;
+	}
+
+	.friends-link {
+		display: block;
+		width: 100%;
+		padding: 6px 8px;
+		text-decoration: none;
+		color: inherit;
 	}
 
 	:global(.logout-item) {
