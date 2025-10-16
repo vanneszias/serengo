@@ -19,6 +19,7 @@ const self = globalThis.self as unknown as ServiceWorkerGlobalScope;
 const CACHE = `cache-${version}`;
 const RUNTIME_CACHE = `runtime-${version}`;
 const IMAGE_CACHE = `images-${version}`;
+const R2_CACHE = `r2-${version}`;
 
 const ASSETS = [
 	...build, // the app itself
@@ -69,7 +70,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
 	// Remove previous cached data from disk
 	async function deleteOldCaches() {
-		const currentCaches = [CACHE, RUNTIME_CACHE, IMAGE_CACHE];
+		const currentCaches = [CACHE, RUNTIME_CACHE, IMAGE_CACHE, R2_CACHE];
 		for (const key of await caches.keys()) {
 			if (!currentCaches.includes(key)) {
 				await caches.delete(key);
@@ -91,6 +92,7 @@ self.addEventListener('fetch', (event) => {
 		const cache = await caches.open(CACHE);
 		const runtimeCache = await caches.open(RUNTIME_CACHE);
 		const imageCache = await caches.open(IMAGE_CACHE);
+		const r2Cache = await caches.open(R2_CACHE);
 
 		// `build`/`files` can always be served from the cache
 		if (ASSETS.includes(url.pathname)) {
@@ -125,6 +127,45 @@ self.addEventListener('fetch', (event) => {
 			const cachedResponse = await cache.match(event.request);
 			if (cachedResponse) {
 				return cachedResponse;
+			}
+		}
+
+		// Handle R2 resources with cache-first strategy
+		if (url.hostname.includes('.r2.dev') || url.hostname.includes('.r2.cloudflarestorage.com')) {
+			const cachedResponse = await r2Cache.match(event.request);
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+
+			try {
+				const response = await fetch(event.request);
+				if (response.ok) {
+					// Cache R2 resources for a long time as they're typically immutable
+					r2Cache.put(event.request, response.clone());
+				}
+				return response;
+			} catch {
+				// Return cached version if available, or fall through to other cache checks
+				return cachedResponse || new Response('R2 resource not available', { status: 404 });
+			}
+		}
+
+		// Handle OpenStreetMap tiles with cache-first strategy
+		if (url.hostname === 'tile.openstreetmap.org') {
+			const cachedResponse = await r2Cache.match(event.request);
+			if (cachedResponse) {
+				return cachedResponse;
+			}
+
+			try {
+				const response = await fetch(event.request);
+				if (response.ok) {
+					// Cache map tiles for a long time
+					r2Cache.put(event.request, response.clone());
+				}
+				return response;
+			} catch {
+				return cachedResponse || new Response('Map tile not available', { status: 404 });
 			}
 		}
 
@@ -166,7 +207,8 @@ self.addEventListener('fetch', (event) => {
 			const cachedResponse =
 				(await cache.match(event.request)) ||
 				(await runtimeCache.match(event.request)) ||
-				(await imageCache.match(event.request));
+				(await imageCache.match(event.request)) ||
+				(await r2Cache.match(event.request));
 
 			if (cachedResponse) {
 				return cachedResponse;
