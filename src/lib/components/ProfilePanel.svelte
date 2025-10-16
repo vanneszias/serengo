@@ -7,19 +7,31 @@
 		DropdownMenuSeparator,
 		DropdownMenuTrigger
 	} from './dropdown-menu';
-	import { Avatar, AvatarFallback } from './avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 	import { Skeleton } from './skeleton';
+	import ProfilePictureSheet from './ProfilePictureSheet.svelte';
 
 	interface Props {
 		username: string;
 		id: string;
+		profilePictureUrl?: string | null;
 		loading?: boolean;
 	}
 
-	let { username, id, loading = false }: Props = $props();
+	let { username, id, profilePictureUrl, loading = false }: Props = $props();
+
+	let showProfilePictureSheet = $state(false);
 
 	// Get the first letter of username for avatar
 	const initial = username.charAt(0).toUpperCase();
+
+	function openProfilePictureSheet() {
+		showProfilePictureSheet = true;
+	}
+
+	function closeProfilePictureSheet() {
+		showProfilePictureSheet = false;
+	}
 </script>
 
 <DropdownMenu>
@@ -28,6 +40,9 @@
 			<Skeleton class="h-10 w-10 rounded-full" />
 		{:else}
 			<Avatar class="profile-avatar">
+				{#if profilePictureUrl}
+					<AvatarImage src={profilePictureUrl} alt={username} />
+				{/if}
 				<AvatarFallback class="profile-avatar-fallback">
 					{initial}
 				</AvatarFallback>
@@ -65,6 +80,12 @@
 
 			<DropdownMenuSeparator />
 
+			<DropdownMenuItem class="profile-picture-item" onclick={openProfilePictureSheet}>
+				Profile Picture
+			</DropdownMenuItem>
+
+			<DropdownMenuSeparator />
+
 			<div class="user-info-item">
 				<span class="info-label">Username</span>
 				<span class="info-value">{username}</span>
@@ -85,6 +106,15 @@
 		{/if}
 	</DropdownMenuContent>
 </DropdownMenu>
+
+{#if showProfilePictureSheet}
+	<ProfilePictureSheet
+		userId={id}
+		{username}
+		{profilePictureUrl}
+		onClose={closeProfilePictureSheet}
+	/>
+{/if}
 
 <style>
 	:global(.profile-trigger) {
@@ -154,6 +184,16 @@
 		font-family: monospace;
 		font-weight: 500;
 		word-break: break-all;
+	}
+
+	:global(.profile-picture-item) {
+		cursor: pointer;
+		font-weight: 500;
+		color: #333;
+	}
+
+	:global(.profile-picture-item:hover) {
+		background: #f5f5f5;
 	}
 
 	:global(.logout-item) {

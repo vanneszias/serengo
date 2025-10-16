@@ -65,6 +65,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				createdAt: find.createdAt,
 				userId: find.userId,
 				username: user.username,
+				profilePictureUrl: user.profilePictureUrl,
 				likeCount: sql<number>`COALESCE(COUNT(DISTINCT ${findLike.id}), 0)`,
 				isLikedByUser: sql<boolean>`CASE WHEN EXISTS(
 					SELECT 1 FROM ${findLike}
@@ -76,7 +77,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			.innerJoin(user, eq(find.userId, user.id))
 			.leftJoin(findLike, eq(find.id, findLike.findId))
 			.where(whereConditions)
-			.groupBy(find.id, user.username)
+			.groupBy(find.id, user.username, user.profilePictureUrl)
 			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt)
 			.limit(100);
 
@@ -147,8 +148,20 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					})
 				);
 
+				// Generate signed URL for user profile picture if it exists
+				let userProfilePictureUrl = findItem.profilePictureUrl;
+				if (userProfilePictureUrl && !userProfilePictureUrl.startsWith('http')) {
+					try {
+						userProfilePictureUrl = await getSignedR2Url(userProfilePictureUrl, 24 * 60 * 60);
+					} catch (error) {
+						console.error('Failed to generate signed URL for user profile picture:', error);
+						userProfilePictureUrl = null;
+					}
+				}
+
 				return {
 					...findItem,
+					profilePictureUrl: userProfilePictureUrl,
 					media: mediaWithSignedUrls,
 					isLikedByUser: Boolean(findItem.isLikedByUser)
 				};

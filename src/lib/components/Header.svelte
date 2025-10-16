@@ -4,6 +4,7 @@
 	type User = {
 		id: string;
 		username: string;
+		profilePictureUrl?: string | null;
 	};
 
 	let { user }: { user: User } = $props();
@@ -13,7 +14,11 @@
 	<div class="header-content">
 		<h1 class="app-title">Serengo</h1>
 		<div class="profile-container">
-			<ProfilePanel username={user.username} id={user.id} />
+			<ProfilePanel
+				username={user.username}
+				id={user.id}
+				profilePictureUrl={user.profilePictureUrl}
+			/>
 		</div>
 	</div>
 </header>

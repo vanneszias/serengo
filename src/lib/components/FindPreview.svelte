@@ -2,7 +2,7 @@
 	import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/sheet';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-	import { Avatar, AvatarFallback } from '$lib/components/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/avatar';
 
 	interface Find {
 		id: string;
@@ -16,6 +16,7 @@
 		user: {
 			id: string;
 			username: string;
+			profilePictureUrl?: string | null;
 		};
 		media?: Array<{
 			type: string;
@@ -112,6 +113,9 @@
 			<SheetHeader class="sheet-header">
 				<div class="user-section">
 					<Avatar class="user-avatar">
+						{#if find.user.profilePictureUrl}
+							<AvatarImage src={find.user.profilePictureUrl} alt={find.user.username} />
+						{/if}
 						<AvatarFallback class="avatar-fallback">
 							{find.user.username.slice(0, 2).toUpperCase()}
 						</AvatarFallback>

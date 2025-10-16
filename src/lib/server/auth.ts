@@ -4,6 +4,7 @@ import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
+import { getSignedR2Url } from '$lib/server/r2';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -31,7 +32,11 @@ export async function validateSessionToken(token: string) {
 	const [result] = await db
 		.select({
 			// Adjust user table here to tweak returned data
-			user: { id: table.user.id, username: table.user.username },
+			user: {
+				id: table.user.id,
+				username: table.user.username,
+				profilePictureUrl: table.user.profilePictureUrl
+			},
 			session: table.session
 		})
 		.from(table.session)
@@ -58,7 +63,25 @@ export async function validateSessionToken(token: string) {
 			.where(eq(table.session.id, session.id));
 	}
 
-	return { session, user };
+	// Generate signed URL for profile picture if it exists
+	let profilePictureUrl = user.profilePictureUrl;
+	if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
+		// It's a path, generate signed URL
+		try {
+			profilePictureUrl = await getSignedR2Url(profilePictureUrl, 24 * 60 * 60); // 24 hours
+		} catch (error) {
+			console.error('Failed to generate signed URL for profile picture:', error);
+			profilePictureUrl = null;
+		}
+	}
+
+	return {
+		session,
+		user: {
+			...user,
+			profilePictureUrl
+		}
+	};
 }
 
 export type SessionValidationResult = Awaited<ReturnType<typeof validateSessionToken>>;
@@ -95,7 +118,8 @@ export async function createUser(googleId: string, name: string) {
 		username: name,
 		googleId,
 		passwordHash: null,
-		age: null
+		age: null,
+		profilePictureUrl: null
 	};
 	await db.insert(table.user).values(user);
 	return user;

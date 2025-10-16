@@ -9,6 +9,7 @@
 		locationName?: string;
 		user: {
 			username: string;
+			profilePictureUrl?: string | null;
 		};
 		likeCount?: number;
 		isLiked?: boolean;

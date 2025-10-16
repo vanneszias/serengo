@@ -20,6 +20,7 @@
 		createdAt: string; // Will be converted to Date type, but is a string from api
 		userId: string;
 		username: string;
+		profilePictureUrl?: string | null;
 		likeCount?: number;
 		isLikedByUser?: boolean;
 		media: Array<{
@@ -47,6 +48,7 @@
 		user: {
 			id: string;
 			username: string;
+			profilePictureUrl?: string | null;
 		};
 		likeCount?: number;
 		isLiked?: boolean;
@@ -70,6 +72,7 @@
 		user: {
 			id: string;
 			username: string;
+			profilePictureUrl?: string | null;
 		};
 		likeCount?: number;
 		isLiked?: boolean;
@@ -92,7 +95,8 @@
 			createdAt: new Date(serverFind.createdAt), // Convert string to Date
 			user: {
 				id: serverFind.userId,
-				username: serverFind.username
+				username: serverFind.username,
+				profilePictureUrl: serverFind.profilePictureUrl
 			},
 			likeCount: serverFind.likeCount,
 			isLiked: serverFind.isLikedByUser,

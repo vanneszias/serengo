@@ -3,7 +3,7 @@
 	import { Badge } from '$lib/components/badge';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-	import { Avatar, AvatarFallback } from '$lib/components/avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/avatar';
 	import { MoreHorizontal, MessageCircle, Share } from '@lucide/svelte';
 
 	interface FindCardProps {
@@ -14,6 +14,7 @@
 		locationName?: string;
 		user: {
 			username: string;
+			profilePictureUrl?: string | null;
 		};
 		media?: Array<{
 			type: string;
@@ -52,6 +53,9 @@
 	<div class="post-header">
 		<div class="user-info">
 			<Avatar class="avatar">
+				{#if user.profilePictureUrl}
+					<AvatarImage src={user.profilePictureUrl} alt={user.username} />
+				{/if}
 				<AvatarFallback class="avatar-fallback">
 					{getUserInitials(user.username)}
 				</AvatarFallback>
