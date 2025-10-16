@@ -19,24 +19,29 @@
 		class: className = ''
 	}: Props = $props();
 
+	// Track the source of truth - server state
+	let serverIsLiked = $state(isLiked);
+	let serverLikeCount = $state(likeCount);
+
+	// Track optimistic state during loading
 	let isLoading = $state(false);
-	let currentIsLiked = $state(isLiked);
-	let currentLikeCount = $state(likeCount);
+	let optimisticIsLiked = $state(isLiked);
+	let optimisticLikeCount = $state(likeCount);
+
+	// Derived state for display
+	let displayIsLiked = $derived(isLoading ? optimisticIsLiked : serverIsLiked);
+	let displayLikeCount = $derived(isLoading ? optimisticLikeCount : serverLikeCount);
 
 	async function toggleLike() {
 		if (isLoading) return;
 
-		const previousLiked = currentIsLiked;
-		const previousCount = currentLikeCount;
-
-		// Optimistic update
-		currentIsLiked = !currentIsLiked;
-		currentLikeCount += currentIsLiked ? 1 : -1;
-
+		// Set optimistic state
+		optimisticIsLiked = !serverIsLiked;
+		optimisticLikeCount = serverLikeCount + (optimisticIsLiked ? 1 : -1);
 		isLoading = true;
 
 		try {
-			const method = currentIsLiked ? 'POST' : 'DELETE';
+			const method = optimisticIsLiked ? 'POST' : 'DELETE';
 			const response = await fetch(`/api/finds/${findId}/like`, {
 				method,
 				headers: {
@@ -45,16 +50,16 @@
 			});
 
 			if (!response.ok) {
-				const error = (await response.json()) as { message?: string };
-				throw new Error(error.message || 'Failed to update like');
+				const errorData = await response.json().catch(() => ({}));
+				throw new Error(errorData.message || `HTTP ${response.status}`);
 			}
 
-			// Success - optimistic update was correct
-		} catch (error: unknown) {
-			// Revert optimistic update on error
-			currentIsLiked = previousLiked;
-			currentLikeCount = previousCount;
+			const result = await response.json();
 
+			// Update server state with response
+			serverIsLiked = result.isLiked;
+			serverLikeCount = result.likeCount;
+		} catch (error: unknown) {
 			console.error('Error updating like:', error);
 			toast.error('Failed to update like. Please try again.');
 		} finally {
@@ -62,10 +67,10 @@
 		}
 	}
 
-	// Update internal state when props change
+	// Update server state when props change (from parent component)
 	$effect(() => {
-		currentIsLiked = isLiked;
-		currentLikeCount = likeCount;
+		serverIsLiked = isLiked;
+		serverLikeCount = likeCount;
 	});
 </script>
 
@@ -77,19 +82,19 @@
 	disabled={isLoading}
 >
 	<Heart
-		class="h-4 w-4 transition-all duration-200 {currentIsLiked
+		class="h-4 w-4 transition-all duration-200 {displayIsLiked
 			? 'scale-110 fill-red-500 text-red-500'
 			: 'text-gray-500 group-hover:scale-105 group-hover:text-red-400'} {isLoading
 			? 'animate-pulse'
 			: ''}"
 	/>
-	{#if currentLikeCount > 0}
+	{#if displayLikeCount > 0}
 		<span
-			class="text-sm font-medium transition-colors {currentIsLiked
+			class="text-sm font-medium transition-colors {displayIsLiked
 				? 'text-red-500'
 				: 'text-gray-500 group-hover:text-red-400'}"
 		>
-			{currentLikeCount}
+			{displayLikeCount}
 		</span>
 	{/if}
 </Button>

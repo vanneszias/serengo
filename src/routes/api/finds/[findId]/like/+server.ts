@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { findLike, find } from '$lib/server/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, count } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
 
 function generateLikeId(): string {
@@ -51,7 +51,20 @@ export async function POST({
 		userId: locals.user.id
 	});
 
-	return json({ success: true, likeId });
+	// Get updated like count
+	const likeCountResult = await db
+		.select({ count: count() })
+		.from(findLike)
+		.where(eq(findLike.findId, findId));
+
+	const likeCount = likeCountResult[0]?.count ?? 0;
+
+	return json({
+		success: true,
+		likeId,
+		isLiked: true,
+		likeCount
+	});
 }
 
 export async function DELETE({
@@ -76,5 +89,17 @@ export async function DELETE({
 		.delete(findLike)
 		.where(and(eq(findLike.findId, findId), eq(findLike.userId, locals.user.id)));
 
-	return json({ success: true });
+	// Get updated like count
+	const likeCountResult = await db
+		.select({ count: count() })
+		.from(findLike)
+		.where(eq(findLike.findId, findId));
+
+	const likeCount = likeCountResult[0]?.count ?? 0;
+
+	return json({
+		success: true,
+		isLiked: false,
+		likeCount
+	});
 }

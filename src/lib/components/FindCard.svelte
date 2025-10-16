@@ -3,6 +3,8 @@
 	import { Badge } from '$lib/components/badge';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
+	import { Avatar, AvatarFallback } from '$lib/components/avatar';
+	import { MoreHorizontal, MessageCircle, Share } from '@lucide/svelte';
 
 	interface FindCardProps {
 		id: string;
@@ -40,14 +42,62 @@
 		onExplore?.(id);
 	}
 
-	function truncateText(text: string, maxLength: number = 120): string {
-		if (text.length <= maxLength) return text;
-		return text.slice(0, maxLength).trim() + '...';
+	function getUserInitials(username: string): string {
+		return username.slice(0, 2).toUpperCase();
 	}
 </script>
 
 <div class="find-card">
-	<div class="find-card-media">
+	<!-- Post Header -->
+	<div class="post-header">
+		<div class="user-info">
+			<Avatar class="avatar">
+				<AvatarFallback class="avatar-fallback">
+					{getUserInitials(user.username)}
+				</AvatarFallback>
+			</Avatar>
+			<div class="user-details">
+				<div class="username">@{user.username}</div>
+				{#if locationName}
+					<div class="location">
+						<svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+							<path
+								d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+							<circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
+						</svg>
+						<span>{locationName}</span>
+					</div>
+				{/if}
+			</div>
+		</div>
+		<Button variant="ghost" size="sm" class="more-button">
+			<MoreHorizontal size={16} />
+		</Button>
+	</div>
+
+	<!-- Post Content -->
+	<div class="post-content">
+		<div class="content-header">
+			<h3 class="post-title">{title}</h3>
+			{#if category}
+				<Badge variant="secondary" class="category-badge">
+					{category}
+				</Badge>
+			{/if}
+		</div>
+
+		{#if description}
+			<p class="post-description">{description}</p>
+		{/if}
+	</div>
+
+	<!-- Media -->
+	<div class="post-media">
 		{#if media && media.length > 0}
 			{#if media[0].type === 'photo'}
 				<img
@@ -62,13 +112,13 @@
 					poster={media[0].thumbnailUrl}
 					muted={true}
 					autoplay={false}
-					controls={false}
+					controls={true}
 					class="media-video"
 				/>
 			{/if}
 		{:else}
 			<div class="no-media">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+				<svg width="32" height="32" viewBox="0 0 24 24" fill="none">
 					<path
 						d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
 						stroke="currentColor"
@@ -82,81 +132,134 @@
 		{/if}
 	</div>
 
-	<div class="find-card-content">
-		<div class="find-card-header">
-			<h3 class="find-card-title">{title}</h3>
-			{#if category}
-				<Badge variant="secondary" class="category-badge">
-					{category}
-				</Badge>
-			{/if}
+	<!-- Post Actions -->
+	<div class="post-actions">
+		<div class="action-buttons">
+			<LikeButton findId={id} {isLiked} {likeCount} size="sm" />
+			<Button variant="ghost" size="sm" class="action-button">
+				<MessageCircle size={16} />
+				<span>comment</span>
+			</Button>
+			<Button variant="ghost" size="sm" class="action-button">
+				<Share size={16} />
+				<span>share</span>
+			</Button>
 		</div>
-
-		{#if description}
-			<p class="find-card-description">
-				{truncateText(description)}
-			</p>
-		{/if}
-
-		<div class="find-card-meta">
-			<div class="location-info">
-				{#if locationName}
-					<div class="location">
-						<svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-							<path
-								d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-							<circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
-						</svg>
-						<span class="location-text">{locationName}</span>
-					</div>
-				{/if}
-				<div class="author">
-					<svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-						<path
-							d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-						<circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="2" />
-					</svg>
-					<span class="author-text">@{user.username}</span>
-				</div>
-			</div>
-			<div class="like-container">
-				<LikeButton findId={id} {isLiked} {likeCount} size="sm" />
-			</div>
-		</div>
-	</div>
-
-	<div class="find-card-actions">
-		<Button variant="default" size="sm" onclick={handleExplore} class="explore-button">
-			explore this find
+		<Button variant="outline" size="sm" onclick={handleExplore} class="explore-button">
+			explore
 		</Button>
 	</div>
 </div>
 
 <style>
 	.find-card {
-		display: flex;
 		background: white;
-		align-items: flex-start;
-		padding-top: 1rem;
-		border-top: 1px solid #e5e7eb;
+		border: 1px solid hsl(var(--border));
+		border-radius: 12px;
+		overflow: hidden;
+		margin-bottom: 1rem;
+		transition: box-shadow 0.2s ease;
 	}
 
-	.find-card-media {
+	.find-card:hover {
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	/* Post Header */
+	.post-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 1rem 0.75rem 1rem;
+	}
+
+	.user-info {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	:global(.avatar) {
+		width: 40px;
+		height: 40px;
+	}
+
+	:global(.avatar-fallback) {
+		background: hsl(var(--primary));
+		color: white;
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.user-details {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.username {
+		font-weight: 600;
+		font-size: 0.875rem;
+		color: hsl(var(--foreground));
+	}
+
+	.location {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.75rem;
+		color: hsl(var(--muted-foreground));
+	}
+
+	:global(.more-button) {
+		color: hsl(var(--muted-foreground));
+	}
+
+	/* Post Content */
+	.post-content {
+		padding: 0 1rem 0.75rem 1rem;
+	}
+
+	.content-header {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.5rem;
+		margin-bottom: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	.post-title {
+		font-family: 'Washington', serif;
+		font-size: 1.125rem;
+		font-weight: 600;
+		line-height: 1.4;
+		color: hsl(var(--foreground));
+		margin: 0;
+		flex: 1;
+	}
+
+	:global(.category-badge) {
+		font-size: 0.75rem;
+		height: 1.5rem;
 		flex-shrink: 0;
-		width: 120px;
-		height: 80px;
-		border-radius: 8px;
+	}
+
+	.post-description {
+		font-size: 0.875rem;
+		line-height: 1.5;
+		color: hsl(var(--muted-foreground));
+		margin: 0;
+	}
+
+	/* Media */
+	.post-media {
+		width: 100%;
+		aspect-ratio: 16/10;
 		overflow: hidden;
+		background: hsl(var(--muted));
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.media-image {
@@ -176,106 +279,54 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: hsl(var(--muted));
-	}
-
-	.find-card-content {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.find-card-header {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.75rem;
-		flex-wrap: wrap;
-	}
-
-	.find-card-title {
-		font-family: 'Washington', serif;
-		font-size: 1.125rem;
-		font-weight: 600;
-		line-height: 1.4;
-		color: hsl(var(--foreground));
-		margin: 0;
-	}
-
-	:global(.category-badge) {
-		font-size: 0.75rem;
-		height: 1.5rem;
-	}
-
-	.find-card-description {
-		font-size: 0.875rem;
-		line-height: 1.5;
 		color: hsl(var(--muted-foreground));
-		margin: 0;
+		opacity: 0.5;
 	}
 
-	.find-card-meta {
+	/* Post Actions */
+	.post-actions {
 		display: flex;
+		align-items: center;
 		justify-content: space-between;
-		align-items: center;
+		padding: 0.75rem 1rem 1rem 1rem;
+		border-top: 1px solid hsl(var(--border));
 	}
 
-	.like-container {
-		flex-shrink: 0;
-	}
-
-	.location-info {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-	}
-
-	.location,
-	.author {
+	.action-buttons {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
+	}
+
+	:global(.action-button) {
 		gap: 0.375rem;
-		font-size: 0.75rem;
 		color: hsl(var(--muted-foreground));
+		font-size: 0.875rem;
 	}
 
-	.location-text,
-	.author-text {
-		font-weight: 500;
-	}
-
-	.find-card-actions {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
+	:global(.action-button:hover) {
+		color: hsl(var(--foreground));
 	}
 
 	:global(.explore-button) {
-		white-space: nowrap;
 		font-weight: 500;
+		font-size: 0.875rem;
 	}
 
 	/* Mobile responsive */
 	@media (max-width: 768px) {
-		.find-card {
+		.post-actions {
 			flex-direction: column;
 			gap: 0.75rem;
+			align-items: stretch;
 		}
 
-		.find-card-media {
+		.action-buttons {
+			justify-content: space-around;
+		}
+
+		:global(.explore-button) {
 			width: 100%;
-			height: 120px;
-		}
-
-		.find-card-header {
-			flex-direction: column;
-			gap: 0.5rem;
-			align-items: flex-start;
-		}
-
-		.find-card-actions {
-			align-self: stretch;
 		}
 	}
 </style>

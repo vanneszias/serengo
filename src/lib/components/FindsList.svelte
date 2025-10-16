@@ -40,17 +40,13 @@
 	}
 </script>
 
-<section class="finds-list-section">
-	<div class="finds-header">
-		<h2 class="finds-title">{title}</h2>
-		<div class="finds-count">
-			{finds.length}
-			{finds.length === 1 ? 'find' : 'finds'}
-		</div>
+<section class="finds-feed">
+	<div class="feed-header">
+		<h2 class="feed-title">{title}</h2>
 	</div>
 
 	{#if finds.length > 0}
-		<div class="finds-grid">
+		<div class="feed-container">
 			{#each finds as find (find.id)}
 				<FindCard
 					id={find.id}
@@ -70,8 +66,8 @@
 		<div class="empty-state">
 			<div class="empty-icon">
 				<svg
-					width="48"
-					height="48"
+					width="64"
+					height="64"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
@@ -81,25 +77,34 @@
 					<circle cx="12" cy="10" r="3" />
 				</svg>
 			</div>
-			<h3 class="empty-title">No finds yet</h3>
+			<h3 class="empty-title">No finds discovered yet</h3>
 			<p class="empty-message">{emptyMessage}</p>
+			<div class="empty-action">
+				<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+					<path
+						d="M12 5v14M5 12h14"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+					/>
+				</svg>
+				<span>Start exploring to discover finds</span>
+			</div>
 		</div>
 	{/if}
 </section>
 
 <style>
-	.finds-list-section {
+	.finds-feed {
 		width: 100%;
 	}
 
-	.finds-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+	.feed-header {
 		margin-bottom: 1.5rem;
+		padding: 0 0.5rem;
 	}
 
-	.finds-title {
+	.feed-title {
 		font-family: 'Washington', serif;
 		font-size: 1.875rem;
 		font-weight: 700;
@@ -107,16 +112,10 @@
 		color: hsl(var(--foreground));
 	}
 
-	.finds-count {
-		font-size: 0.875rem;
-		color: hsl(var(--muted-foreground));
-		font-weight: 500;
-	}
-
-	.finds-grid {
+	.feed-container {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0;
 	}
 
 	.empty-state {
@@ -124,44 +123,79 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 3rem 1rem;
+		padding: 4rem 2rem;
 		text-align: center;
+		background: hsl(var(--card));
+		border-radius: 12px;
+		border: 1px solid hsl(var(--border));
 	}
 
 	.empty-icon {
-		margin-bottom: 1rem;
+		margin-bottom: 1.5rem;
 		color: hsl(var(--muted-foreground));
-		opacity: 0.5;
+		opacity: 0.4;
 	}
 
 	.empty-title {
-		font-size: 1.125rem;
+		font-size: 1.25rem;
 		font-weight: 600;
-		margin: 0 0 0.5rem 0;
+		margin: 0 0 0.75rem 0;
 		color: hsl(var(--foreground));
 	}
 
 	.empty-message {
 		font-size: 0.875rem;
 		color: hsl(var(--muted-foreground));
-		margin: 0;
+		margin: 0 0 1.5rem 0;
+		line-height: 1.5;
+	}
+
+	.empty-action {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		color: hsl(var(--primary));
+		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	/* Mobile responsive */
 	@media (max-width: 768px) {
-		.finds-header {
+		.feed-header {
 			flex-direction: column;
 			align-items: flex-start;
-			gap: 0.5rem;
+			gap: 0.75rem;
 			margin-bottom: 1rem;
+			padding: 0;
 		}
 
-		.finds-title {
+		.feed-title {
 			font-size: 1.5rem;
 		}
 
 		.empty-state {
-			padding: 2rem 1rem;
+			padding: 3rem 1.5rem;
+		}
+	}
+
+	/* Smooth scrolling for feed */
+	.feed-container {
+		scroll-behavior: smooth;
+	}
+
+	/* Add subtle animation for new posts */
+	:global(.find-card) {
+		animation: fadeInUp 0.4s ease-out;
+	}
+
+	@keyframes fadeInUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 </style>
