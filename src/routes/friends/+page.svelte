@@ -134,6 +134,8 @@
 	// Search users when query changes with debounce
 	let searchTimeout: ReturnType<typeof setTimeout>;
 	$effect(() => {
+		// Track searchQuery dependency explicitly
+		searchQuery;
 		clearTimeout(searchTimeout);
 		searchTimeout = setTimeout(searchUsers, 300);
 	});

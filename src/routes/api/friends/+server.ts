@@ -24,30 +24,46 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 
 		if (type === 'friends') {
 			// Get accepted friendships where user is either sender or receiver
-			friendships = await db
+			const friendshipsRaw = await db
 				.select({
 					id: friendship.id,
 					userId: friendship.userId,
 					friendId: friendship.friendId,
 					status: friendship.status,
-					createdAt: friendship.createdAt,
-					friendUsername: user.username,
-					friendProfilePictureUrl: user.profilePictureUrl
+					createdAt: friendship.createdAt
 				})
 				.from(friendship)
-				.innerJoin(
-					user,
-					or(
-						and(eq(friendship.friendId, user.id), eq(friendship.userId, locals.user.id)),
-						and(eq(friendship.userId, user.id), eq(friendship.friendId, locals.user.id))
-					)
-				)
 				.where(
 					and(
 						eq(friendship.status, status),
 						or(eq(friendship.userId, locals.user.id), eq(friendship.friendId, locals.user.id))
 					)
 				);
+
+			// Get friend details for each friendship
+			friendships = await Promise.all(
+				friendshipsRaw.map(async (f) => {
+					const friendUserId = f.userId === locals.user!.id ? f.friendId : f.userId;
+					const friendUser = await db
+						.select({
+							username: user.username,
+							profilePictureUrl: user.profilePictureUrl
+						})
+						.from(user)
+						.where(eq(user.id, friendUserId))
+						.limit(1);
+
+					return {
+						id: f.id,
+						userId: f.userId,
+						friendId: f.friendId,
+						status: f.status,
+						createdAt: f.createdAt,
+						friendUsername: friendUser[0]?.username || '',
+						friendProfilePictureUrl: friendUser[0]?.profilePictureUrl || null
+					};
+				})
+			);
 		} else if (type === 'sent') {
 			// Get friend requests sent by current user
 			friendships = await db

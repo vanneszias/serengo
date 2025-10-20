@@ -38,25 +38,22 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		}> = [];
 
 		if (userIds.length > 0) {
-			existingFriendships = await db
+			// Use a simpler approach: get all friendships involving the current user
+			// and then filter for the relevant user IDs
+			const allUserFriendships = await db
 				.select({
 					userId: friendship.userId,
 					friendId: friendship.friendId,
 					status: friendship.status
 				})
 				.from(friendship)
-				.where(
-					or(
-						and(
-							eq(friendship.userId, locals.user.id),
-							or(...userIds.map((id) => eq(friendship.friendId, id)))
-						),
-						and(
-							eq(friendship.friendId, locals.user.id),
-							or(...userIds.map((id) => eq(friendship.userId, id)))
-						)
-					)
-				);
+				.where(or(eq(friendship.userId, locals.user.id), eq(friendship.friendId, locals.user.id)));
+
+			// Filter to only include friendships with users in our search results
+			existingFriendships = allUserFriendships.filter((f) => {
+				const otherUserId = f.userId === locals.user!.id ? f.friendId : f.userId;
+				return userIds.includes(otherUserId);
+			});
 		}
 
 		// Create a map of friendship statuses
