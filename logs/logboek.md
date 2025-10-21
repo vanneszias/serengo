@@ -2,6 +2,52 @@
 
 ## Oktober 2025
 
+### 21 Oktober 2025 (Maandag) - 4 uren
+
+**Werk uitgevoerd:**
+
+- **UI Refinement & Bug Fixes**
+- Create Find Modal UI refactoring met verbeterde layout
+- Finds list en header layout updates voor betere UX
+- Friends filtering logica fixes
+- Friends en users search functionaliteit verbeteringen
+- Modal interface optimalisaties
+
+**Commits:**
+
+- aa9ed77 - UI:Refactor create find modal UI and update finds list/header layout
+- e1c5846 - fix:friends filtering
+
+**Details:**
+
+- Verbeterde modal interface met consistente styling
+- Fixed filtering logica voor vriendensysteem
+- Enhanced search functionaliteit voor gebruikers en vrienden
+- UI/UX verbeteringen voor betere gebruikerservaring
+
+---
+
+### 20 Oktober 2025 (Zondag) - 2 uren
+
+**Werk uitgevoerd:**
+
+- **Search Logic Improvements**
+- Friends en users search logica geoptimaliseerd
+- Filtering verbeteringen voor vriendschapssysteem
+- Backend search algoritmes verfijnd
+
+**Commits:**
+
+- 634ce8a - fix:logic of friends and users search
+
+**Details:**
+
+- Verbeterde zoekalgoritmes voor gebruikers
+- Geoptimaliseerde filtering voor vriendensysteem
+- Backend logica verfijning voor betere performance
+
+---
+
 ### 16 Oktober 2025 (Woensdag) - 6 uren
 
 **Werk uitgevoerd:**
@@ -17,7 +63,14 @@
 - ProfilePanel uitgebreid met Friends navigatielink
 - Type-safe implementatie met volledige error handling
 
-**Commits:** Nog niet gecommit (staged changes)
+**Commits:**
+
+- f547ee5 - add:logs
+- a01d183 - feat:friends
+- fdbd495 - add:cache for r2 storage
+- e54c4fb - feat:profile pictures
+- bee03a5 - feat:use dynamic sheet for findpreview
+- aea3249 - fix:likes;UI:find card&list
 
 **Details:**
 
@@ -46,7 +99,9 @@
 - CSP headers bijgewerkt voor video support
 - Volledige UI integratie in FindCard en FindPreview componenten
 
-**Commits:** Nog niet gecommit (staged changes)
+**Commits:**
+
+- 067e228 - feat:video player, like button, and media fallbacks
 
 **Details:**
 
@@ -267,9 +322,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 61 uren
-**Werkdagen:** 10 dagen
-**Gemiddelde uren per dag:** 6.1 uur
+**Totale geschatte uren:** 67 uren
+**Werkdagen:** 12 dagen
+**Gemiddelde uren per dag:** 5.6 uur
 
 ### Project Milestones:
 
@@ -283,6 +338,8 @@
 8. **13 Okt**: API architectuur verbetering
 9. **14 Okt**: Modern media support en social interactions
 10. **16 Okt**: Friends & Privacy System implementatie
+11. **20 Okt**: Search logic improvements
+12. **21 Okt**: UI refinement en bug fixes
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
