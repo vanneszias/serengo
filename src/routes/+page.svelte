@@ -24,6 +24,7 @@
 		profilePictureUrl?: string | null;
 		likeCount?: number;
 		isLikedByUser?: boolean;
+		isFromFriend?: boolean;
 		media: Array<{
 			id: string;
 			findId: string;
@@ -53,6 +54,7 @@
 		};
 		likeCount?: number;
 		isLiked?: boolean;
+		isFromFriend?: boolean;
 		media?: Array<{
 			type: string;
 			url: string;
@@ -102,6 +104,7 @@
 			},
 			likeCount: serverFind.likeCount,
 			isLiked: serverFind.isLikedByUser,
+			isFromFriend: serverFind.isFromFriend,
 			media: serverFind.media?.map(
 				(m: { type: string; url: string; thumbnailUrl: string | null }) => ({
 					type: m.type,
@@ -120,7 +123,7 @@
 			case 'public':
 				return allFinds.filter((find) => find.isPublic === 1);
 			case 'friends':
-				return allFinds.filter((find) => find.isPublic === 0 && find.userId !== data.user!.id);
+				return allFinds.filter((find) => find.isFromFriend === true);
 			case 'mine':
 				return allFinds.filter((find) => find.userId === data.user!.id);
 			case 'all':

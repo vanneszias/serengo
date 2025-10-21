@@ -107,7 +107,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					SELECT 1 FROM ${findLike}
 					WHERE ${findLike.findId} = ${find.id}
 					AND ${findLike.userId} = ${locals.user.id}
-				) THEN 1 ELSE 0 END`
+				) THEN 1 ELSE 0 END`,
+				isFromFriend: sql<boolean>`CASE WHEN ${
+					friendIds.length > 0
+						? sql`${find.userId} IN (${sql.join(
+								friendIds.map((id) => sql`${id}`),
+								sql`, `
+							)})`
+						: sql`FALSE`
+				} THEN 1 ELSE 0 END`
 			})
 			.from(find)
 			.innerJoin(user, eq(find.userId, user.id))
@@ -199,7 +207,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					...findItem,
 					profilePictureUrl: userProfilePictureUrl,
 					media: mediaWithSignedUrls,
-					isLikedByUser: Boolean(findItem.isLikedByUser)
+					isLikedByUser: Boolean(findItem.isLikedByUser),
+					isFromFriend: Boolean(findItem.isFromFriend)
 				};
 			})
 		);
