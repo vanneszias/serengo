@@ -26,6 +26,7 @@
 		title?: string;
 		showEmpty?: boolean;
 		emptyMessage?: string;
+		hideTitle?: boolean;
 	}
 
 	let {
@@ -33,7 +34,8 @@
 		onFindExplore,
 		title = 'Finds',
 		showEmpty = true,
-		emptyMessage = 'No finds to display'
+		emptyMessage = 'No finds to display',
+		hideTitle = false
 	}: FindsListProps = $props();
 
 	function handleFindExplore(id: string) {
@@ -42,9 +44,11 @@
 </script>
 
 <section class="finds-feed">
-	<div class="feed-header">
-		<h2 class="feed-title">{title}</h2>
-	</div>
+	{#if !hideTitle}
+		<div class="feed-header">
+			<h2 class="feed-title">{title}</h2>
+		</div>
+	{/if}
 
 	{#if finds.length > 0}
 		<div class="feed-container">
@@ -98,6 +102,7 @@
 <style>
 	.finds-feed {
 		width: 100%;
+		padding: 0 24px 24px 24px;
 	}
 
 	.feed-header {

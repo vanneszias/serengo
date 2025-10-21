@@ -1,7 +1,8 @@
 <script lang="ts">
-	import Modal from '$lib/components/Modal.svelte';
-	import Input from '$lib/components/Input.svelte';
-	import Button from '$lib/components/Button.svelte';
+	import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/sheet';
+	import { Input } from '$lib/components/input';
+	import { Label } from '$lib/components/label';
+	import { Button } from '$lib/components/button';
 	import { coordinates } from '$lib/stores/location';
 
 	interface Props {
@@ -12,7 +13,6 @@
 
 	let { isOpen, onClose, onFindCreated }: Props = $props();
 
-	// Form state
 	let title = $state('');
 	let description = $state('');
 	let latitude = $state('');
@@ -24,7 +24,6 @@
 	let isSubmitting = $state(false);
 	let uploadedMedia = $state<Array<{ type: string; url: string; thumbnailUrl: string }>>([]);
 
-	// Categories
 	const categories = [
 		{ value: 'cafe', label: 'Café' },
 		{ value: 'restaurant', label: 'Restaurant' },
@@ -35,21 +34,40 @@
 		{ value: 'other', label: 'Other' }
 	];
 
-	// Auto-fill location when modal opens
+	let showModal = $state(true);
+	let isMobile = $state(false);
+
 	$effect(() => {
-		if (isOpen && $coordinates) {
+		if (typeof window === 'undefined') return;
+
+		const checkIsMobile = () => {
+			isMobile = window.innerWidth < 768;
+		};
+
+		checkIsMobile();
+		window.addEventListener('resize', checkIsMobile);
+
+		return () => window.removeEventListener('resize', checkIsMobile);
+	});
+
+	$effect(() => {
+		if (!showModal) {
+			onClose();
+		}
+	});
+
+	$effect(() => {
+		if (showModal && $coordinates) {
 			latitude = $coordinates.latitude.toString();
 			longitude = $coordinates.longitude.toString();
 		}
 	});
 
-	// Handle file selection
 	function handleFileChange(event: Event) {
 		const target = event.target as HTMLInputElement;
 		selectedFiles = target.files;
 	}
 
-	// Upload media files
 	async function uploadMedia(): Promise<void> {
 		if (!selectedFiles || selectedFiles.length === 0) return;
 
@@ -71,7 +89,6 @@
 		uploadedMedia = result.media;
 	}
 
-	// Submit form
 	async function handleSubmit() {
 		const lat = parseFloat(latitude);
 		const lng = parseFloat(longitude);
@@ -83,12 +100,10 @@
 		isSubmitting = true;
 
 		try {
-			// Upload media first if any
 			if (selectedFiles && selectedFiles.length > 0) {
 				await uploadMedia();
 			}
 
-			// Create the find
 			const response = await fetch('/api/finds', {
 				method: 'POST',
 				headers: {
@@ -110,11 +125,8 @@
 				throw new Error('Failed to create find');
 			}
 
-			// Reset form and close modal
 			resetForm();
-			onClose();
-
-			// Notify parent about new find creation
+			showModal = false;
 			onFindCreated(new CustomEvent('findCreated', { detail: { reload: true } }));
 		} catch (error) {
 			console.error('Error creating find:', error);
@@ -133,7 +145,6 @@
 		selectedFiles = null;
 		uploadedMedia = [];
 
-		// Reset file input
 		const fileInput = document.querySelector('#media-files') as HTMLInputElement;
 		if (fileInput) {
 			fileInput.value = '';
@@ -142,291 +153,341 @@
 
 	function closeModal() {
 		resetForm();
-		onClose();
+		showModal = false;
 	}
 </script>
 
 {#if isOpen}
-	<Modal bind:showModal={isOpen} positioning="center">
-		{#snippet header()}
-			<h2>Create Find</h2>
-		{/snippet}
+	<Sheet open={showModal} onOpenChange={(open) => (showModal = open)}>
+		<SheetContent side={isMobile ? 'bottom' : 'right'} class="create-find-sheet">
+			<SheetHeader>
+				<SheetTitle>Create Find</SheetTitle>
+			</SheetHeader>
 
-		<div class="form-container">
 			<form
 				onsubmit={(e) => {
 					e.preventDefault();
 					handleSubmit();
 				}}
+				class="form"
 			>
-				<div class="form-group">
-					<label for="title">Title *</label>
-					<Input name="title" placeholder="What did you find?" required bind:value={title} />
-					<span class="char-count">{title.length}/100</span>
-				</div>
-
-				<div class="form-group">
-					<label for="description">Description</label>
-					<textarea
-						name="description"
-						placeholder="Tell us about this place..."
-						maxlength="500"
-						bind:value={description}
-					></textarea>
-					<span class="char-count">{description.length}/500</span>
-				</div>
-
-				<div class="form-group">
-					<label for="location-name">Location Name</label>
-					<Input
-						name="location-name"
-						placeholder="e.g., Café Belga, Brussels"
-						bind:value={locationName}
-					/>
-				</div>
-
-				<div class="form-row">
-					<div class="form-group">
-						<label for="latitude">Latitude *</label>
-						<Input name="latitude" type="text" required bind:value={latitude} />
+				<div class="form-content">
+					<div class="field">
+						<Label for="title">What did you find?</Label>
+						<Input name="title" placeholder="Amazing coffee shop..." required bind:value={title} />
 					</div>
-					<div class="form-group">
-						<label for="longitude">Longitude *</label>
-						<Input name="longitude" type="text" required bind:value={longitude} />
+
+					<div class="field">
+						<Label for="description">Tell us about it</Label>
+						<textarea
+							name="description"
+							placeholder="The best cappuccino in town..."
+							maxlength="500"
+							bind:value={description}
+						></textarea>
 					</div>
-				</div>
 
-				<div class="form-group">
-					<label for="category">Category</label>
-					<select name="category" bind:value={category}>
-						{#each categories as cat (cat.value)}
-							<option value={cat.value}>{cat.label}</option>
-						{/each}
-					</select>
-				</div>
+					<div class="field">
+						<Label for="location-name">Location name</Label>
+						<Input
+							name="location-name"
+							placeholder="Café Central, Brussels"
+							bind:value={locationName}
+						/>
+					</div>
 
-				<div class="form-group">
-					<label for="media-files">Photos/Videos (max 5)</label>
-					<input
-						id="media-files"
-						type="file"
-						accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
-						multiple
-						max="5"
-						onchange={handleFileChange}
-					/>
-					{#if selectedFiles && selectedFiles.length > 0}
-						<div class="file-preview">
-							{#each Array.from(selectedFiles) as file (file.name)}
-								<span class="file-name">{file.name}</span>
-							{/each}
+					<div class="field-group">
+						<div class="field">
+							<Label for="category">Category</Label>
+							<select name="category" bind:value={category} class="select">
+								{#each categories as cat (cat.value)}
+									<option value={cat.value}>{cat.label}</option>
+								{/each}
+							</select>
 						</div>
-					{/if}
+						<div class="field">
+							<Label>Privacy</Label>
+							<label class="privacy-toggle">
+								<input type="checkbox" bind:checked={isPublic} />
+								<span>{isPublic ? 'Public' : 'Private'}</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="field">
+						<Label for="media-files">Add photo or video</Label>
+						<div class="file-upload">
+							<input
+								id="media-files"
+								type="file"
+								accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+								onchange={handleFileChange}
+								class="file-input"
+							/>
+							<div class="file-content">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+									<path
+										d="M14.5 4H6A2 2 0 0 0 4 6V18A2 2 0 0 0 6 20H18A2 2 0 0 0 20 18V9.5L14.5 4Z"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+									<path
+										d="M14 4V10H20"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								<span>Click to upload</span>
+							</div>
+						</div>
+						{#if selectedFiles && selectedFiles.length > 0}
+							<div class="file-selected">
+								<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+									<path
+										d="M14.5 4H6A2 2 0 0 0 4 6V18A2 2 0 0 0 6 20H18A2 2 0 0 0 20 18V9.5L14.5 4Z"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+									<path
+										d="M14 4V10H20"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								<span>{selectedFiles[0].name}</span>
+							</div>
+						{/if}
+					</div>
+
+					<div class="field-group">
+						<div class="field">
+							<Label for="latitude">Latitude</Label>
+							<Input name="latitude" type="text" required bind:value={latitude} />
+						</div>
+						<div class="field">
+							<Label for="longitude">Longitude</Label>
+							<Input name="longitude" type="text" required bind:value={longitude} />
+						</div>
+					</div>
 				</div>
 
-				<div class="form-group">
-					<label class="privacy-toggle">
-						<input type="checkbox" bind:checked={isPublic} />
-						<span class="checkmark"></span>
-						Make this find public
-					</label>
-					<p class="privacy-help">
-						{isPublic ? 'Everyone can see this find' : 'Only your friends can see this find'}
-					</p>
-				</div>
-
-				<div class="form-actions">
-					<button
-						type="button"
-						class="button secondary"
-						onclick={closeModal}
-						disabled={isSubmitting}
-					>
+				<div class="actions">
+					<Button variant="ghost" type="button" onclick={closeModal} disabled={isSubmitting}>
 						Cancel
-					</button>
+					</Button>
 					<Button type="submit" disabled={isSubmitting || !title.trim()}>
 						{isSubmitting ? 'Creating...' : 'Create Find'}
 					</Button>
 				</div>
 			</form>
-		</div>
-	</Modal>
+		</SheetContent>
+	</Sheet>
 {/if}
 
 <style>
-	.form-container {
-		padding: 24px;
-		max-height: 70vh;
+	:global(.create-find-sheet) {
+		padding: 0 !important;
+		width: 100%;
+		max-width: 500px;
+		height: 100vh;
+		border-radius: 0;
+	}
+
+	@media (max-width: 767px) {
+		:global(.create-find-sheet) {
+			height: 90vh;
+			border-radius: 12px 12px 0 0;
+		}
+	}
+
+	.form {
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.form-content {
+		flex: 1;
+		padding: 1.5rem;
 		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
 	}
 
-	.form-group {
-		margin-bottom: 20px;
+	.field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
 
-	.form-row {
+	.field-group {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 16px;
+		gap: 1rem;
 	}
 
-	label {
-		display: block;
-		margin-bottom: 8px;
-		font-weight: 500;
-		color: #333;
-		font-size: 0.9rem;
-		font-family: 'Washington', serif;
+	@media (max-width: 640px) {
+		.field-group {
+			grid-template-columns: 1fr;
+		}
 	}
 
 	textarea {
-		width: 100%;
-		padding: 1.25rem 1.5rem;
-		border: none;
-		border-radius: 2rem;
-		background-color: #e0e0e0;
-		font-size: 1rem;
-		color: #333;
-		outline: none;
-		transition: background-color 0.2s ease;
-		resize: vertical;
-		min-height: 100px;
-		font-family: inherit;
-	}
-
-	textarea:focus {
-		background-color: #d5d5d5;
-	}
-
-	textarea::placeholder {
-		color: #888;
-	}
-
-	select {
-		width: 100%;
-		padding: 1.25rem 1.5rem;
-		border: none;
-		border-radius: 2rem;
-		background-color: #e0e0e0;
-		font-size: 1rem;
-		color: #333;
-		outline: none;
-		transition: background-color 0.2s ease;
-		cursor: pointer;
-	}
-
-	select:focus {
-		background-color: #d5d5d5;
-	}
-
-	input[type='file'] {
-		width: 100%;
-		padding: 12px;
-		border: 2px dashed #ccc;
+		min-height: 80px;
+		padding: 0.75rem;
+		border: 1px solid hsl(var(--border));
 		border-radius: 8px;
-		background-color: #f9f9f9;
-		cursor: pointer;
+		background: hsl(var(--background));
+		font-family: inherit;
+		font-size: 0.875rem;
+		resize: vertical;
+		outline: none;
 		transition: border-color 0.2s ease;
 	}
 
-	input[type='file']:hover {
-		border-color: #999;
+	textarea:focus {
+		border-color: hsl(var(--primary));
+		box-shadow: 0 0 0 1px hsl(var(--primary));
 	}
 
-	.char-count {
-		font-size: 0.8rem;
-		color: #666;
-		text-align: right;
-		display: block;
-		margin-top: 4px;
+	textarea::placeholder {
+		color: hsl(var(--muted-foreground));
 	}
 
-	.file-preview {
-		margin-top: 8px;
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
+	.select {
+		padding: 0.75rem;
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		background: hsl(var(--background));
+		font-size: 0.875rem;
+		outline: none;
+		transition: border-color 0.2s ease;
+		cursor: pointer;
 	}
 
-	.file-name {
-		background-color: #f0f0f0;
-		padding: 4px 8px;
-		border-radius: 12px;
-		font-size: 0.8rem;
-		color: #666;
+	.select:focus {
+		border-color: hsl(var(--primary));
+		box-shadow: 0 0 0 1px hsl(var(--primary));
 	}
 
 	.privacy-toggle {
 		display: flex;
 		align-items: center;
+		gap: 0.5rem;
 		cursor: pointer;
-		font-weight: normal;
+		font-size: 0.875rem;
+		padding: 0.75rem;
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		background: hsl(var(--background));
+		transition: background-color 0.2s ease;
+	}
+
+	.privacy-toggle:hover {
+		background: hsl(var(--muted));
 	}
 
 	.privacy-toggle input[type='checkbox'] {
-		margin-right: 8px;
-		width: 18px;
-		height: 18px;
+		width: 16px;
+		height: 16px;
+		accent-color: hsl(var(--primary));
 	}
 
-	.privacy-help {
-		font-size: 0.8rem;
-		color: #666;
-		margin-top: 4px;
-		margin-left: 26px;
-	}
-
-	.form-actions {
-		display: flex;
-		gap: 12px;
-		margin-top: 32px;
-		padding-top: 20px;
-		border-top: 1px solid #e5e5e5;
-	}
-
-	.button {
-		flex: 1;
-		padding: 1.25rem 2rem;
-		border: none;
-		border-radius: 2rem;
-		font-size: 1rem;
-		font-weight: 500;
+	.file-upload {
+		position: relative;
+		border: 2px dashed hsl(var(--border));
+		border-radius: 8px;
+		background: hsl(var(--muted) / 0.3);
 		transition: all 0.2s ease;
 		cursor: pointer;
-		height: 3.5rem;
 	}
 
-	.button:disabled {
-		opacity: 0.6;
-		cursor: not-allowed;
-		transform: none;
+	.file-upload:hover {
+		border-color: hsl(var(--primary));
+		background: hsl(var(--muted) / 0.5);
 	}
 
-	.button:disabled:hover {
-		transform: none;
+	.file-input {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		opacity: 0;
+		cursor: pointer;
 	}
 
-	.button.secondary {
-		background-color: #6c757d;
-		color: white;
+	.file-content {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem;
+		text-align: center;
+		gap: 0.5rem;
+		color: hsl(var(--muted-foreground));
 	}
 
-	.button.secondary:hover:not(:disabled) {
-		background-color: #5a6268;
-		transform: translateY(-1px);
+	.file-content span {
+		font-size: 0.875rem;
+	}
+
+	.file-selected {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.75rem;
+		background: hsl(var(--muted));
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		font-size: 0.875rem;
+		margin-top: 0.5rem;
+	}
+
+	.file-selected svg {
+		color: hsl(var(--primary));
+		flex-shrink: 0;
+	}
+
+	.file-selected span {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.actions {
+		display: flex;
+		gap: 1rem;
+		padding: 1.5rem;
+		border-top: 1px solid hsl(var(--border));
+		background: hsl(var(--background));
+	}
+
+	.actions :global(button) {
+		flex: 1;
 	}
 
 	@media (max-width: 640px) {
-		.form-container {
-			padding: 16px;
+		.form-content {
+			padding: 1rem;
+			gap: 1rem;
 		}
 
-		.form-row {
-			grid-template-columns: 1fr;
-		}
-
-		.form-actions {
+		.actions {
+			padding: 1rem;
 			flex-direction: column;
+		}
+
+		.actions :global(button) {
+			flex: none;
 		}
 	}
 </style>

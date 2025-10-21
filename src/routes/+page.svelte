@@ -220,19 +220,22 @@
 		</div>
 
 		<div class="finds-section">
-			<div class="finds-header">
-				<div class="finds-title-section">
-					<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+			<div class="finds-sticky-header">
+				<div class="finds-header-content">
+					<div class="finds-title-section">
+						<h2 class="finds-title">Finds</h2>
+						<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+					</div>
+					<Button onclick={openCreateModal} class="create-find-button">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
+							<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
+							<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
+						</svg>
+						Create Find
+					</Button>
 				</div>
-				<FindsList {finds} onFindExplore={handleFindExplore} />
-				<Button onclick={openCreateModal} class="create-find-button">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
-						<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
-						<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
-					</svg>
-					Create Find
-				</Button>
 			</div>
+			<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
 		</div>
 	</main>
 
@@ -288,27 +291,44 @@
 	.finds-section {
 		background: white;
 		border-radius: 12px;
-		padding: 24px;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		position: relative;
 	}
 
-	.finds-header {
-		position: relative;
+	.finds-sticky-header {
+		position: sticky;
+		top: 0;
+		z-index: 50;
+		background: white;
+		border-bottom: 1px solid hsl(var(--border));
+		padding: 24px 24px 16px 24px;
+		border-radius: 12px 12px 0 0;
+	}
+
+	.finds-header-content {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
 	}
 
 	.finds-title-section {
 		display: flex;
-		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 20px;
+		gap: 1rem;
+		flex: 1;
+	}
+
+	.finds-title {
+		font-family: 'Washington', serif;
+		font-size: 1.875rem;
+		font-weight: 700;
+		margin: 0;
+		color: hsl(var(--foreground));
 	}
 
 	:global(.create-find-button) {
-		position: absolute;
-		top: 0;
-		right: 0;
-		z-index: 10;
+		flex-shrink: 0;
 	}
 
 	.fab {
@@ -341,14 +361,25 @@
 			gap: 16px;
 		}
 
-		.finds-section {
-			padding: 16px;
+		.finds-sticky-header {
+			padding: 16px 16px 12px 16px;
+		}
+
+		.finds-header-content {
+			flex-direction: column;
+			align-items: stretch;
+			gap: 12px;
 		}
 
 		.finds-title-section {
-			flex-direction: column;
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
 			gap: 12px;
-			align-items: stretch;
+		}
+
+		.finds-title {
+			font-size: 1.5rem;
 		}
 
 		:global(.create-find-button) {
@@ -369,8 +400,8 @@
 			padding: 12px;
 		}
 
-		.finds-section {
-			padding: 12px;
+		.finds-sticky-header {
+			padding: 12px 12px 8px 12px;
 		}
 	}
 </style>
