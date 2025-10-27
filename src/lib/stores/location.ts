@@ -43,6 +43,7 @@ export const shouldZoomToLocation = derived(
 	locationStore,
 	($location) => $location.shouldZoomToLocation
 );
+export const isWatching = derived(locationStore, ($location) => $location.isWatching);
 
 // Location actions
 export const locationActions = {

@@ -5,6 +5,7 @@
 	import { page } from '$app/state';
 	import { Toaster } from '$lib/components/sonner/index.js';
 	import { Skeleton } from '$lib/components/skeleton';
+	import LocationManager from '$lib/components/LocationManager.svelte';
 
 	let { children, data } = $props();
 	let isLoginRoute = $derived(page.url.pathname.startsWith('/login'));
@@ -31,6 +32,11 @@
 </svelte:head>
 
 <Toaster />
+
+<!-- Auto-start location watching for authenticated users -->
+{#if data?.user && !isLoginRoute}
+	<LocationManager autoStart={true} />
+{/if}
 
 {#if showHeader && data.user}
 	<Header user={data.user} />

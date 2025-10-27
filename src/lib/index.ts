@@ -8,6 +8,7 @@ export { default as Header } from './components/Header.svelte';
 export { default as Modal } from './components/Modal.svelte';
 export { default as Map } from './components/Map.svelte';
 export { default as LocationButton } from './components/LocationButton.svelte';
+export { default as LocationManager } from './components/LocationManager.svelte';
 export { default as FindCard } from './components/FindCard.svelte';
 export { default as FindsList } from './components/FindsList.svelte';
 
@@ -24,6 +25,7 @@ export {
 	locationError,
 	isLocationLoading,
 	hasLocationAccess,
+	isWatching,
 	getMapCenter,
 	getMapZoom
 } from './stores/location';
