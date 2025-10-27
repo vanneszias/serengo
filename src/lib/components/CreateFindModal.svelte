@@ -4,6 +4,8 @@
 	import { Label } from '$lib/components/label';
 	import { Button } from '$lib/components/button';
 	import { coordinates } from '$lib/stores/location';
+	import POISearch from './POISearch.svelte';
+	import type { PlaceResult } from '$lib/utils/places';
 
 	interface Props {
 		isOpen: boolean;
@@ -23,6 +25,7 @@
 	let selectedFiles = $state<FileList | null>(null);
 	let isSubmitting = $state(false);
 	let uploadedMedia = $state<Array<{ type: string; url: string; thumbnailUrl: string }>>([]);
+	let useManualLocation = $state(false);
 
 	const categories = [
 		{ value: 'cafe', label: 'Café' },
@@ -136,14 +139,31 @@
 		}
 	}
 
+	function handlePlaceSelected(place: PlaceResult) {
+		locationName = place.name;
+		latitude = place.latitude.toString();
+		longitude = place.longitude.toString();
+	}
+
+	function toggleLocationMode() {
+		useManualLocation = !useManualLocation;
+		if (!useManualLocation && $coordinates) {
+			latitude = $coordinates.latitude.toString();
+			longitude = $coordinates.longitude.toString();
+		}
+	}
+
 	function resetForm() {
 		title = '';
 		description = '';
 		locationName = '';
+		latitude = '';
+		longitude = '';
 		category = 'cafe';
 		isPublic = true;
 		selectedFiles = null;
 		uploadedMedia = [];
+		useManualLocation = false;
 
 		const fileInput = document.querySelector('#media-files') as HTMLInputElement;
 		if (fileInput) {
@@ -187,13 +207,31 @@
 						></textarea>
 					</div>
 
-					<div class="field">
-						<Label for="location-name">Location name</Label>
-						<Input
-							name="location-name"
-							placeholder="Café Central, Brussels"
-							bind:value={locationName}
-						/>
+					<div class="location-section">
+						<div class="location-header">
+							<Label>Location</Label>
+							<button type="button" onclick={toggleLocationMode} class="toggle-button">
+								{useManualLocation ? 'Use Search' : 'Manual Entry'}
+							</button>
+						</div>
+
+						{#if useManualLocation}
+							<div class="field">
+								<Label for="location-name">Location name</Label>
+								<Input
+									name="location-name"
+									placeholder="Café Central, Brussels"
+									bind:value={locationName}
+								/>
+							</div>
+						{:else}
+							<POISearch
+								onPlaceSelected={handlePlaceSelected}
+								placeholder="Search for cafés, restaurants, landmarks..."
+								label=""
+								showNearbyButton={true}
+							/>
+						{/if}
 					</div>
 
 					<div class="field-group">
@@ -267,16 +305,33 @@
 						{/if}
 					</div>
 
-					<div class="field-group">
-						<div class="field">
-							<Label for="latitude">Latitude</Label>
-							<Input name="latitude" type="text" required bind:value={latitude} />
+					{#if useManualLocation || (!latitude && !longitude)}
+						<div class="field-group">
+							<div class="field">
+								<Label for="latitude">Latitude</Label>
+								<Input name="latitude" type="text" required bind:value={latitude} />
+							</div>
+							<div class="field">
+								<Label for="longitude">Longitude</Label>
+								<Input name="longitude" type="text" required bind:value={longitude} />
+							</div>
 						</div>
-						<div class="field">
-							<Label for="longitude">Longitude</Label>
-							<Input name="longitude" type="text" required bind:value={longitude} />
+					{:else if latitude && longitude}
+						<div class="coordinates-display">
+							<Label>Selected coordinates</Label>
+							<div class="coordinates-info">
+								<span class="coordinate">Lat: {parseFloat(latitude).toFixed(6)}</span>
+								<span class="coordinate">Lng: {parseFloat(longitude).toFixed(6)}</span>
+								<button
+									type="button"
+									onclick={() => (useManualLocation = true)}
+									class="edit-coords-button"
+								>
+									Edit
+								</button>
+							</div>
 						</div>
-					</div>
+					{/if}
 				</div>
 
 				<div class="actions">
@@ -473,6 +528,73 @@
 
 	.actions :global(button) {
 		flex: 1;
+	}
+
+	.location-section {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.location-header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	.toggle-button {
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+		height: auto;
+		background: transparent;
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		color: hsl(var(--foreground));
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.toggle-button:hover {
+		background: hsl(var(--muted));
+	}
+
+	.coordinates-display {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.coordinates-info {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		padding: 0.75rem;
+		background: hsl(var(--muted) / 0.5);
+		border: 1px solid hsl(var(--border));
+		border-radius: 8px;
+		font-size: 0.875rem;
+	}
+
+	.coordinate {
+		color: hsl(var(--muted-foreground));
+		font-family: monospace;
+	}
+
+	.edit-coords-button {
+		margin-left: auto;
+		font-size: 0.75rem;
+		padding: 0.25rem 0.5rem;
+		height: auto;
+		background: transparent;
+		border: 1px solid hsl(var(--border));
+		border-radius: 6px;
+		color: hsl(var(--foreground));
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.edit-coords-button:hover {
+		background: hsl(var(--muted));
 	}
 
 	@media (max-width: 640px) {
