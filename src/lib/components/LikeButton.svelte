@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { Button } from '$lib/components/button';
 	import { Heart } from '@lucide/svelte';
-	import { toast } from 'svelte-sonner';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
+	import { writable } from 'svelte/store';
 
 	interface Props {
 		findId: string;
@@ -19,59 +21,66 @@
 		class: className = ''
 	}: Props = $props();
 
-	// Track the source of truth - server state
-	let serverIsLiked = $state(isLiked);
-	let serverLikeCount = $state(likeCount);
+	// Local state stores for this like button
+	const likeState = writable({
+		isLiked: isLiked,
+		likeCount: likeCount,
+		isLoading: false
+	});
 
-	// Track optimistic state during loading
-	let isLoading = $state(false);
-	let optimisticIsLiked = $state(isLiked);
-	let optimisticLikeCount = $state(likeCount);
+	let apiSync: any = null;
 
-	// Derived state for display
-	let displayIsLiked = $derived(isLoading ? optimisticIsLiked : serverIsLiked);
-	let displayLikeCount = $derived(isLoading ? optimisticLikeCount : serverLikeCount);
+	// Initialize API sync and subscribe to global state
+	onMount(async () => {
+		if (browser) {
+			try {
+				// Dynamically import the API sync
+				const module = await import('$lib/stores/api-sync');
+				apiSync = module.apiSync;
+
+				// Initialize the find's like state with props data
+				apiSync.setEntityState('find', findId, {
+					id: findId,
+					isLikedByUser: isLiked,
+					likeCount: likeCount,
+					// Minimal data needed for like functionality
+					title: '',
+					latitude: '',
+					longitude: '',
+					isPublic: true,
+					createdAt: new Date(),
+					userId: '',
+					username: '',
+					isFromFriend: false
+				});
+
+				// Subscribe to global state for this find
+				const globalLikeState = apiSync.subscribeFindLikes(findId);
+				globalLikeState.subscribe((state: any) => {
+					likeState.set({
+						isLiked: state.isLiked,
+						likeCount: state.likeCount,
+						isLoading: state.isLoading
+					});
+				});
+			} catch (error) {
+				console.error('Failed to initialize API sync:', error);
+			}
+		}
+	});
 
 	async function toggleLike() {
-		if (isLoading) return;
+		if (!apiSync || !browser) return;
 
-		// Set optimistic state
-		optimisticIsLiked = !serverIsLiked;
-		optimisticLikeCount = serverLikeCount + (optimisticIsLiked ? 1 : -1);
-		isLoading = true;
+		const currentState = likeState;
+		if (currentState && (currentState as any).isLoading) return;
 
 		try {
-			const method = optimisticIsLiked ? 'POST' : 'DELETE';
-			const response = await fetch(`/api/finds/${findId}/like`, {
-				method,
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => ({}));
-				throw new Error(errorData.message || `HTTP ${response.status}`);
-			}
-
-			const result = await response.json();
-
-			// Update server state with response
-			serverIsLiked = result.isLiked;
-			serverLikeCount = result.likeCount;
-		} catch (error: unknown) {
-			console.error('Error updating like:', error);
-			toast.error('Failed to update like. Please try again.');
-		} finally {
-			isLoading = false;
+			await apiSync.toggleLike(findId);
+		} catch (error) {
+			console.error('Failed to toggle like:', error);
 		}
 	}
-
-	// Update server state when props change (from parent component)
-	$effect(() => {
-		serverIsLiked = isLiked;
-		serverLikeCount = likeCount;
-	});
 </script>
 
 <Button
@@ -79,22 +88,22 @@
 	{size}
 	class="group gap-1.5 {className}"
 	onclick={toggleLike}
-	disabled={isLoading}
+	disabled={$likeState.isLoading}
 >
 	<Heart
-		class="h-4 w-4 transition-all duration-200 {displayIsLiked
+		class="h-4 w-4 transition-all duration-200 {$likeState.isLiked
 			? 'scale-110 fill-red-500 text-red-500'
-			: 'text-gray-500 group-hover:scale-105 group-hover:text-red-400'} {isLoading
+			: 'text-gray-500 group-hover:scale-105 group-hover:text-red-400'} {$likeState.isLoading
 			? 'animate-pulse'
 			: ''}"
 	/>
-	{#if displayLikeCount > 0}
+	{#if $likeState.likeCount > 0}
 		<span
-			class="text-sm font-medium transition-colors {displayIsLiked
+			class="text-sm font-medium transition-colors {$likeState.isLiked
 				? 'text-red-500'
 				: 'text-gray-500 group-hover:text-red-400'}"
 		>
-			{displayLikeCount}
+			{$likeState.likeCount}
 		</span>
 	{/if}
 </Button>

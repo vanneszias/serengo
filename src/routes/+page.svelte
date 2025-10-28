@@ -7,6 +7,8 @@
 	import type { PageData } from './$types';
 	import { coordinates } from '$lib/stores/location';
 	import { Button } from '$lib/components/button';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	// Server response type
 	interface ServerFind {
@@ -91,6 +93,62 @@
 	let showCreateModal = $state(false);
 	let selectedFind: FindPreviewData | null = $state(null);
 	let currentFilter = $state('all');
+
+	// Initialize API sync with server data on mount
+	onMount(async () => {
+		if (browser && data.finds && data.finds.length > 0) {
+			// Dynamically import the API sync to avoid SSR issues
+			const { apiSync } = await import('$lib/stores/api-sync');
+
+			// Define the FindState interface locally
+			interface FindState {
+				id: string;
+				title: string;
+				description?: string;
+				latitude: string;
+				longitude: string;
+				locationName?: string;
+				category?: string;
+				isPublic: boolean;
+				createdAt: Date;
+				userId: string;
+				username: string;
+				profilePictureUrl?: string;
+				media: Array<{
+					id: string;
+					findId: string;
+					type: string;
+					url: string;
+					thumbnailUrl: string | null;
+					orderIndex: number | null;
+				}>;
+				isLikedByUser: boolean;
+				likeCount: number;
+				isFromFriend: boolean;
+			}
+
+			const findStates: FindState[] = data.finds.map((serverFind: ServerFind) => ({
+				id: serverFind.id,
+				title: serverFind.title,
+				description: serverFind.description,
+				latitude: serverFind.latitude,
+				longitude: serverFind.longitude,
+				locationName: serverFind.locationName,
+				category: serverFind.category,
+				isPublic: Boolean(serverFind.isPublic),
+				createdAt: new Date(serverFind.createdAt),
+				userId: serverFind.userId,
+				username: serverFind.username,
+				profilePictureUrl: serverFind.profilePictureUrl || undefined,
+				media: serverFind.media,
+				isLikedByUser: Boolean(serverFind.isLikedByUser),
+				likeCount: serverFind.likeCount || 0,
+				isFromFriend: Boolean(serverFind.isFromFriend)
+			}));
+
+			apiSync.initializeFindData(findStates);
+		}
+	});
 
 	// All finds - convert server format to component format
 	let allFinds = $derived(
