@@ -6,11 +6,20 @@
 	import { Toaster } from '$lib/components/sonner/index.js';
 	import { Skeleton } from '$lib/components/skeleton';
 	import LocationManager from '$lib/components/LocationManager.svelte';
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	let { children, data } = $props();
 	let isLoginRoute = $derived(page.url.pathname.startsWith('/login'));
 	let showHeader = $derived(!isLoginRoute && data?.user);
-	let isLoading = $derived(!isLoginRoute && !data?.user && data !== null);
+	let isLoading = $state(false);
+
+	// Handle loading state only on client to prevent hydration mismatch
+	onMount(() => {
+		if (browser) {
+			isLoading = !isLoginRoute && !data?.user && data !== null;
+		}
+	});
 </script>
 
 <svelte:head>
