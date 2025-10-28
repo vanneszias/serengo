@@ -158,7 +158,40 @@ class APISync {
 	}
 
 	/**
-	 * Initialize entity state with server data
+	 * Check if entity state exists
+	 */
+	hasEntityState(entityType: string, entityId: string): boolean {
+		const store = this.getEntityStore(entityType);
+		let exists = false;
+
+		const unsubscribe = store.subscribe(($entities) => {
+			exists = $entities.has(entityId);
+		});
+		unsubscribe();
+
+		return exists;
+	}
+
+	/**
+	 * Get current entity state
+	 */
+	getEntityState<T>(entityType: string, entityId: string): T | null {
+		const store = this.getEntityStore(entityType);
+		let currentState: T | null = null;
+
+		const unsubscribe = store.subscribe(($entities) => {
+			const entity = $entities.get(entityId);
+			if (entity?.data) {
+				currentState = entity.data as T;
+			}
+		});
+		unsubscribe();
+
+		return currentState;
+	}
+
+	/**
+	 * Initialize entity state with server data (only if no existing state)
 	 */
 	setEntityState<T>(entityType: string, entityId: string, data: T, isLoading = false): void {
 		const store = this.getEntityStore(entityType);
@@ -173,6 +206,15 @@ class APISync {
 			});
 			return newEntities;
 		});
+	}
+
+	/**
+	 * Initialize entity state only if it doesn't exist yet
+	 */
+	initializeEntityState<T>(entityType: string, entityId: string, data: T, isLoading = false): void {
+		if (!this.hasEntityState(entityType, entityId)) {
+			this.setEntityState(entityType, entityId, data, isLoading);
+		}
 	}
 
 	/**
@@ -426,11 +468,11 @@ class APISync {
 	}
 
 	/**
-	 * Initialize find data from server
+	 * Initialize find data from server (only if no existing state)
 	 */
 	initializeFindData(finds: FindState[]): void {
 		for (const find of finds) {
-			this.setEntityState('find', find.id, find);
+			this.initializeEntityState('find', find.id, find);
 		}
 	}
 

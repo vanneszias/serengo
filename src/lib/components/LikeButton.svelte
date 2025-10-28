@@ -21,7 +21,7 @@
 		class: className = ''
 	}: Props = $props();
 
-	// Local state stores for this like button
+	// Local state stores for this like button - start with props but will be overridden by global state
 	const likeState = writable({
 		isLiked: isLiked,
 		likeCount: likeCount,
@@ -38,21 +38,30 @@
 				const module = await import('$lib/stores/api-sync');
 				apiSync = module.apiSync;
 
-				// Initialize the find's like state with props data
-				apiSync.setEntityState('find', findId, {
-					id: findId,
-					isLikedByUser: isLiked,
-					likeCount: likeCount,
-					// Minimal data needed for like functionality
-					title: '',
-					latitude: '',
-					longitude: '',
-					isPublic: true,
-					createdAt: new Date(),
-					userId: '',
-					username: '',
-					isFromFriend: false
-				});
+				// Check if global state already exists for this find
+				const existingState = apiSync.getEntityState('find', findId);
+
+				if (existingState) {
+					// Use existing global state - it's more current than props
+					console.log(`Using existing global state for find ${findId}`, existingState);
+				} else {
+					// Initialize with minimal data only if no global state exists
+					console.log(`Initializing new minimal state for find ${findId}`);
+					apiSync.setEntityState('find', findId, {
+						id: findId,
+						isLikedByUser: isLiked,
+						likeCount: likeCount,
+						// Minimal data needed for like functionality
+						title: '',
+						latitude: '',
+						longitude: '',
+						isPublic: true,
+						createdAt: new Date(),
+						userId: '',
+						username: '',
+						isFromFriend: false
+					});
+				}
 
 				// Subscribe to global state for this find
 				const globalLikeState = apiSync.subscribeFindLikes(findId);
