@@ -2,7 +2,7 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/card';
 	import { Button } from '$lib/components/button';
 	import { Input } from '$lib/components/input';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/avatar';
+	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
 	import { Badge } from '$lib/components/badge';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
@@ -184,10 +184,10 @@
 						<div class="user-grid">
 							{#each friends as friend (friend.id)}
 								<div class="user-card">
-									<Avatar>
-										<AvatarImage src={friend.friendProfilePictureUrl} alt={friend.friendUsername} />
-										<AvatarFallback>{friend.friendUsername.charAt(0).toUpperCase()}</AvatarFallback>
-									</Avatar>
+									<ProfilePicture
+										username={friend.friendUsername}
+										profilePictureUrl={friend.friendProfilePictureUrl}
+									/>
 									<div class="user-info">
 										<span class="username">{friend.friendUsername}</span>
 										<Badge variant="secondary">Friend</Badge>
@@ -218,15 +218,10 @@
 							<div class="user-grid">
 								{#each receivedRequests as request (request.id)}
 									<div class="user-card">
-										<Avatar>
-											<AvatarImage
-												src={request.friendProfilePictureUrl}
-												alt={request.friendUsername}
-											/>
-											<AvatarFallback
-												>{request.friendUsername.charAt(0).toUpperCase()}</AvatarFallback
-											>
-										</Avatar>
+										<ProfilePicture
+											username={request.friendUsername}
+											profilePictureUrl={request.friendProfilePictureUrl}
+										/>
 										<div class="user-info">
 											<span class="username">{request.friendUsername}</span>
 											<Badge variant="outline">Pending</Badge>
@@ -264,15 +259,10 @@
 							<div class="user-grid">
 								{#each sentRequests as request (request.id)}
 									<div class="user-card">
-										<Avatar>
-											<AvatarImage
-												src={request.friendProfilePictureUrl}
-												alt={request.friendUsername}
-											/>
-											<AvatarFallback
-												>{request.friendUsername.charAt(0).toUpperCase()}</AvatarFallback
-											>
-										</Avatar>
+										<ProfilePicture
+											username={request.friendUsername}
+											profilePictureUrl={request.friendProfilePictureUrl}
+										/>
 										<div class="user-info">
 											<span class="username">{request.friendUsername}</span>
 											<Badge variant="secondary">Sent</Badge>
@@ -305,10 +295,10 @@
 								<div class="user-grid">
 									{#each searchResults as user (user.id)}
 										<div class="user-card">
-											<Avatar>
-												<AvatarImage src={user.profilePictureUrl} alt={user.username} />
-												<AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
-											</Avatar>
+											<ProfilePicture
+												username={user.username}
+												profilePictureUrl={user.profilePictureUrl}
+											/>
 											<div class="user-info">
 												<span class="username">{user.username}</span>
 												{#if user.friendshipStatus === 'accepted'}

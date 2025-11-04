@@ -7,8 +7,8 @@
 		DropdownMenuSeparator,
 		DropdownMenuTrigger
 	} from './dropdown-menu';
-	import { Avatar, AvatarFallback, AvatarImage } from './avatar';
 	import { Skeleton } from './skeleton';
+	import ProfilePicture from './ProfilePicture.svelte';
 	import ProfilePictureSheet from './ProfilePictureSheet.svelte';
 
 	interface Props {
@@ -22,9 +22,6 @@
 
 	let showProfilePictureSheet = $state(false);
 
-	// Get the first letter of username for avatar
-	const initial = username.charAt(0).toUpperCase();
-
 	function openProfilePictureSheet() {
 		showProfilePictureSheet = true;
 	}
@@ -36,18 +33,7 @@
 
 <DropdownMenu>
 	<DropdownMenuTrigger class="profile-trigger">
-		{#if loading}
-			<Skeleton class="h-10 w-10 rounded-full" />
-		{:else}
-			<Avatar class="profile-avatar">
-				{#if profilePictureUrl}
-					<AvatarImage src={profilePictureUrl} alt={username} />
-				{/if}
-				<AvatarFallback class="profile-avatar-fallback">
-					{initial}
-				</AvatarFallback>
-			</Avatar>
-		{/if}
+		<ProfilePicture {username} {profilePictureUrl} {loading} class="profile-avatar" />
 	</DropdownMenuTrigger>
 
 	<DropdownMenuContent align="end" class="profile-dropdown-content">
@@ -142,15 +128,6 @@
 	:global(.profile-avatar) {
 		width: 40px;
 		height: 40px;
-	}
-
-	:global(.profile-avatar-fallback) {
-		background: black;
-		color: white;
-		font-weight: 600;
-		font-size: 16px;
-		border: 2px solid #fff;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 	}
 
 	:global(.profile-dropdown-content) {

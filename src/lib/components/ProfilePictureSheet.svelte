@@ -2,7 +2,7 @@
 	import { invalidateAll } from '$app/navigation';
 	import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './sheet';
 	import { Button } from './button';
-	import { Avatar, AvatarFallback, AvatarImage } from './avatar';
+	import ProfilePicture from './ProfilePicture.svelte';
 
 	interface Props {
 		userId: string;
@@ -18,8 +18,6 @@
 	let isUploading = $state(false);
 	let isDeleting = $state(false);
 	let showModal = $state(true);
-
-	const initial = username.charAt(0).toUpperCase();
 
 	// Close modal when showModal changes to false
 	$effect(() => {
@@ -118,14 +116,7 @@
 
 		<div class="profile-picture-content">
 			<div class="current-avatar">
-				<Avatar class="large-avatar">
-					{#if profilePictureUrl}
-						<AvatarImage src={profilePictureUrl} alt={username} />
-					{/if}
-					<AvatarFallback class="large-avatar-fallback">
-						{initial}
-					</AvatarFallback>
-				</Avatar>
+				<ProfilePicture {username} {profilePictureUrl} size="xl" class="large-avatar" />
 			</div>
 
 			<div class="upload-section">
@@ -188,15 +179,6 @@
 	:global(.large-avatar) {
 		width: 120px;
 		height: 120px;
-	}
-
-	:global(.large-avatar-fallback) {
-		background: black;
-		color: white;
-		font-weight: 600;
-		font-size: 48px;
-		border: 4px solid #fff;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 	}
 
 	.upload-section {

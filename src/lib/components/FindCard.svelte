@@ -3,7 +3,7 @@
 	import { Badge } from '$lib/components/badge';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-	import { Avatar, AvatarFallback, AvatarImage } from '$lib/components/avatar';
+	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
 	import { MoreHorizontal, MessageCircle, Share } from '@lucide/svelte';
 
 	interface FindCardProps {
@@ -42,24 +42,17 @@
 	function handleExplore() {
 		onExplore?.(id);
 	}
-
-	function getUserInitials(username: string): string {
-		return username.slice(0, 2).toUpperCase();
-	}
 </script>
 
 <div class="find-card">
 	<!-- Post Header -->
 	<div class="post-header">
 		<div class="user-info">
-			<Avatar class="avatar">
-				{#if user.profilePictureUrl}
-					<AvatarImage src={user.profilePictureUrl} alt={user.username} />
-				{/if}
-				<AvatarFallback class="avatar-fallback">
-					{getUserInitials(user.username)}
-				</AvatarFallback>
-			</Avatar>
+			<ProfilePicture
+				username={user.username}
+				profilePictureUrl={user.profilePictureUrl}
+				class="avatar"
+			/>
 			<div class="user-details">
 				<div class="username">@{user.username}</div>
 				{#if locationName}
