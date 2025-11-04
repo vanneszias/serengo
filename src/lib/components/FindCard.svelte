@@ -101,8 +101,8 @@
 	</div>
 
 	<!-- Media -->
-	<div class="post-media">
-		{#if media && media.length > 0}
+	{#if media && media.length > 0}
+		<div class="post-media">
 			{#if media[0].type === 'photo'}
 				<img
 					src={media[0].thumbnailUrl || media[0].url}
@@ -120,21 +120,8 @@
 					class="media-video"
 				/>
 			{/if}
-		{:else}
-			<div class="no-media">
-				<svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-					<path
-						d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-					<circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
-				</svg>
-			</div>
-		{/if}
-	</div>
+		</div>
+	{/if}
 
 	<!-- Post Actions -->
 	<div class="post-actions">
@@ -258,33 +245,23 @@
 	/* Media */
 	.post-media {
 		width: 100%;
-		aspect-ratio: 16/10;
+		max-height: 600px;
 		overflow: hidden;
 		background: hsl(var(--muted));
-		display: flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.media-image {
 		width: 100%;
-		height: 100%;
+		height: auto;
+		max-height: 600px;
 		object-fit: cover;
+		display: block;
 	}
 
 	:global(.media-video) {
 		width: 100%;
-		height: 100%;
-	}
-
-	.no-media {
-		width: 100%;
-		height: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		color: hsl(var(--muted-foreground));
-		opacity: 0.5;
+		height: auto;
+		max-height: 600px;
 	}
 
 	/* Post Actions */

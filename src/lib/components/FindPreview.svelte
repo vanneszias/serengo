@@ -278,7 +278,7 @@
 	/* Mobile styles (bottom sheet) */
 	@media (max-width: 767px) {
 		:global(.sheet-content) {
-			height: 80vh !important;
+			height: 50vh !important;
 			border-radius: 16px 16px 0 0 !important;
 		}
 	}
@@ -414,7 +414,7 @@
 	.media-image {
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
+		object-fit: contain;
 	}
 
 	:global(.media-video) {
