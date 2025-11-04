@@ -2,6 +2,65 @@
 
 ## Oktober 2025
 
+### 4 November 2025 - 1 uren
+
+**Werk uitgevoerd:**
+
+- **UI Consistency & Media Layout Improvements**
+- ProfilePicture component geïmplementeerd ter vervanging van Avatar componenten
+- Media layout en sizing verbeteringen voor betere responsive design
+- Mobile sheet optimalisaties voor verbeterde gebruikerservaring
+- Component refactoring voor consistentere UI across applicatie
+- Loading states en fallback styling geconsolideerd
+
+**Commits:**
+
+- d3adac8 - add:ProfilePicture component and replace Avatar
+- 9800be0 - fix:Adjust media layout, sizing, and mobile sheet
+
+**Details:**
+
+- Nieuwe ProfilePicture component met geïntegreerde avatar initials en fallback styling
+- Avatar componenten vervangen door ProfilePicture voor consistentie
+- Media container rendering geoptimaliseerd (alleen tonen bij aanwezige media)
+- Max-height van 600px toegevoegd voor images en videos met height:auto
+- Object-fit: contain toegepast voor media images in preview
+- Mobile sheet height gereduceerd van 80vh naar 50vh voor betere usability
+- Loading states UI geconsolideerd in ProfilePicture component
+- Component library verder uitgebreid met herbruikbare UI elementen
+
+---
+
+### 27-29 Oktober 2025 - 10 uren
+
+**Werk uitgevoerd:**
+
+- **Phase 3: Google Places Integration & Sync Service**
+- Complete implementatie van sync-service voor API data synchronisatie
+- Google Maps Places API integratie voor POI zoekfunctionaliteit
+- Location tracking optimalisaties met continuous watching
+- CSP (Content Security Policy) fixes voor verbeterde security
+- Child subscription fixes voor data consistency
+
+**Commits:**
+
+- 4c973c4 - fix:some csp issues
+- d7fe909 - fix:new child subscription
+- 6620cc6 - feat:implement a sync-service
+- 3b3ebc2 - fix:continuously watch location
+- fef7c16 - feat:use GMaps places api for searching poi's
+
+**Details:**
+
+- Complete sync-service architectuur voor real-time data synchronisatie
+- Google Places API integratie voor Point of Interest zoekfunctionaliteit
+- Verbeterde location tracking met continuous watching voor nauwkeurigere positiebepaling
+- Security verbeteringen door CSP issues op te lossen
+- Data consistency verbeteringen met child subscription fixes
+- Enhanced POI search capabilities met Google Maps integration
+
+---
+
 ### 21 Oktober 2025 (Maandag) - 4 uren
 
 **Werk uitgevoerd:**
@@ -322,9 +381,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 67 uren
-**Werkdagen:** 12 dagen
-**Gemiddelde uren per dag:** 5.6 uur
+**Totale geschatte uren:** 80 uren
+**Werkdagen:** 14 dagen
+**Gemiddelde uren per dag:** 5.8 uur
 
 ### Project Milestones:
 
@@ -340,6 +399,8 @@
 10. **16 Okt**: Friends & Privacy System implementatie
 11. **20 Okt**: Search logic improvements
 12. **21 Okt**: UI refinement en bug fixes
+13. **27-29 Okt**: Google Places Integration & Sync Service
+14. **4 Nov**: UI Consistency & Media Layout Improvements
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
@@ -366,3 +427,7 @@
 - [x] Privacy-bewuste find filtering met vriendenspecifieke zichtbaarheid
 - [x] Friends management pagina met gebruikerszoekfunctionaliteit
 - [x] Real-time find filtering op basis van privacy instellingen
+- [x] Google Maps Places API integratie voor POI zoekfunctionaliteit
+- [x] Sync-service voor API data synchronisatie
+- [x] Continuous location watching voor nauwkeurige tracking
+- [x] CSP security verbeteringen
