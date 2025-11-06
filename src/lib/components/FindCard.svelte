@@ -4,7 +4,8 @@
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
-	import { MoreHorizontal, MessageCircle, Share } from '@lucide/svelte';
+	import CommentsList from '$lib/components/CommentsList.svelte';
+	import { Ellipsis, MessageCircle, Share } from '@lucide/svelte';
 
 	interface FindCardProps {
 		id: string;
@@ -23,6 +24,8 @@
 		}>;
 		likeCount?: number;
 		isLiked?: boolean;
+		commentCount?: number;
+		currentUserId?: string;
 		onExplore?: (id: string) => void;
 	}
 
@@ -36,11 +39,19 @@
 		media,
 		likeCount = 0,
 		isLiked = false,
+		commentCount = 0,
+		currentUserId,
 		onExplore
 	}: FindCardProps = $props();
 
+	let showComments = $state(false);
+
 	function handleExplore() {
 		onExplore?.(id);
+	}
+
+	function toggleComments() {
+		showComments = !showComments;
 	}
 </script>
 
@@ -73,7 +84,7 @@
 			</div>
 		</div>
 		<Button variant="ghost" size="sm" class="more-button">
-			<MoreHorizontal size={16} />
+			<Ellipsis size={16} />
 		</Button>
 	</div>
 
@@ -120,9 +131,9 @@
 	<div class="post-actions">
 		<div class="action-buttons">
 			<LikeButton findId={id} {isLiked} {likeCount} size="sm" />
-			<Button variant="ghost" size="sm" class="action-button">
+			<Button variant="ghost" size="sm" class="action-button" onclick={toggleComments}>
 				<MessageCircle size={16} />
-				<span>comment</span>
+				<span>{commentCount || 'comment'}</span>
 			</Button>
 			<Button variant="ghost" size="sm" class="action-button">
 				<Share size={16} />
@@ -133,6 +144,13 @@
 			explore
 		</Button>
 	</div>
+
+	<!-- Comments Section -->
+	{#if showComments}
+		<div class="comments-section">
+			<CommentsList findId={id} {currentUserId} collapsed={false} />
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -285,6 +303,13 @@
 	:global(.explore-button) {
 		font-weight: 500;
 		font-size: 0.875rem;
+	}
+
+	/* Comments Section */
+	.comments-section {
+		padding: 0 1rem 1rem 1rem;
+		border-top: 1px solid hsl(var(--border));
+		background: hsl(var(--muted) / 0.3);
 	}
 
 	/* Mobile responsive */

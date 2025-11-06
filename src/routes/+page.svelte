@@ -9,6 +9,7 @@
 	import { Button } from '$lib/components/button';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { apiSync, type FindState } from '$lib/stores/api-sync';
 
 	// Server response type
 	interface ServerFind {
@@ -97,36 +98,6 @@
 	// Initialize API sync with server data on mount
 	onMount(async () => {
 		if (browser && data.finds && data.finds.length > 0) {
-			// Dynamically import the API sync to avoid SSR issues
-			const { apiSync } = await import('$lib/stores/api-sync');
-
-			// Define the FindState interface locally
-			interface FindState {
-				id: string;
-				title: string;
-				description?: string;
-				latitude: string;
-				longitude: string;
-				locationName?: string;
-				category?: string;
-				isPublic: boolean;
-				createdAt: Date;
-				userId: string;
-				username: string;
-				profilePictureUrl?: string;
-				media: Array<{
-					id: string;
-					findId: string;
-					type: string;
-					url: string;
-					thumbnailUrl: string | null;
-					orderIndex: number | null;
-				}>;
-				isLikedByUser: boolean;
-				likeCount: number;
-				isFromFriend: boolean;
-			}
-
 			const findStates: FindState[] = data.finds.map((serverFind: ServerFind) => ({
 				id: serverFind.id,
 				title: serverFind.title,
@@ -143,6 +114,7 @@
 				media: serverFind.media,
 				isLikedByUser: Boolean(serverFind.isLikedByUser),
 				likeCount: serverFind.likeCount || 0,
+				commentCount: 0,
 				isFromFriend: Boolean(serverFind.isFromFriend)
 			}));
 

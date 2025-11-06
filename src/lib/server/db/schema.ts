@@ -75,13 +75,28 @@ export const friendship = pgTable('friendship', {
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
 });
 
+export const findComment = pgTable('find_comment', {
+	id: text('id').primaryKey(),
+	findId: text('find_id')
+		.notNull()
+		.references(() => find.id, { onDelete: 'cascade' }),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	content: text('content').notNull(),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
 // Type exports for the new tables
 export type Find = typeof find.$inferSelect;
 export type FindMedia = typeof findMedia.$inferSelect;
 export type FindLike = typeof findLike.$inferSelect;
+export type FindComment = typeof findComment.$inferSelect;
 export type Friendship = typeof friendship.$inferSelect;
 
 export type FindInsert = typeof find.$inferInsert;
 export type FindMediaInsert = typeof findMedia.$inferInsert;
 export type FindLikeInsert = typeof findLike.$inferInsert;
+export type FindCommentInsert = typeof findComment.$inferInsert;
 export type FriendshipInsert = typeof friendship.$inferInsert;

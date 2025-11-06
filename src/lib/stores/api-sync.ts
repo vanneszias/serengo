@@ -59,7 +59,28 @@ export interface FindState {
 	}>;
 	isLikedByUser: boolean;
 	likeCount: number;
+	commentCount: number;
 	isFromFriend: boolean;
+}
+
+export interface CommentState {
+	id: string;
+	findId: string;
+	content: string;
+	createdAt: Date;
+	updatedAt: Date;
+	user: {
+		id: string;
+		username: string;
+		profilePictureUrl?: string;
+	};
+}
+
+export interface FindCommentsState {
+	comments: CommentState[];
+	commentCount: number;
+	isLoading: boolean;
+	error: string | null;
 }
 
 // Generate unique operation IDs
@@ -93,6 +114,7 @@ class APISync {
 		this.initializeEntityStore('find');
 		this.initializeEntityStore('user');
 		this.initializeEntityStore('friendship');
+		this.initializeEntityStore('comment');
 
 		// Start processing queue
 		this.startQueueProcessor();
@@ -151,6 +173,33 @@ class APISync {
 			return {
 				isLiked: findData.isLikedByUser,
 				likeCount: findData.likeCount,
+				isLoading: entity.isLoading,
+				error: entity.error
+			};
+		});
+	}
+
+	/**
+	 * Subscribe to find comments state
+	 */
+	subscribeFindComments(findId: string): Readable<FindCommentsState> {
+		const store = this.getEntityStore('comment');
+
+		return derived(store, ($entities) => {
+			const entity = $entities.get(findId);
+			if (!entity || !entity.data) {
+				return {
+					comments: [],
+					commentCount: 0,
+					isLoading: false,
+					error: null
+				};
+			}
+
+			const commentsData = entity.data as CommentState[];
+			return {
+				comments: commentsData,
+				commentCount: commentsData.length,
 				isLoading: entity.isLoading,
 				error: entity.error
 			};
@@ -359,6 +408,23 @@ class APISync {
 					'Content-Type': 'application/json'
 				}
 			});
+		} else if (entityType === 'comment' && op === 'create') {
+			// Handle comment creation
+			response = await fetch(`/api/finds/${entityId}/comments`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(data)
+			});
+		} else if (entityType === 'comment' && op === 'delete') {
+			// Handle comment deletion
+			response = await fetch(`/api/finds/comments/${entityId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
 		} else {
 			throw new Error(`Unsupported operation: ${entityType}:${op}:${action}`);
 		}
@@ -373,6 +439,10 @@ class APISync {
 		// Update entity state with successful result
 		if (entityType === 'find' && action === 'like') {
 			this.updateFindLikeState(entityId, result.isLiked, result.likeCount);
+		} else if (entityType === 'comment' && op === 'create') {
+			this.addCommentToState(result.data.findId, result.data);
+		} else if (entityType === 'comment' && op === 'delete') {
+			this.removeCommentFromState(entityId, data as { findId: string });
 		}
 	}
 
@@ -468,12 +538,176 @@ class APISync {
 	}
 
 	/**
+	 * Add comment to find comments state
+	 */
+	private addCommentToState(findId: string, comment: CommentState): void {
+		const store = this.getEntityStore('comment');
+
+		store.update(($entities) => {
+			const newEntities = new Map($entities);
+			const existing = newEntities.get(findId);
+
+			const comments = existing?.data ? (existing.data as CommentState[]) : [];
+
+			// If this is a real comment from server, remove any temporary comment with the same content
+			let updatedComments = comments;
+			if (!comment.id.startsWith('temp-')) {
+				updatedComments = comments.filter(
+					(c) => !(c.id.startsWith('temp-') && c.content === comment.content)
+				);
+			}
+
+			updatedComments = [comment, ...updatedComments];
+
+			newEntities.set(findId, {
+				data: updatedComments,
+				isLoading: false,
+				error: null,
+				lastUpdated: new Date()
+			});
+
+			return newEntities;
+		});
+
+		// Update find comment count only for temp comments (optimistic updates)
+		if (comment.id.startsWith('temp-')) {
+			this.updateFindCommentCount(findId, 1);
+		}
+	}
+
+	/**
+	 * Remove comment from find comments state
+	 */
+	private removeCommentFromState(commentId: string, data: { findId: string }): void {
+		const store = this.getEntityStore('comment');
+
+		store.update(($entities) => {
+			const newEntities = new Map($entities);
+			const existing = newEntities.get(data.findId);
+
+			if (existing?.data) {
+				const comments = existing.data as CommentState[];
+				const updatedComments = comments.filter((c) => c.id !== commentId);
+
+				newEntities.set(data.findId, {
+					...existing,
+					data: updatedComments,
+					isLoading: false,
+					error: null,
+					lastUpdated: new Date()
+				});
+			}
+
+			return newEntities;
+		});
+
+		// Update find comment count
+		this.updateFindCommentCount(data.findId, -1);
+	}
+
+	/**
+	 * Update find comment count
+	 */
+	private updateFindCommentCount(findId: string, delta: number): void {
+		const store = this.getEntityStore('find');
+
+		store.update(($entities) => {
+			const newEntities = new Map($entities);
+			const existing = newEntities.get(findId);
+
+			if (existing && existing.data) {
+				const findData = existing.data as FindState;
+				newEntities.set(findId, {
+					...existing,
+					data: {
+						...findData,
+						commentCount: Math.max(0, findData.commentCount + delta)
+					},
+					lastUpdated: new Date()
+				});
+			}
+
+			return newEntities;
+		});
+	}
+
+	/**
+	 * Load comments for a find
+	 */
+	async loadComments(findId: string): Promise<void> {
+		if (this.hasEntityState('comment', findId)) {
+			return;
+		}
+
+		this.setEntityLoading('comment', findId, true);
+
+		try {
+			const response = await fetch(`/api/finds/${findId}/comments`);
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`);
+			}
+
+			const result = await response.json();
+			if (result.success) {
+				this.setEntityState('comment', findId, result.data, false);
+			} else {
+				throw new Error(result.error || 'Failed to load comments');
+			}
+		} catch (error) {
+			console.error('Error loading comments:', error);
+			this.setEntityError('comment', findId, 'Failed to load comments');
+		}
+	}
+
+	/**
+	 * Add a comment to a find
+	 */
+	async addComment(findId: string, content: string): Promise<void> {
+		// Optimistic update: add temporary comment
+		const tempComment: CommentState = {
+			id: `temp-${Date.now()}`,
+			findId,
+			content,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			user: {
+				id: 'current-user',
+				username: 'You',
+				profilePictureUrl: undefined
+			}
+		};
+
+		this.addCommentToState(findId, tempComment);
+
+		// Queue the operation
+		await this.queueOperation('comment', findId, 'create', undefined, { content });
+	}
+
+	/**
+	 * Delete a comment
+	 */
+	async deleteComment(commentId: string, findId: string): Promise<void> {
+		// Optimistic update: remove comment
+		this.removeCommentFromState(commentId, { findId });
+
+		// Queue the operation
+		await this.queueOperation('comment', commentId, 'delete', undefined, { findId });
+	}
+
+	/**
 	 * Initialize find data from server (only if no existing state)
 	 */
 	initializeFindData(finds: FindState[]): void {
 		for (const find of finds) {
 			this.initializeEntityState('find', find.id, find);
 		}
+	}
+
+	/**
+	 * Initialize comments data for a find
+	 */
+	initializeCommentsData(findId: string, comments: CommentState[]): void {
+		this.initializeEntityState('comment', findId, comments);
 	}
 
 	/**
