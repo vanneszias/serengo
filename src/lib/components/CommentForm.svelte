@@ -74,8 +74,10 @@
 
 <style>
 	.comment-form {
-		padding: 0.75rem 0;
+		padding: 0.75rem 1rem;
 		border-top: 1px solid hsl(var(--border));
+		background: hsl(var(--background));
+		flex-shrink: 0;
 	}
 
 	.input-container {

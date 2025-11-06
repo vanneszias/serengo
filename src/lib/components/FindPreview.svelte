@@ -3,6 +3,7 @@
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+	import CommentsList from '$lib/components/CommentsList.svelte';
 
 	interface Find {
 		id: string;
@@ -30,9 +31,10 @@
 	interface Props {
 		find: Find | null;
 		onClose: () => void;
+		currentUserId?: string;
 	}
 
-	let { find, onClose }: Props = $props();
+	let { find, onClose, currentUserId }: Props = $props();
 
 	let showModal = $state(true);
 	let currentMediaIndex = $state(0);
@@ -250,6 +252,15 @@
 							Share
 						</button>
 					</div>
+				</div>
+
+				<div class="comments-section">
+					<CommentsList
+						findId={find.id}
+						{currentUserId}
+						isScrollable={true}
+						showCommentForm={true}
+					/>
 				</div>
 			</div>
 		</SheetContent>
@@ -542,6 +553,30 @@
 		background: hsl(var(--secondary) / 0.8);
 	}
 
+	.comments-section {
+		flex: 1;
+		min-height: 0;
+		border-top: 1px solid hsl(var(--border));
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Desktop comments section */
+	@media (min-width: 768px) {
+		.comments-section {
+			height: calc(100vh - 400px);
+			min-height: 200px;
+		}
+	}
+
+	/* Mobile comments section */
+	@media (max-width: 767px) {
+		.comments-section {
+			height: calc(80vh - 350px);
+			min-height: 150px;
+		}
+	}
+
 	/* Mobile specific adjustments */
 	@media (max-width: 640px) {
 		:global(.sheet-header) {
@@ -572,6 +607,10 @@
 
 		.action-button {
 			width: 100%;
+		}
+
+		.comments-section {
+			height: calc(80vh - 380px);
 		}
 	}
 </style>

@@ -288,7 +288,7 @@
 {/if}
 
 {#if selectedFind}
-	<FindPreview find={selectedFind} onClose={closeFindPreview} />
+	<FindPreview find={selectedFind} onClose={closeFindPreview} currentUserId={data.user?.id} />
 {/if}
 
 <style>

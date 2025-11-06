@@ -9,9 +9,19 @@
 		findId: string;
 		currentUserId?: string;
 		collapsed?: boolean;
+		maxComments?: number;
+		showCommentForm?: boolean;
+		isScrollable?: boolean;
 	}
 
-	let { findId, currentUserId, collapsed = true }: CommentsListProps = $props();
+	let {
+		findId,
+		currentUserId,
+		collapsed = true,
+		maxComments,
+		showCommentForm = true,
+		isScrollable = false
+	}: CommentsListProps = $props();
 
 	let isExpanded = $state(!collapsed);
 	let hasLoadedComments = $state(false);
@@ -90,8 +100,8 @@
 					<button class="retry-button" onclick={loadComments}> Try again </button>
 				</div>
 			{:else}
-				<div class="comments">
-					{#each $commentsState.comments as comment (comment.id)}
+				<div class="comments" class:scrollable={isScrollable}>
+					{#each maxComments ? $commentsState.comments.slice(0, maxComments) : $commentsState.comments as comment (comment.id)}
 						<Comment
 							{comment}
 							showDeleteButton={canDeleteComment(comment)}
@@ -100,10 +110,19 @@
 					{:else}
 						<div class="no-comments">No comments yet. Be the first to comment!</div>
 					{/each}
+					{#if maxComments && $commentsState.comments.length > maxComments}
+						<div class="see-more">
+							<div class="see-more-text">
+								+{$commentsState.comments.length - maxComments} more comments
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
-			<CommentForm onSubmit={handleAddComment} />
+			{#if showCommentForm}
+				<CommentForm onSubmit={handleAddComment} />
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -131,10 +150,34 @@
 	.comments-container {
 		border-top: 1px solid hsl(var(--border));
 		margin-top: 0.5rem;
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
 	}
 
 	.comments {
 		padding: 0.75rem 0;
+	}
+
+	.comments.scrollable {
+		flex: 1;
+		overflow-y: auto;
+		padding: 0.75rem 1rem;
+		min-height: 0;
+	}
+
+	.see-more {
+		padding: 0.5rem 0;
+		border-top: 1px solid hsl(var(--border));
+		margin-top: 0.5rem;
+	}
+
+	.see-more-text {
+		text-align: center;
+		color: hsl(var(--muted-foreground));
+		font-size: 0.75rem;
+		font-style: italic;
 	}
 
 	.no-comments {

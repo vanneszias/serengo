@@ -148,7 +148,13 @@
 	<!-- Comments Section -->
 	{#if showComments}
 		<div class="comments-section">
-			<CommentsList findId={id} {currentUserId} collapsed={false} />
+			<CommentsList
+				findId={id}
+				{currentUserId}
+				collapsed={false}
+				maxComments={5}
+				showCommentForm={true}
+			/>
 		</div>
 	{/if}
 </div>
