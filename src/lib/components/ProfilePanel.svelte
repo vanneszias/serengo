@@ -10,6 +10,7 @@
 	import { Skeleton } from './skeleton';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import ProfilePictureSheet from './ProfilePictureSheet.svelte';
+	import NotificationSettingsSheet from './NotificationSettingsSheet.svelte';
 
 	interface Props {
 		username: string;
@@ -21,6 +22,7 @@
 	let { username, id, profilePictureUrl, loading = false }: Props = $props();
 
 	let showProfilePictureSheet = $state(false);
+	let showNotificationSettingsSheet = $state(false);
 
 	function openProfilePictureSheet() {
 		showProfilePictureSheet = true;
@@ -28,6 +30,14 @@
 
 	function closeProfilePictureSheet() {
 		showProfilePictureSheet = false;
+	}
+
+	function openNotificationSettingsSheet() {
+		showNotificationSettingsSheet = true;
+	}
+
+	function closeNotificationSettingsSheet() {
+		showNotificationSettingsSheet = false;
 	}
 </script>
 
@@ -74,6 +84,10 @@
 				<a href="/friends" class="friends-link">Friends</a>
 			</DropdownMenuItem>
 
+			<DropdownMenuItem class="notification-settings-item" onclick={openNotificationSettingsSheet}>
+				Notifications
+			</DropdownMenuItem>
+
 			<DropdownMenuSeparator />
 
 			<div class="user-info-item">
@@ -104,6 +118,10 @@
 		{profilePictureUrl}
 		onClose={closeProfilePictureSheet}
 	/>
+{/if}
+
+{#if showNotificationSettingsSheet}
+	<NotificationSettingsSheet onClose={closeNotificationSettingsSheet} />
 {/if}
 
 <style>
@@ -185,6 +203,16 @@
 	}
 
 	:global(.friends-item:hover) {
+		background: #f5f5f5;
+	}
+
+	:global(.notification-settings-item) {
+		cursor: pointer;
+		font-weight: 500;
+		color: #333;
+	}
+
+	:global(.notification-settings-item:hover) {
 		background: #f5f5f5;
 	}
 

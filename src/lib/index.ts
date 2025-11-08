@@ -10,6 +10,10 @@ export { default as Modal } from './components/Modal.svelte';
 export { default as Map } from './components/Map.svelte';
 export { default as LocationButton } from './components/LocationButton.svelte';
 export { default as LocationManager } from './components/LocationManager.svelte';
+export { default as NotificationManager } from './components/NotificationManager.svelte';
+export { default as NotificationPrompt } from './components/NotificationPrompt.svelte';
+export { default as NotificationSettings } from './components/NotificationSettings.svelte';
+export { default as NotificationSettingsSheet } from './components/NotificationSettingsSheet.svelte';
 export { default as FindCard } from './components/FindCard.svelte';
 export { default as FindsList } from './components/FindsList.svelte';
 
