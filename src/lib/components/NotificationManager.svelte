@@ -32,31 +32,41 @@
 
 	async function initializeNotifications() {
 		try {
+			console.log('[NotificationManager] Starting initialization...');
+
 			// Get current permission status
 			permissionStatus = Notification.permission;
-
+			console.log('[NotificationManager] Permission status:', permissionStatus);
 			// If already denied, don't do anything
 			if (permissionStatus === 'denied') {
 				console.log('Notification permission denied by user');
 				return;
 			}
+			// Get existing service worker registration (SvelteKit registers it automatically)
+			let registration = await navigator.serviceWorker.getRegistration();
 
-			// Register service worker
-			const registration = await navigator.serviceWorker.register('/service-worker.js', {
-				type: 'module'
-			});
-
+			// If no registration exists, register it
+			if (!registration) {
+				console.log('[NotificationManager] No SW found, registering...');
+				registration = await navigator.serviceWorker.register('/service-worker.js', {
+					type: 'module'
+				});
+			}
 			// Wait for service worker to be ready
 			await navigator.serviceWorker.ready;
-
+			console.log('[NotificationManager] Service worker ready');
 			// If permission is default, request it
 			if (permissionStatus === 'default') {
+				console.log('[NotificationManager] Requesting permission...');
 				permissionStatus = await Notification.requestPermission();
+				console.log('[NotificationManager] Permission response:', permissionStatus);
 			}
-
 			// If permission granted, subscribe to push notifications
 			if (permissionStatus === 'granted') {
+				console.log('[NotificationManager] Permission granted, subscribing...');
 				await subscribeToPushNotifications(registration);
+			} else {
+				console.log('[NotificationManager] Permission not granted, status:', permissionStatus);
 			}
 		} catch (error) {
 			console.error('Error initializing notifications:', error);
