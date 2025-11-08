@@ -56,7 +56,7 @@
 		await apiSync.deleteComment(commentId, findId);
 	}
 
-	function canDeleteComment(comment: any): boolean {
+	function canDeleteComment(comment: { user: { id: string } }): boolean {
 		return Boolean(
 			currentUserId && (comment.user.id === currentUserId || comment.user.id === 'current-user')
 		);
@@ -65,7 +65,7 @@
 
 {#snippet loadingSkeleton()}
 	<div class="loading-skeleton">
-		{#each Array(3) as _}
+		{#each Array(3) as _, index (index)}
 			<div class="comment-skeleton">
 				<Skeleton class="avatar-skeleton" />
 				<div class="content-skeleton">

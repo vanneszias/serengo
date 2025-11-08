@@ -36,17 +36,16 @@
 
 		isLoading = true;
 		try {
-			const params = new URLSearchParams({
-				action: 'autocomplete',
-				query: query.trim()
-			});
+			const searchParams = new URL('/api/places', window.location.origin).searchParams;
+			searchParams.set('action', 'autocomplete');
+			searchParams.set('query', query.trim());
 
 			if ($coordinates) {
-				params.set('lat', $coordinates.latitude.toString());
-				params.set('lng', $coordinates.longitude.toString());
+				searchParams.set('lat', $coordinates.latitude.toString());
+				searchParams.set('lng', $coordinates.longitude.toString());
 			}
 
-			const response = await fetch(`/api/places?${params}`);
+			const response = await fetch(`/api/places?${searchParams}`);
 			if (response.ok) {
 				suggestions = await response.json();
 				showSuggestions = true;
@@ -179,7 +178,7 @@
 					<div class="suggestion-content">
 						<span class="suggestion-name">{suggestion.description}</span>
 						<div class="suggestion-types">
-							{#each suggestion.types.slice(0, 2) as type}
+							{#each suggestion.types.slice(0, 2) as type, index (index)}
 								<span class="suggestion-type">{type.replace(/_/g, ' ')}</span>
 							{/each}
 						</div>

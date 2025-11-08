@@ -41,7 +41,10 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 		} else if (Array.isArray(notificationIds) && notificationIds.length > 0) {
 			await notificationService.markAsRead(notificationIds);
 		} else {
-			return json({ error: 'Invalid request: provide notificationIds or markAll' }, { status: 400 });
+			return json(
+				{ error: 'Invalid request: provide notificationIds or markAll' },
+				{ status: 400 }
+			);
 		}
 
 		return json({ success: true });
@@ -66,7 +69,10 @@ export const DELETE: RequestHandler = async ({ locals, request }) => {
 		} else if (notificationId) {
 			await notificationService.deleteNotification(notificationId, user.id);
 		} else {
-			return json({ error: 'Invalid request: provide notificationId or deleteAll' }, { status: 400 });
+			return json(
+				{ error: 'Invalid request: provide notificationId or deleteAll' },
+				{ status: 400 }
+			);
 		}
 
 		return json({ success: true });

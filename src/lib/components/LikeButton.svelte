@@ -28,7 +28,7 @@
 		isLoading: false
 	});
 
-	let apiSync: any = null;
+	let apiSync: typeof import('$lib/stores/api-sync').apiSync | null = null;
 
 	// Initialize API sync and subscribe to global state
 	onMount(async () => {
@@ -65,13 +65,15 @@
 
 				// Subscribe to global state for this find
 				const globalLikeState = apiSync.subscribeFindLikes(findId);
-				globalLikeState.subscribe((state: any) => {
-					likeState.set({
-						isLiked: state.isLiked,
-						likeCount: state.likeCount,
-						isLoading: state.isLoading
-					});
-				});
+				globalLikeState.subscribe(
+					(state: { isLiked: boolean; likeCount: number; isLoading: boolean }) => {
+						likeState.set({
+							isLiked: state.isLiked,
+							likeCount: state.likeCount,
+							isLoading: state.isLoading
+						});
+					}
+				);
 			} catch (error) {
 				console.error('Failed to initialize API sync:', error);
 			}
@@ -81,8 +83,7 @@
 	async function toggleLike() {
 		if (!apiSync || !browser) return;
 
-		const currentState = likeState;
-		if (currentState && (currentState as any).isLoading) return;
+		if ($likeState.isLoading) return;
 
 		try {
 			await apiSync.toggleLike(findId);

@@ -4,11 +4,7 @@ import { notificationSubscription } from './db/schema';
 import type { NotificationSubscriptionInsert } from './db/schema';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import {
-	VAPID_PUBLIC_KEY,
-	VAPID_PRIVATE_KEY,
-	VAPID_SUBJECT
-} from '$env/static/private';
+import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } from '$env/static/private';
 
 // Initialize web-push with VAPID keys
 if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY || !VAPID_SUBJECT) {
@@ -88,7 +84,10 @@ export class PushService {
 		await db
 			.delete(notificationSubscription)
 			.where(
-				and(eq(notificationSubscription.userId, userId), eq(notificationSubscription.endpoint, endpoint))
+				and(
+					eq(notificationSubscription.userId, userId),
+					eq(notificationSubscription.endpoint, endpoint)
+				)
 			);
 	}
 
@@ -100,7 +99,10 @@ export class PushService {
 			.select()
 			.from(notificationSubscription)
 			.where(
-				and(eq(notificationSubscription.userId, userId), eq(notificationSubscription.isActive, true))
+				and(
+					eq(notificationSubscription.userId, userId),
+					eq(notificationSubscription.isActive, true)
+				)
 			);
 	}
 

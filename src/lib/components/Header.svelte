@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { ProfilePanel } from '$lib';
+	import { resolveRoute } from '$app/paths';
 
 	type User = {
 		id: string;
@@ -12,7 +13,7 @@
 
 <header class="app-header">
 	<div class="header-content">
-		<h1 class="app-title"><a href="/">Serengo</a></h1>
+		<h1 class="app-title"><a href={resolveRoute('/')}>Serengo</a></h1>
 		<div class="profile-container">
 			<ProfilePanel
 				username={user.username}

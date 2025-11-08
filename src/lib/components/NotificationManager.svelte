@@ -9,8 +9,6 @@
 	 */
 
 	let permissionStatus = $state<NotificationPermission>('default');
-	let subscriptionStatus = $state<'idle' | 'subscribing' | 'subscribed' | 'error'>('idle');
-	let errorMessage = $state<string>('');
 	let showPrompt = $state<boolean>(false);
 	let isSupported = $state<boolean>(false);
 
@@ -57,8 +55,6 @@
 			}
 		} catch (error) {
 			console.error('[NotificationManager] Error initializing notifications:', error);
-			subscriptionStatus = 'error';
-			errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		}
 	}
 
@@ -75,13 +71,9 @@
 				await subscribeToNotifications();
 			} else {
 				console.log('[NotificationManager] Permission not granted');
-				subscriptionStatus = 'error';
-				errorMessage = 'Notification permission was not granted';
 			}
 		} catch (error) {
 			console.error('[NotificationManager] Error enabling notifications:', error);
-			subscriptionStatus = 'error';
-			errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		}
 	}
 
@@ -94,7 +86,6 @@
 	async function subscribeToNotifications() {
 		try {
 			console.log('[NotificationManager] subscribeToNotifications called');
-			subscriptionStatus = 'subscribing';
 
 			// Get or register service worker
 			let registration = await navigator.serviceWorker.getRegistration();
@@ -161,12 +152,9 @@
 				throw new Error('Failed to save subscription to server');
 			}
 
-			subscriptionStatus = 'subscribed';
 			console.log('[NotificationManager] Successfully subscribed to push notifications!');
 		} catch (error) {
 			console.error('[NotificationManager] Error subscribing to push notifications:', error);
-			subscriptionStatus = 'error';
-			errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		}
 	}
 

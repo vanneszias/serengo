@@ -4,7 +4,11 @@ import type { NotificationInsert } from './db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
-export type NotificationType = 'friend_request' | 'friend_accepted' | 'find_liked' | 'find_commented';
+export type NotificationType =
+	| 'friend_request'
+	| 'friend_accepted'
+	| 'find_liked'
+	| 'find_commented';
 
 export interface CreateNotificationData {
 	userId: string;
@@ -106,10 +110,7 @@ export class NotificationService {
 	 */
 	async markAsRead(notificationIds: string[]): Promise<void> {
 		for (const id of notificationIds) {
-			await db
-				.update(notification)
-				.set({ isRead: true })
-				.where(eq(notification.id, id));
+			await db.update(notification).set({ isRead: true }).where(eq(notification.id, id));
 		}
 	}
 
@@ -117,20 +118,14 @@ export class NotificationService {
 	 * Mark a single notification as read
 	 */
 	async markOneAsRead(notificationId: string): Promise<void> {
-		await db
-			.update(notification)
-			.set({ isRead: true })
-			.where(eq(notification.id, notificationId));
+		await db.update(notification).set({ isRead: true }).where(eq(notification.id, notificationId));
 	}
 
 	/**
 	 * Mark all notifications as read for a user
 	 */
 	async markAllAsRead(userId: string): Promise<void> {
-		await db
-			.update(notification)
-			.set({ isRead: true })
-			.where(eq(notification.userId, userId));
+		await db.update(notification).set({ isRead: true }).where(eq(notification.userId, userId));
 	}
 
 	/**

@@ -65,7 +65,7 @@ export async function POST({
 	const findOwner = existingFind[0];
 	if (findOwner.userId !== locals.user.id) {
 		const shouldNotify = await notificationService.shouldNotify(findOwner.userId, 'find_liked');
-		
+
 		if (shouldNotify) {
 			// Get liker's username
 			const likerUser = await db
@@ -73,7 +73,7 @@ export async function POST({
 				.from(user)
 				.where(eq(user.id, locals.user.id))
 				.limit(1);
-			
+
 			const likerUsername = likerUser[0]?.username || 'Someone';
 			const findTitle = findOwner.title || 'your find';
 

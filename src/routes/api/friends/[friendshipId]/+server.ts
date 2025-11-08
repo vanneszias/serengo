@@ -78,7 +78,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 		if (action === 'accept') {
 			const senderId = friendshipRecord.userId;
 			const shouldNotify = await notificationService.shouldNotify(senderId, 'friend_accepted');
-			
+
 			if (shouldNotify) {
 				// Get accepter's username
 				const accepterUser = await db
@@ -86,7 +86,7 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 					.from(user)
 					.where(eq(user.id, locals.user.id))
 					.limit(1);
-				
+
 				const accepterUsername = accepterUser[0]?.username || 'Someone';
 
 				await notificationService.createNotification({

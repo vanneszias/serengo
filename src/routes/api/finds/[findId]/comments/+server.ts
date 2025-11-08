@@ -76,7 +76,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 		const commentId = crypto.randomUUID();
 		const now = new Date();
 
-		const [newComment] = await db
+		await db
 			.insert(findComment)
 			.values({
 				id: commentId,
@@ -112,11 +112,14 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
 		// Send notification to find owner if not self-comment
 		const findData = await db.select().from(find).where(eq(find.id, findId)).limit(1);
-		
+
 		if (findData.length > 0 && findData[0].userId !== session.userId) {
 			const findOwner = findData[0];
-			const shouldNotify = await notificationService.shouldNotify(findOwner.userId, 'find_commented');
-			
+			const shouldNotify = await notificationService.shouldNotify(
+				findOwner.userId,
+				'find_commented'
+			);
+
 			if (shouldNotify) {
 				// Get commenter's username
 				const commenterUser = await db
@@ -124,7 +127,7 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 					.from(user)
 					.where(eq(user.id, session.userId))
 					.limit(1);
-				
+
 				const commenterUsername = commenterUser[0]?.username || 'Someone';
 				const findTitle = findOwner.title || 'your find';
 

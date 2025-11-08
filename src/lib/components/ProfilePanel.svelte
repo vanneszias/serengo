@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { resolveRoute } from '$app/paths';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
@@ -81,7 +82,7 @@
 			</DropdownMenuItem>
 
 			<DropdownMenuItem class="friends-item">
-				<a href="/friends" class="friends-link">Friends</a>
+				<a href={resolveRoute('/friends')} class="friends-link">Friends</a>
 			</DropdownMenuItem>
 
 			<DropdownMenuItem class="notification-settings-item" onclick={openNotificationSettingsSheet}>
