@@ -6,6 +6,7 @@
 	import { Toaster } from '$lib/components/sonner/index.js';
 	import { Skeleton } from '$lib/components/skeleton';
 	import LocationManager from '$lib/components/LocationManager.svelte';
+	import NotificationManager from '$lib/components/NotificationManager.svelte';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 
@@ -42,9 +43,10 @@
 
 <Toaster />
 
-<!-- Auto-start location watching for authenticated users -->
+<!-- Auto-start location and notfication watching for authenticated users -->
 {#if data?.user && !isLoginRoute}
 	<LocationManager autoStart={true} />
+	<NotificationManager />
 {/if}
 
 {#if showHeader && data.user}
