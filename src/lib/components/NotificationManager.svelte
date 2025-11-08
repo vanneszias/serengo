@@ -77,28 +77,31 @@
 
 	async function subscribeToPushNotifications(registration: ServiceWorkerRegistration) {
 		try {
+			console.log('[NotificationManager] subscribeToPushNotifications called');
 			subscriptionStatus = 'subscribing';
-
 			// Get VAPID public key from server
+			console.log('[NotificationManager] Fetching VAPID key...');
 			const response = await fetch('/api/notifications/subscribe');
 			if (!response.ok) {
 				throw new Error('Failed to get VAPID public key');
 			}
-
 			const { publicKey } = await response.json();
-
+			console.log('[NotificationManager] Got VAPID key:', publicKey);
 			// Check if already subscribed
+			console.log('[NotificationManager] Checking existing subscription...');
 			let subscription = await registration.pushManager.getSubscription();
-
+			console.log('[NotificationManager] Existing subscription:', subscription);
 			// If not subscribed, create new subscription
 			if (!subscription) {
+				console.log('[NotificationManager] Creating new subscription...');
 				subscription = await registration.pushManager.subscribe({
 					userVisibleOnly: true,
 					applicationServerKey: urlBase64ToUint8Array(publicKey)
 				});
+				console.log('[NotificationManager] Subscription created:', subscription);
 			}
-
 			// Send subscription to server
+			console.log('[NotificationManager] Sending subscription to server...');
 			const saveResponse = await fetch('/api/notifications/subscribe', {
 				method: 'POST',
 				headers: {
@@ -114,15 +117,16 @@
 					}
 				})
 			});
-
+			console.log('[NotificationManager] Save response status:', saveResponse.status);
 			if (!saveResponse.ok) {
+				const errorText = await saveResponse.text();
+				console.error('[NotificationManager] Save failed:', errorText);
 				throw new Error('Failed to save subscription to server');
 			}
-
 			subscriptionStatus = 'subscribed';
-			console.log('Successfully subscribed to push notifications');
+			console.log('[NotificationManager] Successfully subscribed to push notifications!');
 		} catch (error) {
-			console.error('Error subscribing to push notifications:', error);
+			console.error('[NotificationManager] Error subscribing to push notifications:', error);
 			subscriptionStatus = 'error';
 			errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		}
