@@ -5,6 +5,8 @@ import { friendship, user } from '$lib/server/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
 import { getSignedR2Url } from '$lib/server/r2';
+import { notificationService } from '$lib/server/notifications';
+import { pushService } from '$lib/server/push';
 
 function generateFriendshipId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(15));
@@ -179,6 +181,34 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				status: 'pending'
 			})
 			.returning();
+
+		// Send notification to friend
+		const shouldNotify = await notificationService.shouldNotify(friendId, 'friend_request');
+		if (shouldNotify) {
+			await notificationService.createNotification({
+				userId: friendId,
+				type: 'friend_request',
+				title: 'New friend request',
+				message: `${locals.user.username} sent you a friend request`,
+				data: {
+					friendshipId: newFriendship[0].id,
+					senderId: locals.user.id,
+					senderUsername: locals.user.username
+				}
+			});
+
+			// Send push notification
+			await pushService.sendPushNotification(friendId, {
+				title: 'New friend request',
+				message: `${locals.user.username} sent you a friend request`,
+				url: '/friends',
+				tag: 'friend_request',
+				data: {
+					friendshipId: newFriendship[0].id,
+					senderId: locals.user.id
+				}
+			});
+		}
 
 		return json({ success: true, friendship: newFriendship[0] });
 	} catch (err) {

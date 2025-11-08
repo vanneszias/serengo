@@ -1,8 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { findLike, find } from '$lib/server/db/schema';
+import { findLike, find, user } from '$lib/server/db/schema';
 import { eq, and, count } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
+import { notificationService } from '$lib/server/notifications';
+import { pushService } from '$lib/server/push';
 
 function generateLikeId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(15));
@@ -58,6 +60,49 @@ export async function POST({
 		.where(eq(findLike.findId, findId));
 
 	const likeCount = likeCountResult[0]?.count ?? 0;
+
+	// Send notification to find owner if not self-like
+	const findOwner = existingFind[0];
+	if (findOwner.userId !== locals.user.id) {
+		const shouldNotify = await notificationService.shouldNotify(findOwner.userId, 'find_liked');
+		
+		if (shouldNotify) {
+			// Get liker's username
+			const likerUser = await db
+				.select({ username: user.username })
+				.from(user)
+				.where(eq(user.id, locals.user.id))
+				.limit(1);
+			
+			const likerUsername = likerUser[0]?.username || 'Someone';
+			const findTitle = findOwner.title || 'your find';
+
+			await notificationService.createNotification({
+				userId: findOwner.userId,
+				type: 'find_liked',
+				title: 'Someone liked your find',
+				message: `${likerUsername} liked your find: ${findTitle}`,
+				data: {
+					findId: findOwner.id,
+					likerId: locals.user.id,
+					likerUsername,
+					findTitle
+				}
+			});
+
+			// Send push notification
+			await pushService.sendPushNotification(findOwner.userId, {
+				title: 'Someone liked your find',
+				message: `${likerUsername} liked your find: ${findTitle}`,
+				url: `/?find=${findOwner.id}`,
+				tag: 'find_liked',
+				data: {
+					findId: findOwner.id,
+					likerId: locals.user.id
+				}
+			});
+		}
+	}
 
 	return json({
 		success: true,

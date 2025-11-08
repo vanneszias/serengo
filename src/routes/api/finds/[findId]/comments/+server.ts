@@ -1,8 +1,10 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { findComment, user } from '$lib/server/db/schema';
+import { findComment, user, find } from '$lib/server/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { notificationService } from '$lib/server/notifications';
+import { pushService } from '$lib/server/push';
 
 export const GET: RequestHandler = async ({ params, locals }) => {
 	const session = locals.session;
@@ -106,6 +108,54 @@ export const POST: RequestHandler = async ({ params, locals, request }) => {
 
 		if (commentWithUser.length === 0) {
 			return json({ success: false, error: 'Failed to create comment' }, { status: 500 });
+		}
+
+		// Send notification to find owner if not self-comment
+		const findData = await db.select().from(find).where(eq(find.id, findId)).limit(1);
+		
+		if (findData.length > 0 && findData[0].userId !== session.userId) {
+			const findOwner = findData[0];
+			const shouldNotify = await notificationService.shouldNotify(findOwner.userId, 'find_commented');
+			
+			if (shouldNotify) {
+				// Get commenter's username
+				const commenterUser = await db
+					.select({ username: user.username })
+					.from(user)
+					.where(eq(user.id, session.userId))
+					.limit(1);
+				
+				const commenterUsername = commenterUser[0]?.username || 'Someone';
+				const findTitle = findOwner.title || 'your find';
+
+				await notificationService.createNotification({
+					userId: findOwner.userId,
+					type: 'find_commented',
+					title: 'New comment on your find',
+					message: `${commenterUsername} commented on: ${findTitle}`,
+					data: {
+						findId: findOwner.id,
+						commentId,
+						commenterId: session.userId,
+						commenterUsername,
+						findTitle,
+						commentContent: content.trim().substring(0, 100)
+					}
+				});
+
+				// Send push notification
+				await pushService.sendPushNotification(findOwner.userId, {
+					title: 'New comment on your find',
+					message: `${commenterUsername} commented on: ${findTitle}`,
+					url: `/?find=${findOwner.id}`,
+					tag: 'find_commented',
+					data: {
+						findId: findOwner.id,
+						commentId,
+						commenterId: session.userId
+					}
+				});
+			}
 		}
 
 		return json({

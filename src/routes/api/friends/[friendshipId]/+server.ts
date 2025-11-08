@@ -1,8 +1,10 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { friendship } from '$lib/server/db/schema';
+import { friendship, user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { notificationService } from '$lib/server/notifications';
+import { pushService } from '$lib/server/push';
 
 export const PUT: RequestHandler = async ({ params, request, locals }) => {
 	if (!locals.user) {
@@ -71,6 +73,47 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 			.set({ status: newStatus })
 			.where(eq(friendship.id, friendshipId))
 			.returning();
+
+		// Send notification if friend request was accepted
+		if (action === 'accept') {
+			const senderId = friendshipRecord.userId;
+			const shouldNotify = await notificationService.shouldNotify(senderId, 'friend_accepted');
+			
+			if (shouldNotify) {
+				// Get accepter's username
+				const accepterUser = await db
+					.select({ username: user.username })
+					.from(user)
+					.where(eq(user.id, locals.user.id))
+					.limit(1);
+				
+				const accepterUsername = accepterUser[0]?.username || 'Someone';
+
+				await notificationService.createNotification({
+					userId: senderId,
+					type: 'friend_accepted',
+					title: 'Friend request accepted',
+					message: `${accepterUsername} accepted your friend request`,
+					data: {
+						friendshipId: friendshipRecord.id,
+						accepterId: locals.user.id,
+						accepterUsername
+					}
+				});
+
+				// Send push notification
+				await pushService.sendPushNotification(senderId, {
+					title: 'Friend request accepted',
+					message: `${accepterUsername} accepted your friend request`,
+					url: '/friends',
+					tag: 'friend_accepted',
+					data: {
+						friendshipId: friendshipRecord.id,
+						accepterId: locals.user.id
+					}
+				});
+			}
+		}
 
 		return json({ success: true, friendship: updatedFriendship[0] });
 	} catch (err) {

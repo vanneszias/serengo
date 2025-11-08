@@ -1,4 +1,4 @@
-import { pgTable, integer, text, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, integer, text, timestamp, boolean, jsonb } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('user', {
 	id: text('id').primaryKey(),
@@ -88,15 +88,62 @@ export const findComment = pgTable('find_comment', {
 	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
 });
 
-// Type exports for the new tables
+// Notification system tables
+export const notification = pgTable('notification', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	type: text('type').notNull(), // 'friend_request', 'friend_accepted', 'find_liked', 'find_commented'
+	title: text('title').notNull(),
+	message: text('message').notNull(),
+	data: jsonb('data'), // Additional context data (findId, friendId, etc.)
+	isRead: boolean('is_read').default(false),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+export const notificationSubscription = pgTable('notification_subscription', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	endpoint: text('endpoint').notNull(),
+	p256dhKey: text('p256dh_key').notNull(),
+	authKey: text('auth_key').notNull(),
+	userAgent: text('user_agent'),
+	isActive: boolean('is_active').default(true),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+export const notificationPreferences = pgTable('notification_preferences', {
+	userId: text('user_id')
+		.primaryKey()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	friendRequests: boolean('friend_requests').default(true),
+	friendAccepted: boolean('friend_accepted').default(true),
+	findLiked: boolean('find_liked').default(true),
+	findCommented: boolean('find_commented').default(true),
+	pushEnabled: boolean('push_enabled').default(true),
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+	updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+// Type exports for the tables
 export type Find = typeof find.$inferSelect;
 export type FindMedia = typeof findMedia.$inferSelect;
 export type FindLike = typeof findLike.$inferSelect;
 export type FindComment = typeof findComment.$inferSelect;
 export type Friendship = typeof friendship.$inferSelect;
+export type Notification = typeof notification.$inferSelect;
+export type NotificationSubscription = typeof notificationSubscription.$inferSelect;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 
 export type FindInsert = typeof find.$inferInsert;
 export type FindMediaInsert = typeof findMedia.$inferInsert;
 export type FindLikeInsert = typeof findLike.$inferInsert;
 export type FindCommentInsert = typeof findComment.$inferInsert;
 export type FriendshipInsert = typeof friendship.$inferInsert;
+export type NotificationInsert = typeof notification.$inferInsert;
+export type NotificationSubscriptionInsert = typeof notificationSubscription.$inferInsert;
+export type NotificationPreferencesInsert = typeof notificationPreferences.$inferInsert;
