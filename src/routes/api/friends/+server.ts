@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { friendship, user } from '$lib/server/db/schema';
 import { eq, and, or } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
-import { getSignedR2Url } from '$lib/server/r2';
+import { getLocalR2Url } from '$lib/server/r2';
 import { notificationService } from '$lib/server/notifications';
 import { pushService } from '$lib/server/push';
 
@@ -98,25 +98,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				.where(and(eq(friendship.friendId, locals.user.id), eq(friendship.status, status)));
 		}
 
-		// Generate signed URLs for profile pictures
-		const friendshipsWithSignedUrls = await Promise.all(
-			(friendships || []).map(async (friendship) => {
-				let profilePictureUrl = friendship.friendProfilePictureUrl;
-				if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
-					try {
-						profilePictureUrl = await getSignedR2Url(profilePictureUrl, 24 * 60 * 60);
-					} catch (error) {
-						console.error('Failed to generate signed URL for profile picture:', error);
-						profilePictureUrl = null;
-					}
-				}
+		// Generate local proxy URLs for profile pictures
+		const friendshipsWithSignedUrls = (friendships || []).map((friendship) => {
+			let profilePictureUrl = friendship.friendProfilePictureUrl;
+			if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
+				profilePictureUrl = getLocalR2Url(profilePictureUrl);
+			}
 
-				return {
-					...friendship,
-					friendProfilePictureUrl: profilePictureUrl
-				};
-			})
-		);
+			return {
+				...friendship,
+				friendProfilePictureUrl: profilePictureUrl
+			};
+		});
 
 		return json(friendshipsWithSignedUrls);
 	} catch (err) {

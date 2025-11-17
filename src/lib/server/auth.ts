@@ -4,7 +4,7 @@ import { sha256 } from '@oslojs/crypto/sha2';
 import { encodeBase64url, encodeHexLowerCase } from '@oslojs/encoding';
 import { db } from '$lib/server/db';
 import * as table from '$lib/server/db/schema';
-import { getSignedR2Url } from '$lib/server/r2';
+import { getLocalR2Url } from '$lib/server/r2';
 
 const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -63,16 +63,11 @@ export async function validateSessionToken(token: string) {
 			.where(eq(table.session.id, session.id));
 	}
 
-	// Generate signed URL for profile picture if it exists
+	// Generate local proxy URL for profile picture if it exists
 	let profilePictureUrl = user.profilePictureUrl;
 	if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
-		// It's a path, generate signed URL
-		try {
-			profilePictureUrl = await getSignedR2Url(profilePictureUrl, 24 * 60 * 60); // 24 hours
-		} catch (error) {
-			console.error('Failed to generate signed URL for profile picture:', error);
-			profilePictureUrl = null;
-		}
+		// It's a path, generate local proxy URL
+		profilePictureUrl = getLocalR2Url(profilePictureUrl);
 	}
 
 	return {

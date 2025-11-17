@@ -72,3 +72,7 @@ export async function getSignedR2Url(path: string, expiresIn = 3600): Promise<st
 
 	return await getSignedUrl(r2Client, command, { expiresIn });
 }
+
+export function getLocalR2Url(path: string): string {
+	return `/api/media/${path}`;
+}

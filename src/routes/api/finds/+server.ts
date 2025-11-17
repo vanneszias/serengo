@@ -4,7 +4,7 @@ import { db } from '$lib/server/db';
 import { find, findMedia, user, findLike, friendship } from '$lib/server/db/schema';
 import { eq, and, sql, desc, or } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
-import { getSignedR2Url } from '$lib/server/r2';
+import { getLocalR2Url } from '$lib/server/r2';
 
 function generateFindId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(15));
@@ -176,31 +176,24 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				// Generate signed URLs for all media items
 				const mediaWithSignedUrls = await Promise.all(
 					findMedia.map(async (mediaItem) => {
-						// URLs in database are now paths, generate signed URLs directly
-						const [signedUrl, signedThumbnailUrl] = await Promise.all([
-							getSignedR2Url(mediaItem.url, 24 * 60 * 60), // 24 hours
-							mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
-								? getSignedR2Url(mediaItem.thumbnailUrl, 24 * 60 * 60)
-								: Promise.resolve(mediaItem.thumbnailUrl) // Keep static placeholder paths as-is
-						]);
+						// URLs in database are now paths, generate local proxy URLs
+						const localUrl = getLocalR2Url(mediaItem.url);
+						const localThumbnailUrl = mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
+							? getLocalR2Url(mediaItem.thumbnailUrl)
+							: mediaItem.thumbnailUrl; // Keep static placeholder paths as-is
 
 						return {
 							...mediaItem,
-							url: signedUrl,
-							thumbnailUrl: signedThumbnailUrl
+							url: localUrl,
+							thumbnailUrl: localThumbnailUrl
 						};
 					})
 				);
 
-				// Generate signed URL for user profile picture if it exists
+				// Generate local proxy URL for user profile picture if it exists
 				let userProfilePictureUrl = findItem.profilePictureUrl;
 				if (userProfilePictureUrl && !userProfilePictureUrl.startsWith('http')) {
-					try {
-						userProfilePictureUrl = await getSignedR2Url(userProfilePictureUrl, 24 * 60 * 60);
-					} catch (error) {
-						console.error('Failed to generate signed URL for user profile picture:', error);
-						userProfilePictureUrl = null;
-					}
+					userProfilePictureUrl = getLocalR2Url(userProfilePictureUrl);
 				}
 
 				return {

@@ -130,8 +130,8 @@ self.addEventListener('fetch', (event) => {
 			}
 		}
 
-		// Handle R2 resources with cache-first strategy
-		if (url.hostname.includes('.r2.dev') || url.hostname.includes('.r2.cloudflarestorage.com')) {
+		// Handle R2 resources and local media proxy with cache-first strategy
+		if (url.hostname.includes('.r2.dev') || url.hostname.includes('.r2.cloudflarestorage.com') || url.pathname.startsWith('/api/media/')) {
 			const cachedResponse = await r2Cache.match(event.request);
 			if (cachedResponse) {
 				return cachedResponse;
@@ -146,7 +146,7 @@ self.addEventListener('fetch', (event) => {
 				return response;
 			} catch {
 				// Return cached version if available, or fall through to other cache checks
-				return cachedResponse || new Response('R2 resource not available', { status: 404 });
+				return cachedResponse || new Response('Media resource not available', { status: 404 });
 			}
 		}
 

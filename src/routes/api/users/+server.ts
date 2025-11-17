@@ -3,7 +3,7 @@ import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { user, friendship } from '$lib/server/db/schema';
 import { eq, and, or, ilike, ne } from 'drizzle-orm';
-import { getSignedR2Url } from '$lib/server/r2';
+import { getLocalR2Url } from '$lib/server/r2';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
 	if (!locals.user) {
@@ -63,28 +63,21 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			friendshipStatusMap.set(otherUserId, f.status);
 		});
 
-		// Generate signed URLs and add friendship status
-		const usersWithSignedUrls = await Promise.all(
-			users.map(async (userItem) => {
-				let profilePictureUrl = userItem.profilePictureUrl;
-				if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
-					try {
-						profilePictureUrl = await getSignedR2Url(profilePictureUrl, 24 * 60 * 60);
-					} catch (error) {
-						console.error('Failed to generate signed URL for profile picture:', error);
-						profilePictureUrl = null;
-					}
-				}
+		// Generate local proxy URLs and add friendship status
+		const usersWithSignedUrls = users.map((userItem) => {
+			let profilePictureUrl = userItem.profilePictureUrl;
+			if (profilePictureUrl && !profilePictureUrl.startsWith('http')) {
+				profilePictureUrl = getLocalR2Url(profilePictureUrl);
+			}
 
-				const friendshipStatus = friendshipStatusMap.get(userItem.id) || 'none';
+			const friendshipStatus = friendshipStatusMap.get(userItem.id) || 'none';
 
-				return {
-					...userItem,
-					profilePictureUrl,
-					friendshipStatus
-				};
-			})
-		);
+			return {
+				...userItem,
+				profilePictureUrl,
+				friendshipStatus
+			};
+		});
 
 		return json(usersWithSignedUrls);
 	} catch (err) {
