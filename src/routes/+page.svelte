@@ -264,14 +264,6 @@
 			<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
 		</div>
 	</div>
-
-	<!-- Floating action button for mobile -->
-	<button class="fab" onclick={openCreateModal} aria-label="Create new find">
-		<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-			<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
-			<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
-		</svg>
-	</button>
 </div>
 
 <!-- Modals -->
@@ -331,6 +323,7 @@
 
 	.finds-header {
 		display: flex;
+		justify-content: space-between;
 		padding: 20px;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 		background: rgba(255, 255, 255, 0.5);
@@ -347,30 +340,6 @@
 		flex-shrink: 0;
 	}
 
-	.fab {
-		position: fixed;
-		bottom: 2rem;
-		right: 2rem;
-		width: 56px;
-		height: 56px;
-		background: hsl(var(--primary));
-		color: hsl(var(--primary-foreground));
-		border: none;
-		border-radius: 50%;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-		cursor: pointer;
-		display: none;
-		align-items: center;
-		justify-content: center;
-		transition: all 0.2s;
-		z-index: 200;
-	}
-
-	.fab:hover {
-		transform: scale(1.1);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-	}
-
 	@media (max-width: 768px) {
 		.finds-sidebar {
 			top: auto;
@@ -384,14 +353,6 @@
 
 		.finds-header {
 			padding: 16px;
-		}
-
-		:global(.create-find-button) {
-			display: none;
-		}
-
-		.fab {
-			display: flex;
 		}
 
 		.map-section :global(.map-container) {
