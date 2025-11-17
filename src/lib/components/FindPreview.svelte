@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/sheet';
 	import LikeButton from '$lib/components/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
 	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
@@ -36,7 +35,6 @@
 
 	let { find, onClose, currentUserId }: Props = $props();
 
-	let showModal = $state(true);
 	let currentMediaIndex = $state(0);
 	let isMobile = $state(false);
 
@@ -52,13 +50,6 @@
 		window.addEventListener('resize', checkIsMobile);
 
 		return () => window.removeEventListener('resize', checkIsMobile);
-	});
-
-	// Close modal when showModal changes to false
-	$effect(() => {
-		if (!showModal) {
-			onClose();
-		}
 	});
 
 	function nextMedia() {
@@ -110,9 +101,9 @@
 </script>
 
 {#if find}
-	<Sheet open={showModal} onOpenChange={(open) => (showModal = open)}>
-		<SheetContent side={isMobile ? 'bottom' : 'right'} class="sheet-content">
-			<SheetHeader class="sheet-header">
+	<div class="modal-container" class:mobile={isMobile}>
+		<div class="modal-content">
+			<div class="modal-header">
 				<div class="user-section">
 					<ProfilePicture
 						username={find.user.username}
@@ -120,7 +111,7 @@
 						class="user-avatar"
 					/>
 					<div class="user-info">
-						<SheetTitle class="find-title">{find.title}</SheetTitle>
+						<h2 class="find-title">{find.title}</h2>
 						<div class="find-meta">
 							<span class="username">@{find.user.username}</span>
 							<span class="separator">•</span>
@@ -132,9 +123,20 @@
 						</div>
 					</div>
 				</div>
-			</SheetHeader>
+				<button type="button" class="close-button" onclick={onClose} aria-label="Close">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M18 6L6 18M6 6L18 18"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</button>
+			</div>
 
-			<div class="sheet-body">
+			<div class="modal-body">
 				{#if find.media && find.media.length > 0}
 					<div class="media-container">
 						<div class="media-viewer">
@@ -263,37 +265,78 @@
 					/>
 				</div>
 			</div>
-		</SheetContent>
-	</Sheet>
+		</div>
+	</div>
 {/if}
 
 <style>
-	/* Base styles for sheet content */
-	:global(.sheet-content) {
-		padding: 0 !important;
+	.modal-container {
+		position: fixed;
+		top: 80px;
+		right: 20px;
+		width: 40%;
+		max-width: 600px;
+		min-width: 500px;
+		height: calc(100vh - 100px);
+		backdrop-filter: blur(10px);
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 50;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		animation: slideIn 0.3s ease-out;
 	}
 
-	/* Desktop styles (side sheet) */
-	@media (min-width: 768px) {
-		:global(.sheet-content) {
-			width: 80vw !important;
-			max-width: 600px !important;
-			height: 100vh !important;
-			border-radius: 0 !important;
+	@keyframes slideIn {
+		from {
+			opacity: 0;
+			transform: translateX(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
 		}
 	}
 
-	/* Mobile styles (bottom sheet) */
-	@media (max-width: 767px) {
-		:global(.sheet-content) {
-			height: 50vh !important;
-			border-radius: 16px 16px 0 0 !important;
+	.modal-container.mobile {
+		top: auto;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		min-width: 0;
+		max-width: none;
+		height: 90vh;
+		border-radius: 16px 16px 0 0;
+		animation: slideUp 0.3s ease-out;
+	}
+
+	@keyframes slideUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 
-	:global(.sheet-header) {
-		padding: 1rem 1.5rem;
-		border-bottom: 1px solid hsl(var(--border));
+	.modal-content {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.modal-header {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 1.25rem 1.5rem;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
 	}
 
@@ -301,7 +344,8 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		width: 100%;
+		flex: 1;
+		min-width: 0;
 	}
 
 	:global(.user-avatar) {
@@ -322,13 +366,13 @@
 		min-width: 0;
 	}
 
-	:global(.find-title) {
-		font-family: 'Washington', serif !important;
-		font-size: 1.25rem !important;
-		font-weight: 600 !important;
-		margin: 0 !important;
-		color: hsl(var(--foreground)) !important;
-		line-height: 1.3 !important;
+	.find-title {
+		font-family: 'Washington', serif;
+		font-size: 1.25rem;
+		font-weight: 600;
+		margin: 0;
+		color: hsl(var(--foreground));
+		line-height: 1.3;
 	}
 
 	.find-meta {
@@ -359,7 +403,27 @@
 		text-transform: capitalize;
 	}
 
-	.sheet-body {
+	.close-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: none;
+		background: transparent;
+		color: hsl(var(--muted-foreground));
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+	}
+
+	.close-button:hover {
+		background: hsl(var(--muted) / 0.5);
+		color: hsl(var(--foreground));
+	}
+
+	.modal-body {
 		flex: 1;
 		overflow: hidden;
 		padding: 0;
@@ -387,8 +451,8 @@
 
 	/* Desktop media viewer - maximize available space */
 	@media (min-width: 768px) {
-		.sheet-body {
-			height: calc(100vh - 140px);
+		.modal-body {
+			height: calc(100vh - 180px);
 		}
 
 		.media-container {
@@ -404,8 +468,8 @@
 
 	/* Mobile media viewer - maximize available space */
 	@media (max-width: 767px) {
-		.sheet-body {
-			height: calc(80vh - 140px);
+		.modal-body {
+			height: calc(90vh - 180px);
 		}
 
 		.media-container {
@@ -490,6 +554,7 @@
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	.description {
@@ -556,15 +621,16 @@
 	.comments-section {
 		flex: 1;
 		min-height: 0;
-		border-top: 1px solid hsl(var(--border));
+		border-top: 1px solid rgba(0, 0, 0, 0.1);
 		display: flex;
 		flex-direction: column;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	/* Desktop comments section */
 	@media (min-width: 768px) {
 		.comments-section {
-			height: calc(100vh - 400px);
+			height: calc(100vh - 500px);
 			min-height: 200px;
 		}
 	}
@@ -572,14 +638,14 @@
 	/* Mobile comments section */
 	@media (max-width: 767px) {
 		.comments-section {
-			height: calc(80vh - 350px);
+			height: calc(90vh - 450px);
 			min-height: 150px;
 		}
 	}
 
 	/* Mobile specific adjustments */
 	@media (max-width: 640px) {
-		:global(.sheet-header) {
+		.modal-header {
 			padding: 1rem;
 		}
 
@@ -592,8 +658,8 @@
 			height: 40px;
 		}
 
-		:global(.find-title) {
-			font-size: 1.125rem !important;
+		.find-title {
+			font-size: 1.125rem;
 		}
 
 		.content-section {
@@ -610,7 +676,7 @@
 		}
 
 		.comments-section {
-			height: calc(80vh - 380px);
+			height: calc(90vh - 480px);
 		}
 	}
 </style>
