@@ -319,6 +319,7 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
+		box-sizing: border-box;
 	}
 
 	.finds-header {
@@ -347,8 +348,11 @@
 			left: 0;
 			right: 0;
 			width: 100%;
+			max-width: 100vw;
+			min-width: 0;
 			height: 50vh;
 			border-radius: 20px 20px 0 0;
+			box-sizing: border-box;
 		}
 
 		.finds-header {

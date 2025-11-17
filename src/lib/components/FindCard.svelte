@@ -286,12 +286,16 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
+		flex-wrap: wrap;
+		min-width: 0;
 	}
 
 	:global(.action-button) {
 		gap: 0.375rem;
 		color: hsl(var(--muted-foreground));
 		font-size: 0.875rem;
+		flex-shrink: 1;
+		min-width: 0;
 	}
 
 	:global(.action-button:hover) {
