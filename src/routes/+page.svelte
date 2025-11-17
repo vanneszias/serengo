@@ -94,6 +94,7 @@
 	let showCreateModal = $state(false);
 	let selectedFind: FindPreviewData | null = $state(null);
 	let currentFilter = $state('all');
+	let isSidebarVisible = $state(true);
 
 	// Initialize API sync with server data on mount
 	onMount(async () => {
@@ -215,6 +216,10 @@
 	function closeCreateModal() {
 		showCreateModal = false;
 	}
+
+	function toggleSidebar() {
+		isSidebarVisible = !isSidebarVisible;
+	}
 </script>
 
 <svelte:head>
@@ -248,8 +253,19 @@
 		/>
 	</div>
 
+	<!-- Toggle button -->
+	<button class="sidebar-toggle" onclick={toggleSidebar} aria-label="Toggle finds list">
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+			{#if isSidebarVisible}
+				<path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+			{:else}
+				<path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+			{/if}
+		</svg>
+	</button>
+
 	<!-- Left sidebar with finds list -->
-	<div class="finds-sidebar">
+	<div class="finds-sidebar" class:hidden={!isSidebarVisible}>
 		<div class="finds-header">
 			<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
 			<Button onclick={openCreateModal} class="create-find-button">
@@ -304,10 +320,38 @@
 		box-shadow: none !important;
 	}
 
+	.sidebar-toggle {
+		position: fixed;
+		top: 90px;
+		left: 20px;
+		width: 48px;
+		height: 48px;
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(10px);
+		border: none;
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.sidebar-toggle:hover {
+		background: rgba(255, 255, 255, 1);
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+	}
+
+	.sidebar-toggle svg {
+		color: #333;
+	}
+
 	.finds-sidebar {
 		position: fixed;
 		top: 80px;
-		left: 20px;
+		left: 80px;
 		width: 40%;
 		max-width: 1000px;
 		min-width: 500px;
@@ -320,6 +364,15 @@
 		flex-direction: column;
 		overflow: hidden;
 		box-sizing: border-box;
+		transition:
+			transform 0.3s ease,
+			opacity 0.3s ease;
+	}
+
+	.finds-sidebar.hidden {
+		transform: translateX(-100%);
+		opacity: 0;
+		pointer-events: none;
 	}
 
 	.finds-header {
@@ -342,6 +395,17 @@
 	}
 
 	@media (max-width: 768px) {
+		.sidebar-toggle {
+			top: auto;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+		}
+
+		.sidebar-toggle svg {
+			transform: rotate(90deg);
+		}
+
 		.finds-sidebar {
 			top: auto;
 			bottom: 0;
@@ -353,6 +417,10 @@
 			height: 50vh;
 			border-radius: 20px 20px 0 0;
 			box-sizing: border-box;
+		}
+
+		.finds-sidebar.hidden {
+			transform: translateY(100%);
 		}
 
 		.finds-header {
