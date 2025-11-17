@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Sheet, SheetContent, SheetHeader, SheetTitle } from '$lib/components/sheet';
 	import { Input } from '$lib/components/input';
 	import { Label } from '$lib/components/label';
 	import { Button } from '$lib/components/button';
@@ -37,7 +36,6 @@
 		{ value: 'other', label: 'Other' }
 	];
 
-	let showModal = $state(true);
 	let isMobile = $state(false);
 
 	$effect(() => {
@@ -54,13 +52,7 @@
 	});
 
 	$effect(() => {
-		if (!showModal) {
-			onClose();
-		}
-	});
-
-	$effect(() => {
-		if (showModal && $coordinates) {
+		if (isOpen && $coordinates) {
 			latitude = $coordinates.latitude.toString();
 			longitude = $coordinates.longitude.toString();
 		}
@@ -129,8 +121,8 @@
 			}
 
 			resetForm();
-			showModal = false;
 			onFindCreated(new CustomEvent('findCreated', { detail: { reload: true } }));
+			onClose();
 		} catch (error) {
 			console.error('Error creating find:', error);
 			alert('Failed to create find. Please try again.');
@@ -173,16 +165,27 @@
 
 	function closeModal() {
 		resetForm();
-		showModal = false;
+		onClose();
 	}
 </script>
 
 {#if isOpen}
-	<Sheet open={showModal} onOpenChange={(open) => (showModal = open)}>
-		<SheetContent side={isMobile ? 'bottom' : 'right'} class="sheet-content">
-			<SheetHeader class="sheet-header">
-				<SheetTitle class="sheet-title">Create Find</SheetTitle>
-			</SheetHeader>
+	<div class="modal-container" class:mobile={isMobile}>
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 class="modal-title">Create Find</h2>
+				<button type="button" class="close-button" onclick={closeModal} aria-label="Close">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+						<path
+							d="M18 6L6 18M6 6L18 18"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</button>
+			</div>
 
 			<form
 				onsubmit={(e) => {
@@ -191,7 +194,7 @@
 				}}
 				class="form"
 			>
-				<div class="sheet-body">
+				<div class="modal-body">
 					<div class="field">
 						<Label for="title">What did you find?</Label>
 						<Input name="title" placeholder="Amazing coffee shop..." required bind:value={title} />
@@ -334,7 +337,7 @@
 					{/if}
 				</div>
 
-				<div class="sheet-footer">
+				<div class="modal-footer">
 					<Button variant="ghost" type="button" onclick={closeModal} disabled={isSubmitting}>
 						Cancel
 					</Button>
@@ -343,46 +346,106 @@
 					</Button>
 				</div>
 			</form>
-		</SheetContent>
-	</Sheet>
+		</div>
+	</div>
 {/if}
 
 <style>
-	/* Base styles for sheet content */
-	:global(.sheet-content) {
-		padding: 0 !important;
+	.modal-container {
+		position: fixed;
+		top: 80px;
+		right: 20px;
+		width: 40%;
+		max-width: 600px;
+		min-width: 500px;
+		height: calc(100vh - 100px);
+		backdrop-filter: blur(10px);
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 50;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		animation: slideIn 0.3s ease-out;
 	}
 
-	/* Desktop styles (side sheet) */
-	@media (min-width: 768px) {
-		:global(.sheet-content) {
-			width: 80vw !important;
-			max-width: 600px !important;
-			height: 100vh !important;
-			border-radius: 0 !important;
+	@keyframes slideIn {
+		from {
+			opacity: 0;
+			transform: translateX(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
 		}
 	}
 
-	/* Mobile styles (bottom sheet) */
-	@media (max-width: 767px) {
-		:global(.sheet-content) {
-			height: 90vh !important;
-			border-radius: 16px 16px 0 0 !important;
+	.modal-container.mobile {
+		top: auto;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		min-width: 0;
+		max-width: none;
+		height: 90vh;
+		border-radius: 16px 16px 0 0;
+		animation: slideUp 0.3s ease-out;
+	}
+
+	@keyframes slideUp {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
 		}
 	}
 
-	:global(.sheet-header) {
-		padding: 1rem 1.5rem;
-		border-bottom: 1px solid hsl(var(--border));
+	.modal-content {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		background: rgba(255, 255, 255, 0.6);
+	}
+
+	.modal-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 1.25rem 1.5rem;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
 	}
 
-	:global(.sheet-title) {
-		font-family: 'Washington', serif !important;
-		font-size: 1.5rem !important;
-		font-weight: 600 !important;
-		margin: 0 !important;
-		color: hsl(var(--foreground)) !important;
+	.modal-title {
+		font-family: 'Washington', serif;
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0;
+		color: hsl(var(--foreground));
+	}
+
+	.close-button {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: none;
+		background: transparent;
+		color: hsl(var(--muted-foreground));
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.close-button:hover {
+		background: hsl(var(--muted) / 0.5);
+		color: hsl(var(--foreground));
 	}
 
 	.form {
@@ -391,7 +454,7 @@
 		flex-direction: column;
 	}
 
-	.sheet-body {
+	.modal-body {
 		flex: 1;
 		padding: 1.5rem;
 		overflow-y: auto;
@@ -411,12 +474,6 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
-	}
-
-	@media (max-width: 640px) {
-		.field-group {
-			grid-template-columns: 1fr;
-		}
 	}
 
 	textarea {
@@ -545,16 +602,16 @@
 		color: hsl(var(--foreground));
 	}
 
-	.sheet-footer {
+	.modal-footer {
 		display: flex;
 		gap: 0.75rem;
 		padding: 1.5rem;
-		border-top: 1px solid hsl(var(--border));
-		background: hsl(var(--background));
+		border-top: 1px solid rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
 	}
 
-	.sheet-footer :global(button) {
+	.modal-footer :global(button) {
 		flex: 1;
 	}
 
@@ -629,27 +686,31 @@
 	}
 
 	/* Mobile specific adjustments */
-	@media (max-width: 640px) {
-		:global(.sheet-header) {
+	@media (max-width: 767px) {
+		.modal-header {
 			padding: 1rem;
 		}
 
-		:global(.sheet-title) {
-			font-size: 1.25rem !important;
+		.modal-title {
+			font-size: 1.25rem;
 		}
 
-		.sheet-body {
+		.modal-body {
 			padding: 1rem;
 			gap: 1.25rem;
 		}
 
-		.sheet-footer {
+		.modal-footer {
 			padding: 1rem;
 			gap: 0.5rem;
 		}
 
 		.file-content {
 			padding: 1.5rem 1rem;
+		}
+
+		.field-group {
+			grid-template-columns: 1fr;
 		}
 	}
 </style>
