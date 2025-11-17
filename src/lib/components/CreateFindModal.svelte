@@ -179,9 +179,9 @@
 
 {#if isOpen}
 	<Sheet open={showModal} onOpenChange={(open) => (showModal = open)}>
-		<SheetContent side={isMobile ? 'bottom' : 'right'} class="create-find-sheet">
-			<SheetHeader>
-				<SheetTitle>Create Find</SheetTitle>
+		<SheetContent side={isMobile ? 'bottom' : 'right'} class="sheet-content">
+			<SheetHeader class="sheet-header">
+				<SheetTitle class="sheet-title">Create Find</SheetTitle>
 			</SheetHeader>
 
 			<form
@@ -191,7 +191,7 @@
 				}}
 				class="form"
 			>
-				<div class="form-content">
+				<div class="sheet-body">
 					<div class="field">
 						<Label for="title">What did you find?</Label>
 						<Input name="title" placeholder="Amazing coffee shop..." required bind:value={title} />
@@ -334,7 +334,7 @@
 					{/if}
 				</div>
 
-				<div class="actions">
+				<div class="sheet-footer">
 					<Button variant="ghost" type="button" onclick={closeModal} disabled={isSubmitting}>
 						Cancel
 					</Button>
@@ -348,19 +348,41 @@
 {/if}
 
 <style>
-	:global(.create-find-sheet) {
+	/* Base styles for sheet content */
+	:global(.sheet-content) {
 		padding: 0 !important;
-		width: 100%;
-		max-width: 500px;
-		height: 100vh;
-		border-radius: 0;
 	}
 
-	@media (max-width: 767px) {
-		:global(.create-find-sheet) {
-			height: 90vh;
-			border-radius: 12px 12px 0 0;
+	/* Desktop styles (side sheet) */
+	@media (min-width: 768px) {
+		:global(.sheet-content) {
+			width: 80vw !important;
+			max-width: 600px !important;
+			height: 100vh !important;
+			border-radius: 0 !important;
 		}
+	}
+
+	/* Mobile styles (bottom sheet) */
+	@media (max-width: 767px) {
+		:global(.sheet-content) {
+			height: 90vh !important;
+			border-radius: 16px 16px 0 0 !important;
+		}
+	}
+
+	:global(.sheet-header) {
+		padding: 1rem 1.5rem;
+		border-bottom: 1px solid hsl(var(--border));
+		flex-shrink: 0;
+	}
+
+	:global(.sheet-title) {
+		font-family: 'Washington', serif !important;
+		font-size: 1.5rem !important;
+		font-weight: 600 !important;
+		margin: 0 !important;
+		color: hsl(var(--foreground)) !important;
 	}
 
 	.form {
@@ -369,13 +391,14 @@
 		flex-direction: column;
 	}
 
-	.form-content {
+	.sheet-body {
 		flex: 1;
 		padding: 1.5rem;
 		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
 		gap: 1.5rem;
+		min-height: 0;
 	}
 
 	.field {
@@ -397,7 +420,7 @@
 	}
 
 	textarea {
-		min-height: 80px;
+		min-height: 100px;
 		padding: 0.75rem;
 		border: 1px solid hsl(var(--border));
 		border-radius: 8px;
@@ -407,6 +430,7 @@
 		resize: vertical;
 		outline: none;
 		transition: border-color 0.2s ease;
+		line-height: 1.5;
 	}
 
 	textarea:focus {
@@ -448,13 +472,14 @@
 	}
 
 	.privacy-toggle:hover {
-		background: hsl(var(--muted));
+		background: hsl(var(--muted) / 0.5);
 	}
 
 	.privacy-toggle input[type='checkbox'] {
-		width: 16px;
-		height: 16px;
+		width: 18px;
+		height: 18px;
 		accent-color: hsl(var(--primary));
+		cursor: pointer;
 	}
 
 	.file-upload {
@@ -485,7 +510,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		padding: 2rem;
+		padding: 2rem 1rem;
 		text-align: center;
 		gap: 0.5rem;
 		color: hsl(var(--muted-foreground));
@@ -493,6 +518,7 @@
 
 	.file-content span {
 		font-size: 0.875rem;
+		font-weight: 500;
 	}
 
 	.file-selected {
@@ -500,7 +526,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.75rem;
-		background: hsl(var(--muted));
+		background: hsl(var(--muted) / 0.5);
 		border: 1px solid hsl(var(--border));
 		border-radius: 8px;
 		font-size: 0.875rem;
@@ -516,24 +542,26 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+		color: hsl(var(--foreground));
 	}
 
-	.actions {
+	.sheet-footer {
 		display: flex;
-		gap: 1rem;
+		gap: 0.75rem;
 		padding: 1.5rem;
 		border-top: 1px solid hsl(var(--border));
 		background: hsl(var(--background));
+		flex-shrink: 0;
 	}
 
-	.actions :global(button) {
+	.sheet-footer :global(button) {
 		flex: 1;
 	}
 
 	.location-section {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.75rem;
 	}
 
 	.location-header {
@@ -544,18 +572,19 @@
 
 	.toggle-button {
 		font-size: 0.75rem;
-		padding: 0.25rem 0.5rem;
+		padding: 0.375rem 0.75rem;
 		height: auto;
-		background: transparent;
+		background: hsl(var(--secondary));
 		border: 1px solid hsl(var(--border));
 		border-radius: 6px;
-		color: hsl(var(--foreground));
+		color: hsl(var(--secondary-foreground));
 		cursor: pointer;
 		transition: all 0.2s ease;
+		font-weight: 500;
 	}
 
 	.toggle-button:hover {
-		background: hsl(var(--muted));
+		background: hsl(var(--secondary) / 0.8);
 	}
 
 	.coordinates-display {
@@ -567,7 +596,7 @@
 	.coordinates-info {
 		display: flex;
 		align-items: center;
-		gap: 1rem;
+		gap: 0.75rem;
 		padding: 0.75rem;
 		background: hsl(var(--muted) / 0.5);
 		border: 1px solid hsl(var(--border));
@@ -578,38 +607,49 @@
 	.coordinate {
 		color: hsl(var(--muted-foreground));
 		font-family: monospace;
+		font-size: 0.8125rem;
 	}
 
 	.edit-coords-button {
 		margin-left: auto;
 		font-size: 0.75rem;
-		padding: 0.25rem 0.5rem;
+		padding: 0.375rem 0.75rem;
 		height: auto;
-		background: transparent;
+		background: hsl(var(--secondary));
 		border: 1px solid hsl(var(--border));
 		border-radius: 6px;
-		color: hsl(var(--foreground));
+		color: hsl(var(--secondary-foreground));
 		cursor: pointer;
 		transition: all 0.2s ease;
+		font-weight: 500;
 	}
 
 	.edit-coords-button:hover {
-		background: hsl(var(--muted));
+		background: hsl(var(--secondary) / 0.8);
 	}
 
+	/* Mobile specific adjustments */
 	@media (max-width: 640px) {
-		.form-content {
+		:global(.sheet-header) {
 			padding: 1rem;
-			gap: 1rem;
 		}
 
-		.actions {
-			padding: 1rem;
-			flex-direction: column;
+		:global(.sheet-title) {
+			font-size: 1.25rem !important;
 		}
 
-		.actions :global(button) {
-			flex: none;
+		.sheet-body {
+			padding: 1rem;
+			gap: 1.25rem;
+		}
+
+		.sheet-footer {
+			padding: 1rem;
+			gap: 0.5rem;
+		}
+
+		.file-content {
+			padding: 1.5rem 1rem;
 		}
 	}
 </style>
