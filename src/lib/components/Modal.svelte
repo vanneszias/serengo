@@ -163,6 +163,7 @@
 		box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 		background: white;
 		overflow: hidden;
+		z-index: 9999;
 	}
 
 	.modal.dropdown {
@@ -171,11 +172,12 @@
 		right: 0;
 		max-width: 320px;
 		width: 320px;
-		z-index: 1000;
+		z-index: 10000;
 	}
 
 	.modal::backdrop {
 		background: rgba(0, 0, 0, 0.1);
+		z-index: 9998;
 	}
 
 	.modal-content {

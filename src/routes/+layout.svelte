@@ -64,12 +64,12 @@
 
 <style>
 	.header-skeleton {
-		border-bottom: 1px solid #e5e7eb;
-		background: white;
 		padding: 0 20px;
 		height: 64px;
 		display: flex;
 		align-items: center;
+		position: relative;
+		z-index: 100;
 	}
 
 	.header-content {

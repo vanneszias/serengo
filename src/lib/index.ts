@@ -8,7 +8,6 @@ export { default as ProfilePictureSheet } from './components/ProfilePictureSheet
 export { default as Header } from './components/Header.svelte';
 export { default as Modal } from './components/Modal.svelte';
 export { default as Map } from './components/Map.svelte';
-export { default as LocationButton } from './components/LocationButton.svelte';
 export { default as LocationManager } from './components/LocationManager.svelte';
 export { default as NotificationManager } from './components/NotificationManager.svelte';
 export { default as NotificationPrompt } from './components/NotificationPrompt.svelte';

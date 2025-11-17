@@ -9,7 +9,6 @@
 		locationActions,
 		isWatching
 	} from '$lib/stores/location';
-	import LocationButton from './LocationButton.svelte';
 	import { Skeleton } from '$lib/components/skeleton';
 
 	interface Find {
@@ -39,7 +38,6 @@
 		center?: [number, number];
 		zoom?: number;
 		class?: string;
-		showLocationButton?: boolean;
 		autoCenter?: boolean;
 		finds?: Find[];
 		onFindClick?: (find: Find) => void;
@@ -67,7 +65,6 @@
 		center,
 		zoom,
 		class: className = '',
-		showLocationButton = true,
 		autoCenter = true,
 		finds = [],
 		onFindClick
@@ -179,12 +176,6 @@
 				</Marker>
 			{/each}
 		</MapLibre>
-
-		{#if showLocationButton}
-			<div class="location-controls">
-				<LocationButton variant="icon" size="medium" showLabel={false} />
-			</div>
-		{/if}
 	</div>
 </div>
 
@@ -219,15 +210,7 @@
 
 	.map-container :global(.maplibregl-map) {
 		margin: 0 auto;
-		box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-		border-radius: 12px;
 		overflow: hidden;
-	}
-
-	.location-controls {
-		position: absolute;
-		top: 12px;
-		right: 12px;
 	}
 
 	/* Location marker styles */

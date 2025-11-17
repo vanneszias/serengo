@@ -28,8 +28,7 @@
 	.app-header {
 		width: 100%;
 		position: relative;
-		z-index: 10;
-		backdrop-filter: blur(10px);
+		z-index: 100;
 	}
 
 	.header-content {
@@ -38,7 +37,6 @@
 		justify-content: space-between;
 		padding: 16px 20px;
 		margin: 0 auto;
-		max-width: 1200px;
 	}
 
 	.profile-container {

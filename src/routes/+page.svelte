@@ -238,36 +238,32 @@
 </svelte:head>
 
 <div class="home-container">
-	<main class="main-content">
-		<div class="map-section">
-			<Map
-				showLocationButton={true}
-				autoCenter={true}
-				center={[$coordinates?.longitude || 0, $coordinates?.latitude || 51.505]}
-				{finds}
-				onFindClick={handleFindClick}
-			/>
-		</div>
+	<!-- Fullscreen map -->
+	<div class="map-section">
+		<Map
+			autoCenter={true}
+			center={[$coordinates?.longitude || 0, $coordinates?.latitude || 51.505]}
+			{finds}
+			onFindClick={handleFindClick}
+		/>
+	</div>
 
-		<div class="finds-section">
-			<div class="finds-sticky-header">
-				<div class="finds-header-content">
-					<div class="finds-title-section">
-						<h2 class="finds-title">Finds</h2>
-						<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
-					</div>
-					<Button onclick={openCreateModal} class="create-find-button">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
-							<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
-							<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
-						</svg>
-						Create Find
-					</Button>
-				</div>
-			</div>
+	<!-- Left sidebar with finds list -->
+	<div class="finds-sidebar">
+		<div class="finds-header">
+			<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+			<Button onclick={openCreateModal} class="create-find-button">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
+					<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
+					<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
+				</svg>
+				Create Find
+			</Button>
+		</div>
+		<div class="finds-list-container">
 			<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
 		</div>
-	</main>
+	</div>
 
 	<!-- Floating action button for mobile -->
 	<button class="fab" onclick={openCreateModal} aria-label="Create new find">
@@ -293,68 +289,58 @@
 
 <style>
 	.home-container {
-		background-color: #f8f8f8;
-		min-height: 100vh;
-	}
-
-	.main-content {
-		padding: 24px 20px;
-		max-width: 1200px;
-		margin: 0 auto;
-		display: flex;
-		flex-direction: column;
-		gap: 24px;
-	}
-
-	.map-section {
-		background: white;
-		border-radius: 12px;
-		overflow: hidden;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-	}
-
-	.map-section :global(.map-container) {
-		height: 500px;
-		border-radius: 0;
-	}
-
-	.finds-section {
-		background: white;
-		border-radius: 12px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 		position: relative;
 	}
 
-	.finds-sticky-header {
-		position: sticky;
+	.map-section {
+		position: fixed;
 		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		z-index: 0;
+		overflow: hidden;
+	}
+
+	.map-section :global(.map-container) {
+		height: 100vh;
+		border-radius: 0;
+	}
+
+	.map-section :global(.maplibregl-map) {
+		border-radius: 0 !important;
+		box-shadow: none !important;
+	}
+
+	.finds-sidebar {
+		position: fixed;
+		top: 80px;
+		left: 20px;
+		width: 40%;
+		max-width: 1000px;
+		min-width: 500px;
+		height: calc(100vh - 100px);
+		backdrop-filter: blur(10px);
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 		z-index: 50;
-		background: white;
-		border-bottom: 1px solid hsl(var(--border));
-		padding: 24px 24px 16px 24px;
-		border-radius: 12px 12px 0 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 
-	.finds-header-content {
+	.finds-header {
 		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 1rem;
+		padding: 20px;
+		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		background: rgba(255, 255, 255, 0.5);
+		flex-shrink: 0;
 	}
 
-	.finds-title-section {
-		display: flex;
-		align-items: center;
-		gap: 1rem;
+	.finds-list-container {
 		flex: 1;
-	}
-
-	.finds-title {
-		font-family: 'Washington', serif;
-		font-size: 1.875rem;
-		font-weight: 700;
-		margin: 0;
-		color: hsl(var(--foreground));
+		overflow-y: auto;
+		overflow-x: hidden;
 	}
 
 	:global(.create-find-button) {
@@ -377,7 +363,7 @@
 		align-items: center;
 		justify-content: center;
 		transition: all 0.2s;
-		z-index: 100;
+		z-index: 200;
 	}
 
 	.fab:hover {
@@ -386,30 +372,18 @@
 	}
 
 	@media (max-width: 768px) {
-		.main-content {
+		.finds-sidebar {
+			top: auto;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			width: 100%;
+			height: 50vh;
+			border-radius: 20px 20px 0 0;
+		}
+
+		.finds-header {
 			padding: 16px;
-			gap: 16px;
-		}
-
-		.finds-sticky-header {
-			padding: 16px 16px 12px 16px;
-		}
-
-		.finds-header-content {
-			flex-direction: column;
-			align-items: stretch;
-			gap: 12px;
-		}
-
-		.finds-title-section {
-			flex-direction: row;
-			justify-content: space-between;
-			align-items: center;
-			gap: 12px;
-		}
-
-		.finds-title {
-			font-size: 1.5rem;
 		}
 
 		:global(.create-find-button) {
@@ -421,17 +395,17 @@
 		}
 
 		.map-section :global(.map-container) {
-			height: 300px;
+			height: 100vh;
 		}
 	}
 
 	@media (max-width: 480px) {
-		.main-content {
-			padding: 12px;
+		.finds-sidebar {
+			height: 60vh;
 		}
 
-		.finds-sticky-header {
-			padding: 12px 12px 8px 12px;
+		.finds-header {
+			padding: 12px;
 		}
 	}
 </style>

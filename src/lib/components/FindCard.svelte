@@ -161,16 +161,8 @@
 
 <style>
 	.find-card {
-		background: white;
-		border: 1px solid hsl(var(--border));
-		border-radius: 12px;
-		overflow: hidden;
+		backdrop-filter: blur(10px);
 		margin-bottom: 1rem;
-		transition: box-shadow 0.2s ease;
-	}
-
-	.find-card:hover {
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
 	/* Post Header */
