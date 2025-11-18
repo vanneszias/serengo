@@ -1,5 +1,113 @@
 # Logboek - Serengo Project
 
+## November 2025
+
+### 17 November 2025 - 3 uren
+
+**Werk uitgevoerd:**
+
+- **UI/UX Grote Overhaul - Fullscreen Map & Sidebar Design**
+- Fullscreen map layout met side-sheet voor finds geïmplementeerd
+- Sidebar toggle functionaliteit toegevoegd
+- Local media proxy geïmplementeerd voor caching en CSP fixes
+- Mobile en desktop UI verbeteringen voor CreateFind en FindPreview
+- Overscroll behavior fixes
+- FindList overflow problemen opgelost
+
+**Commits:**
+
+- 1c31e2c - add:sidebar toggle and fix overscroll behavior
+- d8cab06 - fix:overflow of findlist
+- d4d23ed - ui:find preview better ui
+- ab8b0ee - ui:create find better ui
+- dabc732 - fix:styling for mobile createfind
+- 1f0e814 - ui:remove mobile + button and use same as desktop
+- 96a173b - feat:use local proxy for media
+- 08f7e77 - ui:big ui update
+
+**Details:**
+
+- Complete UI refresh met fullscreen map en overlay side-sheet voor finds
+- Sidebar toggle voor betere map ervaring
+- Local media proxy (/api/media/[...path]) voor caching en snellere laadtijden
+- CSP issues opgelost door local proxy te gebruiken in plaats van directe R2 requests
+- LocationButton component verwijderd (430 lines cleanup)
+- Verbeterde mobile en desktop styling voor CreateFindModal
+- FindPreview UI verbeteringen voor betere gebruikerservaring
+- Overscroll behavior gefixed voor soepelere scrolling
+- Mobile + button verwijderd, unified desktop/mobile interface
+
+---
+
+### 8 November 2025 - 5 uren
+
+**Werk uitgevoerd:**
+
+- **Web Push Notifications Systeem**
+- Complete Web Push notification systeem geïmplementeerd
+- NotificationManager, NotificationPrompt, en NotificationSettings componenten
+- Notification preferences API endpoints
+- Push notification triggers voor likes, comments, en friend requests
+- Service worker push event handling
+- VAPID keys generation script
+
+**Commits:**
+
+- ae339d6 - chore:linting,formatting,type fixing, ....
+- 0754d62 - fix:push notification UI, settings and API
+- e27b249 - fix:notifications
+- 4d28834 - fix:notificationmanager
+- d7f803c - fix:add NotificationManager and enable in layout
+- df67564 - feat:add Web Push notification system
+
+**Details:**
+
+- Complete Web Push notification infrastructuur met VAPID keys
+- Database schema uitbreiding voor notification subscriptions en preferences
+- NotificationManager component voor real-time notification handling
+- NotificationPrompt voor gebruikers toestemming
+- NotificationSettings en NotificationSettingsSheet voor preference management
+- Push notifications bij likes, comments, en friend requests
+- Service worker integratie voor background push events
+- API endpoints voor subscription management en preferences
+- CSP updates voor FCM/GCM endpoints
+- Lucide-svelte dependency toegevoegd voor icons
+- Code linting, formatting, en type fixes
+
+---
+
+### 6 November 2025 - 4 uren
+
+**Werk uitgevoerd:**
+
+- **Comments Feature Implementatie**
+- Complete comment systeem voor finds geïmplementeerd
+- Comment creation, viewing, en deletion functionaliteit
+- API-sync layer voor real-time comment synchronisatie
+- Scrollable comments met limit functionaliteit
+- Comment form en list UI componenten
+
+**Commits:**
+
+- 2efd496 - add:enhance comments list with scroll, limit, and styling
+- b8c88d7 - feat:comments
+- af49ed6 - logs:update logs
+
+**Details:**
+
+- Comment database schema en migraties
+- API endpoints voor comment CRUD operaties (/api/finds/[findId]/comments)
+- API-sync store uitbreiding voor comment state management
+- CommentForm component met real-time posting
+- CommentsList component met scrolling en limit ("+N more comments")
+- Comment component met delete functionaliteit
+- Integration in FindCard en FindPreview componenten
+- Responsive styling voor mobile en desktop
+- User authentication en authorization voor comments
+- Real-time updates via API-sync layer
+
+---
+
 ## Oktober 2025
 
 ### 4 November 2025 - 1 uren
@@ -381,9 +489,9 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 80 uren
-**Werkdagen:** 14 dagen
-**Gemiddelde uren per dag:** 5.8 uur
+**Totale geschatte uren:** 93 uren
+**Werkdagen:** 17 dagen
+**Gemiddelde uren per dag:** 5.5 uur
 
 ### Project Milestones:
 
@@ -401,6 +509,9 @@
 12. **21 Okt**: UI refinement en bug fixes
 13. **27-29 Okt**: Google Places Integration & Sync Service
 14. **4 Nov**: UI Consistency & Media Layout Improvements
+15. **6 Nov**: Comments Feature Implementatie
+16. **8 Nov**: Web Push Notifications Systeem
+17. **17 Nov**: UI/UX Grote Overhaul - Fullscreen Map & Sidebar Design
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
@@ -431,3 +542,12 @@
 - [x] Sync-service voor API data synchronisatie
 - [x] Continuous location watching voor nauwkeurige tracking
 - [x] CSP security verbeteringen
+- [x] Comments systeem met real-time synchronisatie
+- [x] Scrollable comments met limit functionaliteit
+- [x] Web Push notifications systeem
+- [x] Notification preferences management
+- [x] Push notifications voor likes, comments, en friend requests
+- [x] Service worker push event handling
+- [x] Local media proxy voor caching en performance
+- [x] Fullscreen map UI met sidebar toggle
+- [x] Unified mobile/desktop interface
