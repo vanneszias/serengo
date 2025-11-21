@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
-	import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from './sheet';
-	import { Button } from './button';
+	import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '../sheet';
+	import { Button } from '../button';
 	import ProfilePicture from './ProfilePicture.svelte';
 
 	interface Props {

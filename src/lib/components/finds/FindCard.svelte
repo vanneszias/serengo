@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { Button } from '$lib/components/button';
 	import { Badge } from '$lib/components/badge';
-	import LikeButton from '$lib/components/LikeButton.svelte';
-	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
-	import CommentsList from '$lib/components/CommentsList.svelte';
+	import LikeButton from './LikeButton.svelte';
+	import VideoPlayer from '../media/VideoPlayer.svelte';
+	import ProfilePicture from '../profile/ProfilePicture.svelte';
+	import CommentsList from './CommentsList.svelte';
 	import { Ellipsis, MessageCircle, Share } from '@lucide/svelte';
 
 	interface FindCardProps {

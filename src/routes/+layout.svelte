@@ -5,8 +5,8 @@
 	import { page } from '$app/state';
 	import { Toaster } from '$lib/components/sonner/index.js';
 	import { Skeleton } from '$lib/components/skeleton';
-	import LocationManager from '$lib/components/LocationManager.svelte';
-	import NotificationManager from '$lib/components/NotificationManager.svelte';
+	import LocationManager from '$lib/components/map/LocationManager.svelte';
+	import NotificationManager from '$lib/components/notifications/NotificationManager.svelte';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 

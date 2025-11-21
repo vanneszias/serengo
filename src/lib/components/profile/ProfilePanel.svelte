@@ -7,11 +7,11 @@
 		DropdownMenuItem,
 		DropdownMenuSeparator,
 		DropdownMenuTrigger
-	} from './dropdown-menu';
-	import { Skeleton } from './skeleton';
+	} from '../dropdown-menu';
+	import { Skeleton } from '../skeleton';
 	import ProfilePicture from './ProfilePicture.svelte';
 	import ProfilePictureSheet from './ProfilePictureSheet.svelte';
-	import NotificationSettingsSheet from './NotificationSettingsSheet.svelte';
+	import NotificationSettings from '../notifications/NotificationSettings.svelte';
 
 	interface Props {
 		username: string;
@@ -23,7 +23,7 @@
 	let { username, id, profilePictureUrl, loading = false }: Props = $props();
 
 	let showProfilePictureSheet = $state(false);
-	let showNotificationSettingsSheet = $state(false);
+	let showNotificationSettings = $state(false);
 
 	function openProfilePictureSheet() {
 		showProfilePictureSheet = true;
@@ -33,12 +33,12 @@
 		showProfilePictureSheet = false;
 	}
 
-	function openNotificationSettingsSheet() {
-		showNotificationSettingsSheet = true;
+	function openNotificationSettings() {
+		showNotificationSettings = true;
 	}
 
-	function closeNotificationSettingsSheet() {
-		showNotificationSettingsSheet = false;
+	function closeNotificationSettings() {
+		showNotificationSettings = false;
 	}
 </script>
 
@@ -85,7 +85,7 @@
 				<a href={resolveRoute('/friends')} class="friends-link">Friends</a>
 			</DropdownMenuItem>
 
-			<DropdownMenuItem class="notification-settings-item" onclick={openNotificationSettingsSheet}>
+			<DropdownMenuItem class="notification-settings-item" onclick={openNotificationSettings}>
 				Notifications
 			</DropdownMenuItem>
 
@@ -121,8 +121,8 @@
 	/>
 {/if}
 
-{#if showNotificationSettingsSheet}
-	<NotificationSettingsSheet onClose={closeNotificationSettingsSheet} />
+{#if showNotificationSettings}
+	<NotificationSettings onClose={closeNotificationSettings} />
 {/if}
 
 <style>

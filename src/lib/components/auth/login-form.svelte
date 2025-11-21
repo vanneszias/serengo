@@ -9,7 +9,7 @@
 	import { cn } from '$lib/utils.js';
 	import { toast } from 'svelte-sonner';
 	import type { HTMLAttributes } from 'svelte/elements';
-	import type { ActionData } from '../../routes/login/$types.js';
+	import type { ActionData } from '../../../routes/login/$types.js';
 
 	let {
 		class: className,

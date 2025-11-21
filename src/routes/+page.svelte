@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Map } from '$lib';
-	import FindsList from '$lib/components/FindsList.svelte';
-	import CreateFindModal from '$lib/components/CreateFindModal.svelte';
-	import FindPreview from '$lib/components/FindPreview.svelte';
-	import FindsFilter from '$lib/components/FindsFilter.svelte';
+	import FindsList from '$lib/components/finds/FindsList.svelte';
+	import CreateFindModal from '$lib/components/finds/CreateFindModal.svelte';
+	import FindPreview from '$lib/components/finds/FindPreview.svelte';
+	import FindsFilter from '$lib/components/finds/FindsFilter.svelte';
 	import type { PageData } from './$types';
 	import { coordinates } from '$lib/stores/location';
 	import { Button } from '$lib/components/button';

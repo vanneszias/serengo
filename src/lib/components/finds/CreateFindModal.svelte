@@ -3,7 +3,7 @@
 	import { Label } from '$lib/components/label';
 	import { Button } from '$lib/components/button';
 	import { coordinates } from '$lib/stores/location';
-	import POISearch from './POISearch.svelte';
+	import POISearch from '../map/POISearch.svelte';
 	import type { PlaceResult } from '$lib/utils/places';
 
 	interface Props {

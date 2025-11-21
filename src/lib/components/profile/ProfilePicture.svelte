@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Avatar, AvatarFallback, AvatarImage } from './avatar';
+	import { Avatar, AvatarFallback, AvatarImage } from '../avatar';
 	import { cn } from '$lib/utils';
 
 	interface Props {

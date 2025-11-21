@@ -131,7 +131,11 @@ self.addEventListener('fetch', (event) => {
 		}
 
 		// Handle R2 resources and local media proxy with cache-first strategy
-		if (url.hostname.includes('.r2.dev') || url.hostname.includes('.r2.cloudflarestorage.com') || url.pathname.startsWith('/api/media/')) {
+		if (
+			url.hostname.includes('.r2.dev') ||
+			url.hostname.includes('.r2.cloudflarestorage.com') ||
+			url.pathname.startsWith('/api/media/')
+		) {
 			const cachedResponse = await r2Cache.match(event.request);
 			if (cachedResponse) {
 				return cachedResponse;

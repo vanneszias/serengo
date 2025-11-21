@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Comment from '$lib/components/Comment.svelte';
-	import CommentForm from '$lib/components/CommentForm.svelte';
+	import Comment from './Comment.svelte';
+	import CommentForm from './CommentForm.svelte';
 	import { Skeleton } from '$lib/components/skeleton';
 	import { apiSync } from '$lib/stores/api-sync';
 	import { onMount } from 'svelte';

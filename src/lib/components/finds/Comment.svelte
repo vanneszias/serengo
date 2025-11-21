@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Button } from '$lib/components/button';
-	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+	import ProfilePicture from '../profile/ProfilePicture.svelte';
 	import { Trash2 } from '@lucide/svelte';
 	import type { CommentState } from '$lib/stores/api-sync';
 

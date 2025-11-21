@@ -1,8 +1,8 @@
 <script lang="ts">
-	import LikeButton from '$lib/components/LikeButton.svelte';
-	import VideoPlayer from '$lib/components/VideoPlayer.svelte';
-	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
-	import CommentsList from '$lib/components/CommentsList.svelte';
+	import LikeButton from './LikeButton.svelte';
+	import VideoPlayer from '../media/VideoPlayer.svelte';
+	import ProfilePicture from '../profile/ProfilePicture.svelte';
+	import CommentsList from './CommentsList.svelte';
 
 	interface Find {
 		id: string;
@@ -274,10 +274,10 @@
 		position: fixed;
 		top: 80px;
 		right: 20px;
-		width: 40%;
+		width: fit-content;
 		max-width: 600px;
-		min-width: 500px;
-		height: calc(100vh - 100px);
+		min-width: 400px;
+		max-height: calc(100vh - 100px);
 		backdrop-filter: blur(10px);
 		border-radius: 12px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -424,63 +424,28 @@
 	}
 
 	.modal-body {
-		flex: 1;
-		overflow: hidden;
-		padding: 0;
 		display: flex;
 		flex-direction: column;
-		min-height: 0;
+		overflow: auto;
+		padding: 0;
 	}
 
 	.media-container {
 		position: relative;
-		flex: 1;
 		display: flex;
 		flex-direction: column;
-		min-height: 0;
+		width: 100%;
 	}
 
 	.media-viewer {
 		position: relative;
 		width: 100%;
+		max-height: 400px;
 		background: hsl(var(--muted));
 		overflow: hidden;
-		flex: 1;
-		min-height: 0;
-	}
-
-	/* Desktop media viewer - maximize available space */
-	@media (min-width: 768px) {
-		.modal-body {
-			height: calc(100vh - 180px);
-		}
-
-		.media-container {
-			flex: 2;
-		}
-
-		.content-section {
-			flex: 1;
-			min-height: 160px;
-			max-height: 300px;
-		}
-	}
-
-	/* Mobile media viewer - maximize available space */
-	@media (max-width: 767px) {
-		.modal-body {
-			height: calc(90vh - 180px);
-		}
-
-		.media-container {
-			flex: 2;
-		}
-
-		.content-section {
-			flex: 1;
-			min-height: 140px;
-			max-height: 250px;
-		}
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.media-image {
@@ -551,7 +516,6 @@
 
 	.content-section {
 		padding: 1rem 1.5rem 1.5rem;
-		overflow-y: auto;
 		display: flex;
 		flex-direction: column;
 		background: rgba(255, 255, 255, 0.5);
@@ -619,28 +583,12 @@
 	}
 
 	.comments-section {
-		flex: 1;
-		min-height: 0;
 		border-top: 1px solid rgba(0, 0, 0, 0.1);
 		display: flex;
 		flex-direction: column;
 		background: rgba(255, 255, 255, 0.5);
-	}
-
-	/* Desktop comments section */
-	@media (min-width: 768px) {
-		.comments-section {
-			height: calc(100vh - 500px);
-			min-height: 200px;
-		}
-	}
-
-	/* Mobile comments section */
-	@media (max-width: 767px) {
-		.comments-section {
-			height: calc(90vh - 450px);
-			min-height: 150px;
-		}
+		max-height: 400px;
+		overflow-y: auto;
 	}
 
 	/* Mobile specific adjustments */
@@ -664,19 +612,6 @@
 
 		.content-section {
 			padding: 1rem;
-		}
-
-		.actions {
-			flex-direction: column;
-			gap: 0.5rem;
-		}
-
-		.action-button {
-			width: 100%;
-		}
-
-		.comments-section {
-			height: calc(90vh - 480px);
 		}
 	}
 </style>

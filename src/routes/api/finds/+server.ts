@@ -178,9 +178,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 					findMedia.map(async (mediaItem) => {
 						// URLs in database are now paths, generate local proxy URLs
 						const localUrl = getLocalR2Url(mediaItem.url);
-						const localThumbnailUrl = mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
-							? getLocalR2Url(mediaItem.thumbnailUrl)
-							: mediaItem.thumbnailUrl; // Keep static placeholder paths as-is
+						const localThumbnailUrl =
+							mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
+								? getLocalR2Url(mediaItem.thumbnailUrl)
+								: mediaItem.thumbnailUrl; // Keep static placeholder paths as-is
 
 						return {
 							...mediaItem,

@@ -2,7 +2,7 @@
 	import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/card';
 	import { Button } from '$lib/components/button';
 	import { Input } from '$lib/components/input';
-	import ProfilePicture from '$lib/components/ProfilePicture.svelte';
+	import ProfilePicture from '$lib/components/profile/ProfilePicture.svelte';
 	import { Badge } from '$lib/components/badge';
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
