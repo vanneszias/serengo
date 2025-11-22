@@ -260,6 +260,7 @@
 					<CommentsList
 						findId={find.id}
 						{currentUserId}
+						collapsed={false}
 						isScrollable={true}
 						showCommentForm={true}
 					/>
@@ -307,7 +308,8 @@
 		width: 100%;
 		min-width: 0;
 		max-width: none;
-		height: 90vh;
+		height: auto;
+		max-height: calc(90vh - 20px);
 		border-radius: 16px 16px 0 0;
 		animation: slideUp 0.3s ease-out;
 	}
@@ -534,7 +536,6 @@
 		gap: 0.5rem;
 		color: hsl(var(--muted-foreground));
 		font-size: 0.875rem;
-		margin-bottom: 1.5rem;
 	}
 
 	.actions {
@@ -588,7 +589,7 @@
 		flex-direction: column;
 		background: rgba(255, 255, 255, 0.5);
 		max-height: 400px;
-		overflow-y: auto;
+		overflow: hidden;
 	}
 
 	/* Mobile specific adjustments */

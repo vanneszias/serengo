@@ -92,6 +92,12 @@
 
 	{#if isExpanded}
 		<div class="comments-container">
+			{#if showCommentForm}
+				<div class="comment-form-container">
+					<CommentForm onSubmit={handleAddComment} />
+				</div>
+			{/if}
+
 			{#if $commentsState.isLoading && !hasLoadedComments}
 				{@render loadingSkeleton()}
 			{:else if $commentsState.error}
@@ -119,10 +125,6 @@
 					{/if}
 				</div>
 			{/if}
-
-			{#if showCommentForm}
-				<CommentForm onSubmit={handleAddComment} />
-			{/if}
 		</div>
 	{/if}
 </div>
@@ -148,12 +150,19 @@
 	}
 
 	.comments-container {
-		border-top: 1px solid hsl(var(--border));
-		margin-top: 0.5rem;
 		display: flex;
 		flex-direction: column;
 		height: 100%;
 		min-height: 0;
+	}
+
+	.comment-form-container {
+		flex-shrink: 0;
+		border-bottom: 1px solid hsl(var(--border));
+		position: sticky;
+		top: 0;
+		background: hsl(var(--background));
+		z-index: 1;
 	}
 
 	.comments {
@@ -165,6 +174,7 @@
 		overflow-y: auto;
 		padding: 0.75rem 1rem;
 		min-height: 0;
+		max-height: 300px;
 	}
 
 	.see-more {

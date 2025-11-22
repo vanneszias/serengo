@@ -151,7 +151,7 @@
 			<CommentsList
 				findId={id}
 				{currentUserId}
-				collapsed={false}
+				collapsed={true}
 				maxComments={5}
 				showCommentForm={true}
 			/>
