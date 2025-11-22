@@ -12,10 +12,6 @@ function generateFindId(): string {
 }
 
 export const GET: RequestHandler = async ({ url, locals }) => {
-	if (!locals.user) {
-		throw error(401, 'Unauthorized');
-	}
-
 	const lat = url.searchParams.get('lat');
 	const lng = url.searchParams.get('lng');
 	const radius = url.searchParams.get('radius') || '50';
@@ -25,9 +21,9 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	const includeFriends = url.searchParams.get('includeFriends') === 'true';
 
 	try {
-		// Get user's friends if needed
+		// Get user's friends if needed and user is logged in
 		let friendIds: string[] = [];
-		if (includeFriends || includePrivate) {
+		if (locals.user && (includeFriends || includePrivate)) {
 			const friendships = await db
 				.select({
 					userId: friendship.userId,
@@ -37,7 +33,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				.where(
 					and(
 						eq(friendship.status, 'accepted'),
-						or(eq(friendship.userId, locals.user!.id), eq(friendship.friendId, locals.user!.id))
+						or(eq(friendship.userId, locals.user.id), eq(friendship.friendId, locals.user.id))
 					)
 				);
 
@@ -47,12 +43,12 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		// Build privacy conditions
 		const conditions = [sql`${find.isPublic} = 1`]; // Always include public finds
 
-		if (includePrivate) {
+		if (locals.user && includePrivate) {
 			// Include user's own finds (both public and private)
-			conditions.push(sql`${find.userId} = ${locals.user!.id}`);
+			conditions.push(sql`${find.userId} = ${locals.user.id}`);
 		}
 
-		if (includeFriends && friendIds.length > 0) {
+		if (locals.user && includeFriends && friendIds.length > 0) {
 			// Include friends' finds (both public and private)
 			conditions.push(
 				sql`${find.userId} IN (${sql.join(
@@ -103,19 +99,23 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				username: user.username,
 				profilePictureUrl: user.profilePictureUrl,
 				likeCount: sql<number>`COALESCE(COUNT(DISTINCT ${findLike.id}), 0)`,
-				isLikedByUser: sql<boolean>`CASE WHEN EXISTS(
-					SELECT 1 FROM ${findLike}
-					WHERE ${findLike.findId} = ${find.id}
-					AND ${findLike.userId} = ${locals.user.id}
-				) THEN 1 ELSE 0 END`,
-				isFromFriend: sql<boolean>`CASE WHEN ${
-					friendIds.length > 0
-						? sql`${find.userId} IN (${sql.join(
-								friendIds.map((id) => sql`${id}`),
-								sql`, `
-							)})`
-						: sql`FALSE`
-				} THEN 1 ELSE 0 END`
+				isLikedByUser: locals.user
+					? sql<boolean>`CASE WHEN EXISTS(
+						SELECT 1 FROM ${findLike}
+						WHERE ${findLike.findId} = ${find.id}
+						AND ${findLike.userId} = ${locals.user.id}
+					) THEN 1 ELSE 0 END`
+					: sql<boolean>`0`,
+				isFromFriend: locals.user
+					? sql<boolean>`CASE WHEN ${
+							friendIds.length > 0
+								? sql`${find.userId} IN (${sql.join(
+										friendIds.map((id) => sql`${id}`),
+										sql`, `
+									)})`
+								: sql`FALSE`
+						} THEN 1 ELSE 0 END`
+					: sql<boolean>`0`
 			})
 			.from(find)
 			.innerJoin(user, eq(find.userId, user.id))

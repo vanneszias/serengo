@@ -258,14 +258,22 @@
 		<!-- Left sidebar with finds list -->
 		<div class="finds-sidebar" class:hidden={!isSidebarVisible}>
 			<div class="finds-header">
-				<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
-				<Button onclick={openCreateModal} class="create-find-button">
-					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
-						<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
-						<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
-					</svg>
-					Create Find
-				</Button>
+				{#if data.user}
+					<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+					<Button onclick={openCreateModal} class="create-find-button">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
+							<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
+							<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
+						</svg>
+						Create Find
+					</Button>
+				{:else}
+					<div class="login-prompt">
+						<h3>Welcome to Serengo</h3>
+						<p>Login to create finds and view your friends' discoveries</p>
+						<a href="/login" class="login-button">Login</a>
+					</div>
+				{/if}
 			</div>
 			<div class="finds-list-container">
 				<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
@@ -391,6 +399,43 @@
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
+	}
+
+	.login-prompt {
+		width: 100%;
+		text-align: center;
+		padding: 1rem;
+	}
+
+	.login-prompt h3 {
+		font-family: 'Washington', serif;
+		font-size: 1.25rem;
+		margin: 0 0 0.5rem 0;
+		color: hsl(var(--foreground));
+	}
+
+	.login-prompt p {
+		font-size: 0.875rem;
+		color: hsl(var(--muted-foreground));
+		margin: 0 0 1rem 0;
+	}
+
+	.login-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.75rem 1.5rem;
+		background: hsl(var(--primary));
+		color: hsl(var(--primary-foreground));
+		border-radius: 8px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+
+	.login-button:hover {
+		background: hsl(var(--primary) / 0.9);
 	}
 
 	.finds-list-container {
