@@ -53,6 +53,35 @@
 	function toggleComments() {
 		showComments = !showComments;
 	}
+
+	function handleShare() {
+		const url = `${window.location.origin}/finds/${id}`;
+
+		if (navigator.share) {
+			navigator
+				.share({
+					title: title,
+					text: description || `Check out this find: ${title}`,
+					url: url
+				})
+				.catch((error) => {
+					// User cancelled or error occurred
+					if (error.name !== 'AbortError') {
+						console.error('Error sharing:', error);
+					}
+				});
+		} else {
+			// Fallback: Copy to clipboard
+			navigator.clipboard
+				.writeText(url)
+				.then(() => {
+					alert('Find URL copied to clipboard!');
+				})
+				.catch((error) => {
+					console.error('Error copying to clipboard:', error);
+				});
+		}
+	}
 </script>
 
 <div class="find-card">
@@ -135,7 +164,7 @@
 				<MessageCircle size={16} />
 				<span>{commentCount || 'comment'}</span>
 			</Button>
-			<Button variant="ghost" size="sm" class="action-button">
+			<Button variant="ghost" size="sm" class="action-button" onclick={handleShare}>
 				<Share size={16} />
 				<span>share</span>
 			</Button>

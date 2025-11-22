@@ -48,14 +48,28 @@
 		const url = `${window.location.origin}/finds/${data.find.id}`;
 
 		if (navigator.share) {
-			navigator.share({
-				title: data.find.title,
-				text: data.find.description || `Check out this find: ${data.find.title}`,
-				url: url
-			});
+			navigator
+				.share({
+					title: data.find.title,
+					text: data.find.description || `Check out this find: ${data.find.title}`,
+					url: url
+				})
+				.catch((error) => {
+					// User cancelled or error occurred
+					if (error.name !== 'AbortError') {
+						console.error('Error sharing:', error);
+					}
+				});
 		} else {
-			navigator.clipboard.writeText(url);
-			alert('Find URL copied to clipboard!');
+			// Fallback: Copy to clipboard
+			navigator.clipboard
+				.writeText(url)
+				.then(() => {
+					alert('Find URL copied to clipboard!');
+				})
+				.catch((error) => {
+					console.error('Error copying to clipboard:', error);
+				});
 		}
 	}
 
