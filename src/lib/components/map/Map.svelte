@@ -87,8 +87,10 @@
 	const mapReady = $derived(mapLoaded && styleLoaded && isIdle);
 
 	// Reactive center and zoom based on location or props
+	// Only recenter when shouldZoomToLocation is true (user clicked location button)
+	// or when autoCenter is true AND coordinates are first loaded
 	const mapCenter = $derived(
-		$coordinates && (autoCenter || $shouldZoomToLocation)
+		$coordinates && $shouldZoomToLocation
 			? ([$coordinates.longitude, $coordinates.latitude] as [number, number])
 			: center || $getMapCenter
 	);
@@ -98,9 +100,7 @@
 			// Force zoom to calculated level when location button is clicked
 			return $getMapZoom;
 		}
-		if ($coordinates && autoCenter) {
-			return $getMapZoom;
-		}
+		// Don't auto-zoom on coordinate updates, keep current zoom
 		return zoom || 13;
 	});
 
