@@ -9,6 +9,7 @@
 	let { data }: { data: PageData } = $props();
 
 	let currentMediaIndex = $state(0);
+	let isPanelVisible = $state(true);
 
 	function nextMedia() {
 		if (!data.find?.media) return;
@@ -56,6 +57,10 @@
 			navigator.clipboard.writeText(url);
 			alert('Find URL copied to clipboard!');
 		}
+	}
+
+	function togglePanel() {
+		isPanelVisible = !isPanelVisible;
 	}
 
 	// Create the map find format
@@ -132,6 +137,7 @@
 </svelte:head>
 
 <div class="public-find-page">
+	<!-- Fullscreen map -->
 	<div class="map-section">
 		<Map
 			autoCenter={true}
@@ -141,187 +147,208 @@
 		/>
 	</div>
 
-	<div class="find-details">
-		{#if data.find}
-			<div class="details-content">
-				<div class="details-header">
-					<div class="user-section">
-						<ProfilePicture
-							username={data.find.username}
-							profilePictureUrl={data.find.profilePictureUrl}
-							class="user-avatar"
-						/>
-						<div class="user-info">
-							<h1 class="find-title">{data.find.title}</h1>
-							<div class="find-meta">
-								<span class="username">@{data.find.username}</span>
-								<span class="separator">•</span>
-								<span class="date">{formatDate(data.find.createdAt)}</span>
-								{#if data.find.category}
+	<!-- Details panel container -->
+	<div class="panel-container">
+		<!-- Details panel -->
+		<div class="find-details-panel" class:hidden={!isPanelVisible}>
+			{#if data.find}
+				<div class="panel-content">
+					<div class="panel-header">
+						<div class="user-section">
+							<ProfilePicture
+								username={data.find.username}
+								profilePictureUrl={data.find.profilePictureUrl}
+								class="user-avatar"
+							/>
+							<div class="user-info">
+								<h1 class="find-title">{data.find.title}</h1>
+								<div class="find-meta">
+									<span class="username">@{data.find.username}</span>
 									<span class="separator">•</span>
-									<span class="category">{data.find.category}</span>
-								{/if}
+									<span class="date">{formatDate(data.find.createdAt)}</span>
+									{#if data.find.category}
+										<span class="separator">•</span>
+										<span class="category">{data.find.category}</span>
+									{/if}
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				<div class="details-body">
-					{#if data.find.media && data.find.media.length > 0}
-						<div class="media-container">
-							<div class="media-viewer">
-								{#if data.find.media[currentMediaIndex].type === 'photo'}
-									<img
-										src={data.find.media[currentMediaIndex].url}
-										alt={data.find.title}
-										class="media-image"
-									/>
-								{:else}
-									<VideoPlayer
-										src={data.find.media[currentMediaIndex].url}
-										poster={data.find.media[currentMediaIndex].thumbnailUrl}
-										class="media-video"
-									/>
-								{/if}
+					<div class="panel-body">
+						{#if data.find.media && data.find.media.length > 0}
+							<div class="media-container">
+								<div class="media-viewer">
+									{#if data.find.media[currentMediaIndex].type === 'photo'}
+										<img
+											src={data.find.media[currentMediaIndex].url}
+											alt={data.find.title}
+											class="media-image"
+										/>
+									{:else}
+										<VideoPlayer
+											src={data.find.media[currentMediaIndex].url}
+											poster={data.find.media[currentMediaIndex].thumbnailUrl}
+											class="media-video"
+										/>
+									{/if}
+
+									{#if data.find.media.length > 1}
+										<button class="media-nav prev" onclick={prevMedia} aria-label="Previous media">
+											<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+												<path
+													d="M15 18L9 12L15 6"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												/>
+											</svg>
+										</button>
+										<button class="media-nav next" onclick={nextMedia} aria-label="Next media">
+											<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+												<path
+													d="M9 18L15 12L9 6"
+													stroke="currentColor"
+													stroke-width="2"
+													stroke-linecap="round"
+													stroke-linejoin="round"
+												/>
+											</svg>
+										</button>
+									{/if}
+								</div>
 
 								{#if data.find.media.length > 1}
-									<button class="media-nav prev" onclick={prevMedia} aria-label="Previous media">
-										<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-											<path
-												d="M15 18L9 12L15 6"
-												stroke="currentColor"
-												stroke-width="2"
-												stroke-linecap="round"
-												stroke-linejoin="round"
-											/>
-										</svg>
-									</button>
-									<button class="media-nav next" onclick={nextMedia} aria-label="Next media">
-										<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-											<path
-												d="M9 18L15 12L9 6"
-												stroke="currentColor"
-												stroke-width="2"
-												stroke-linecap="round"
-												stroke-linejoin="round"
-											/>
-										</svg>
-									</button>
+									<div class="media-indicators">
+										{#each data.find.media as _, index (index)}
+											<button
+												class="indicator"
+												class:active={index === currentMediaIndex}
+												onclick={() => (currentMediaIndex = index)}
+												aria-label={`View media ${index + 1}`}
+											></button>
+										{/each}
+									</div>
 								{/if}
 							</div>
+						{/if}
 
-							{#if data.find.media.length > 1}
-								<div class="media-indicators">
-									{#each data.find.media as _, index (index)}
-										<button
-											class="indicator"
-											class:active={index === currentMediaIndex}
-											onclick={() => (currentMediaIndex = index)}
-											aria-label={`View media ${index + 1}`}
-										></button>
-									{/each}
+						<div class="content-section">
+							{#if data.find.description}
+								<p class="description">{data.find.description}</p>
+							{/if}
+
+							{#if data.find.locationName}
+								<div class="location-info">
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+										<path
+											d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+										<circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
+									</svg>
+									<span>{data.find.locationName}</span>
 								</div>
 							{/if}
-						</div>
-					{/if}
 
-					<div class="content-section">
-						{#if data.find.description}
-							<p class="description">{data.find.description}</p>
-						{/if}
+							<div class="actions">
+								<LikeButton
+									findId={data.find.id}
+									isLiked={data.find.isLikedByUser || false}
+									likeCount={data.find.likeCount || 0}
+									size="default"
+									class="like-action"
+								/>
 
-						{#if data.find.locationName}
-							<div class="location-info">
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-									<path
-										d="M21 10C21 17 12 23 12 23S3 17 3 10A9 9 0 0 1 12 1A9 9 0 0 1 21 10Z"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-									<circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2" />
-								</svg>
-								<span>{data.find.locationName}</span>
+								<button class="action-button primary" onclick={getDirections}>
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+										<path
+											d="M3 11L22 2L13 21L11 13L3 11Z"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+									Directions
+								</button>
+
+								<button class="action-button secondary" onclick={shareFindUrl}>
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+										<path
+											d="M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+										<polyline
+											points="16,6 12,2 8,6"
+											stroke="currentColor"
+											stroke-width="2"
+											stroke-linecap="round"
+											stroke-linejoin="round"
+										/>
+									</svg>
+									Share
+								</button>
 							</div>
-						{/if}
-
-						<div class="actions">
-							<LikeButton
-								findId={data.find.id}
-								isLiked={data.find.isLikedByUser || false}
-								likeCount={data.find.likeCount || 0}
-								size="default"
-								class="like-action"
-							/>
-
-							<button class="action-button primary" onclick={getDirections}>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-									<path
-										d="M3 11L22 2L13 21L11 13L3 11Z"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-								</svg>
-								Directions
-							</button>
-
-							<button class="action-button secondary" onclick={shareFindUrl}>
-								<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-									<path
-										d="M4 12V20A2 2 0 0 0 6 22H18A2 2 0 0 0 20 20V12"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-									<polyline
-										points="16,6 12,2 8,6"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-								</svg>
-								Share
-							</button>
 						</div>
-					</div>
 
-					<div class="comments-section">
-						<CommentsList
-							findId={data.find.id}
-							currentUserId={data.user?.id}
-							collapsed={false}
-							isScrollable={true}
-							showCommentForm={data.user ? true : false}
-						/>
+						<div class="comments-section">
+							<CommentsList
+								findId={data.find.id}
+								currentUserId={data.user?.id}
+								collapsed={false}
+								isScrollable={true}
+								showCommentForm={data.user ? true : false}
+							/>
+						</div>
 					</div>
 				</div>
-			</div>
-		{:else}
-			<div class="error-state">
-				<h1>Find not found</h1>
-				<p>This find does not exist or is private.</p>
-			</div>
-		{/if}
+			{:else}
+				<div class="error-state">
+					<h1>Find not found</h1>
+					<p>This find does not exist or is private.</p>
+					<a href="/" class="back-button">Back to Home</a>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Toggle button -->
+		<button
+			class="panel-toggle"
+			class:collapsed={!isPanelVisible}
+			onclick={togglePanel}
+			aria-label="Toggle find details"
+		>
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+				{#if isPanelVisible}
+					<path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				{:else}
+					<path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				{/if}
+			</svg>
+		</button>
 	</div>
 </div>
 
 <style>
 	.public-find-page {
-		display: flex;
-		flex-direction: row;
-		width: 100vw;
-		height: 100vh;
-		overflow: hidden;
+		position: relative;
 	}
 
 	.map-section {
-		flex: 1;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
 		height: 100vh;
+		z-index: 0;
 		overflow: hidden;
 	}
 
@@ -330,29 +357,78 @@
 		border-radius: 0;
 	}
 
-	.find-details {
-		width: 45%;
-		max-width: 650px;
-		min-width: 400px;
-		height: 100vh;
-		background: rgba(255, 255, 255, 0.95);
-		backdrop-filter: blur(10px);
-		box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
-		overflow-y: auto;
-		display: flex;
-		flex-direction: column;
+	.map-section :global(.maplibregl-map) {
+		border-radius: 0 !important;
+		box-shadow: none !important;
 	}
 
-	.details-content {
+	.panel-container {
+		display: flex;
+		flex-direction: row;
+		margin-left: 20px;
+		gap: 12px;
+	}
+
+	.panel-toggle {
+		width: 48px;
+		height: 48px;
+		background: rgba(255, 255, 255, 0.95);
+		backdrop-filter: blur(10px);
+		border: none;
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 60;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.3s ease;
+	}
+
+	.panel-toggle:hover {
+		background: rgba(255, 255, 255, 1);
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2);
+	}
+
+	.panel-toggle svg {
+		color: #333;
+	}
+
+	.find-details-panel {
+		width: 40%;
+		max-width: 1000px;
+		min-width: 500px;
+		height: calc(100vh - 100px);
+		backdrop-filter: blur(10px);
+		border-radius: 12px;
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+		z-index: 50;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		box-sizing: border-box;
+		transition:
+			transform 0.3s ease,
+			opacity 0.3s ease;
+	}
+
+	.find-details-panel.hidden {
+		display: none;
+		transform: translateX(-100%);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.panel-content {
 		display: flex;
 		flex-direction: column;
 		height: 100%;
 	}
 
-	.details-header {
+	.panel-header {
 		padding: 1.5rem 2rem;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-		background: rgba(255, 255, 255, 0.8);
+		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
 	}
 
@@ -366,6 +442,13 @@
 		width: 56px;
 		height: 56px;
 		flex-shrink: 0;
+	}
+
+	:global(.avatar-fallback) {
+		background: hsl(var(--primary));
+		color: white;
+		font-size: 1rem;
+		font-weight: 600;
 	}
 
 	.user-info {
@@ -410,7 +493,7 @@
 		text-transform: capitalize;
 	}
 
-	.details-body {
+	.panel-body {
 		display: flex;
 		flex-direction: column;
 		overflow: auto;
@@ -427,7 +510,7 @@
 	.media-viewer {
 		position: relative;
 		width: 100%;
-		max-height: 450px;
+		max-height: 400px;
 		background: hsl(var(--muted));
 		overflow: hidden;
 		display: flex;
@@ -506,6 +589,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	.description {
@@ -573,39 +657,81 @@
 		flex-direction: column;
 		flex: 1;
 		overflow: hidden;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	.error-state {
 		padding: 2rem;
 		text-align: center;
+		background: rgba(255, 255, 255, 0.5);
 	}
 
 	.error-state h1 {
 		font-family: 'Washington', serif;
 		font-size: 2rem;
 		margin-bottom: 1rem;
+		color: hsl(var(--foreground));
 	}
 
-	@media (max-width: 1024px) {
-		.public-find-page {
-			flex-direction: column;
+	.error-state p {
+		color: hsl(var(--muted-foreground));
+		margin-bottom: 1.5rem;
+	}
+
+	.back-button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.75rem 1.5rem;
+		background: hsl(var(--primary));
+		color: hsl(var(--primary-foreground));
+		border-radius: 8px;
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 0.2s ease;
+	}
+
+	.back-button:hover {
+		background: hsl(var(--primary) / 0.9);
+	}
+
+	@media (max-width: 768px) {
+		.panel-container {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			display: flex;
+			flex-direction: column-reverse;
+			align-items: center;
+			margin: 0;
 		}
 
-		.map-section {
-			height: 40vh;
+		.panel-toggle.collapsed {
+			margin: 12px auto;
 		}
 
-		.find-details {
+		.panel-toggle svg {
+			transform: rotate(-90deg);
+		}
+
+		.find-details-panel {
 			width: 100%;
-			max-width: none;
+			max-width: 100vw;
 			min-width: 0;
-			height: 60vh;
+			border-radius: 20px 20px 0 0;
+			box-sizing: border-box;
 		}
-	}
 
-	@media (max-width: 640px) {
-		.details-header,
-		.content-section {
+		.find-details-panel.hidden {
+			display: none;
+			transform: translateX(-100%);
+			opacity: 0;
+			pointer-events: none;
+		}
+
+		.panel-header {
 			padding: 1rem 1.25rem;
 		}
 
@@ -616,6 +742,25 @@
 		:global(.user-avatar) {
 			width: 48px;
 			height: 48px;
+		}
+
+		.content-section {
+			padding: 1rem 1.25rem;
+		}
+
+		.map-section :global(.map-container) {
+			height: 100vh;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.find-details-panel {
+			height: 60vh;
+		}
+
+		.panel-header,
+		.content-section {
+			padding: 1rem;
 		}
 	}
 </style>
