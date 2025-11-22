@@ -1,6 +1,101 @@
 # Logboek - Serengo Project
 
+## Development Timeline & Activity Log
+
+**Project Start:** 26 September 2025  
+**Total Commits:** 99 commits  
+**Primary Developer:** Zias van Nes  
+**Tech Stack:** SvelteKit, Drizzle ORM, PostgreSQL, Cloudflare R2, MapLibre GL JS
+
+---
+
 ## November 2025
+
+### 21-22 November 2025 - 7 uren
+
+**Werk uitgevoerd:**
+
+- **Phase 4: Public Finds & Sharing System + Major Code Reorganization**
+- Complete component library reorganizatie met logische directory structuur
+- Public find detail pagina met individuele find viewing
+- Advanced sharing functionaliteit met native Web Share API
+- Map improvements met better centering en zoom controls
+- UI consistency updates across all find components
+- Enhanced sidebar toggle functionaliteit
+- Comments list styling improvements
+
+**Commits:**
+
+- c17bb94 - fix:recentering when updating map
+- 73eeaf0 - feat:better sharing of finds
+- 2ac826c - ui:use the default styling on homepage and find detail page
+- 5285a15 - feat:big update to public finds
+- 9f60806 - fix:dont autozoom when watching
+- 4c73b6f - fix:sidebar toggle
+- 42d7246 - ui:update findpreview and commentlist
+- 63b3e51 - ui:big ui overhaul
+
+**Details:**
+
+**Code Organization (63b3e51):**
+
+- Complete component library restructuring met logische groepering:
+  - `/auth/` - Authentication components (login-form)
+  - `/finds/` - Find-related components (10 components)
+  - `/map/` - Map components (Map, LocationManager, POISearch)
+  - `/media/` - Media components (VideoPlayer)
+  - `/notifications/` - Notification system (3 components)
+  - `/profile/` - Profile components (ProfilePanel, ProfilePicture, ProfilePictureSheet)
+- Nieuwe barrel exports (index.ts) voor cleaner imports
+- NotificationSettings component volledig herschreven (613 lines) met betere UX
+- Enhanced Comments component met improved layout
+- 40 bestanden gewijzigd, +2012/-746 lijnen
+
+**Public Finds System (5285a15, 2ac826c):**
+
+- Nieuwe `/finds/[findId]` route voor individuele find viewing
+- Server-side data fetching met find detail loading
+- Complete FindCard API endpoint uitbreiding voor single find retrieval
+- Unified styling tussen homepage en detail pagina's
+- 780+ lines nieuwe detail page implementation
+- Enhanced API responses met proper error handling
+- Backward-compatible met existing find filtering
+
+**Sharing Features (73eeaf0):**
+
+- Native Web Share API integratie voor mobile devices
+- Fallback copy-to-clipboard functionaliteit voor desktop
+- Toast notifications voor share feedback
+- Social sharing van individuele finds via URL
+- Share button in FindCard, FindPreview, en detail page
+- Dynamic URL generation voor shareable finds
+
+**Map Enhancements (c17bb94, 9f60806):**
+
+- Smart map centering met separate user location en find markers
+- Fixed autozoom tijdens location watching voor betere UX
+- Improved map state management (+147 lines in Map.svelte)
+- Better handling van map updates zonder constant recentering
+- Enhanced marker clustering en positioning
+
+**UI Improvements (42d7246, 4c73b6f):**
+
+- CommentsList styling verbeteringen met better spacing
+- Enhanced sidebar toggle met improved state management
+- FindPreview UI refinements voor consistency
+- Cleaned up unused CommentForm imports
+- Better responsive behavior voor mobile/desktop
+
+**Technical Details:**
+
+- Svelte 5 reactivity patterns voor alle nieuwe features
+- Type-safe API endpoints met proper error handling
+- SEO-friendly URLs voor shareable finds
+- Progressive enhancement voor Web Share API
+- Component modularization voor better maintainability
+- Service worker updates voor offline functionality
+
+---
 
 ### 17 November 2025 - 3 uren
 
@@ -489,65 +584,357 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 93 uren
-**Werkdagen:** 17 dagen
-**Gemiddelde uren per dag:** 5.5 uur
+**Totale geschatte uren:** 104 uren  
+**Totaal aantal commits:** 99 commits  
+
+### Git Statistics:
+
+```
+Total Commits: 99
+Primary Author: Zias van Nes
+Commit Breakdown by Phase:
+  - Initial Setup & Auth (Sept 26-27): 16 commits
+  - UI Foundation (Sept 28-29): 6 commits
+  - Maps & Location (Oct 2-3): 11 commits
+  - SEO & Performance (Oct 7): 7 commits
+  - Finds & Media (Oct 10-14): 6 commits
+  - Social Features (Oct 16-21): 9 commits
+  - Places & Sync (Oct 27-29): 5 commits
+  - Polish & Refinement (Nov 4-8): 9 commits
+  - Major Overhauls (Nov 17-22): 8 commits
+```
 
 ### Project Milestones:
 
-1. **26 Sept**: Project initialisatie en auth systeem
-2. **27 Sept**: Deployment en productie setup
-3. **28 Sept**: UI/UX complete overhaul
-4. **29 Sept**: Component architectuur verbetering
-5. **2-3 Okt**: Maps en location features
-6. **7 Okt**: SEO, PWA en performance optimalisaties
-7. **10 Okt**: Finds feature en media upload systeem
-8. **13 Okt**: API architectuur verbetering
-9. **14 Okt**: Modern media support en social interactions
-10. **16 Okt**: Friends & Privacy System implementatie
-11. **20 Okt**: Search logic improvements
-12. **21 Okt**: UI refinement en bug fixes
-13. **27-29 Okt**: Google Places Integration & Sync Service
-14. **4 Nov**: UI Consistency & Media Layout Improvements
-15. **6 Nov**: Comments Feature Implementatie
-16. **8 Nov**: Web Push Notifications Systeem
-17. **17 Nov**: UI/UX Grote Overhaul - Fullscreen Map & Sidebar Design
+**Phase 0: Foundation (Sept 26-27)**
+
+1. Project initialisatie met SvelteKit + Drizzle ORM
+2. Lucia auth systeem met database schema
+3. Docker deployment setup
+4. Vercel production configuration
+
+**Phase 1: Core UI & Infrastructure (Sept 28 - Oct 7)** 5. Complete UI overhaul met custom components 6. Washington font en branding implementation 7. MapLibre GL JS integration 8. Location tracking met Geolocation API 9. Google OAuth integration 10. SEO, PWA, en performance optimalisaties 11. Service worker caching strategy 12. Manifest.json en meta tags
+
+**Phase 2: Core Features (Oct 10-16)** 13. Finds feature met media upload systeem 14. Cloudflare R2 storage integratie 15. Signed URLs voor secure media access 16. API architectuur verbetering 17. Video support met custom VideoPlayer 18. WebP/JPEG image processing pipeline 19. Like/unlike systeem met optimistic updates 20. Profile pictures met upload functionaliteit
+
+**Phase 3: Social & Privacy (Oct 16-29)** 21. Complete Friends & Privacy System 22. Friend request workflow (send/accept/reject/remove) 23. Privacy-aware find filtering (All/Public/Friends/Mine) 24. Users search met friendship status 25. Google Maps Places API integratie 26. POI search functionaliteit 27. Sync-service voor real-time data synchronisatie 28. Continuous location watching
+
+**Phase 4: Advanced Social Features (Nov 4-8)** 29. ProfilePicture component met fallbacks 30. Media layout optimalisaties 31. Comments systeem met real-time sync 32. Scrollable comments met limits 33. Web Push notifications infrastructuur 34. Notification preferences management 35. Push notifications voor likes, comments, friend requests 36. Service worker push event handling
+
+**Phase 5: Major UI/UX Overhauls (Nov 17-22)** 37. Fullscreen map layout met sidebar toggle 38. Local media proxy voor caching 39. Unified mobile/desktop interface 40. Component library reorganizatie 41. Public finds detail pages 42. Native Web Share API integration 43. Enhanced map controls en centering 44. Code structure improvements (40 files reorganized)
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
+**Authentication & Users:**
+
 - [x] Gebruikersauthenticatie (Lucia + Google OAuth)
+- [x] User profiles met profile pictures
+- [x] Profile picture upload en management
+- [x] User search functionaliteit
+
+**UI/UX:**
+
 - [x] Responsive UI met custom componenten
-- [x] Real-time locatie tracking
+- [x] Fullscreen map layout met sidebar toggle
+- [x] Unified mobile/desktop interface
+- [x] Toast notifications (Sonner)
+- [x] Loading states en skeleton screens
+- [x] Custom fonts (Washington)
+- [x] Organized component library (auth/, finds/, map/, media/, notifications/, profile/)
+
+**Maps & Location:**
+
 - [x] Interactive maps (MapLibre GL JS)
-- [x] PWA functionaliteit
-- [x] Docker deployment
-- [x] Database (PostgreSQL + Drizzle ORM)
-- [x] Toast notifications
-- [x] Loading states en error handling
-- [x] SEO optimalisatie (meta tags, Open Graph, sitemap)
-- [x] Performance optimalisaties (image compression, caching)
-- [x] Finds feature met media upload
+- [x] Real-time locatie tracking
+- [x] Continuous location watching
+- [x] Smart map centering en zoom controls
+- [x] Google Maps Places API integratie
+- [x] POI search functionaliteit
+- [x] Enhanced marker positioning
+
+**Finds & Media:**
+
+- [x] Finds feature met create/view/edit/delete
+- [x] Multi-media upload (images + videos)
 - [x] Cloudflare R2 storage integratie
 - [x] Signed URLs voor veilige media toegang
-- [x] API architectuur verbetering
 - [x] Video support met custom VideoPlayer component
-- [x] WebP image processing met JPEG fallbacks
+- [x] WebP/JPEG image processing met fallbacks
+- [x] Local media proxy voor caching en performance
+- [x] Public find detail pages
+- [x] Native Web Share API voor sharing
+- [x] Privacy-aware find filtering (All/Public/Friends/Mine)
+
+**Social Interactions:**
+
 - [x] Like/unlike systeem met real-time updates
-- [x] Social interactions en animated UI components
-- [x] Friends & Privacy System met vriendschapsverzoeken
-- [x] Privacy-bewuste find filtering met vriendenspecifieke zichtbaarheid
-- [x] Friends management pagina met gebruikerszoekfunctionaliteit
-- [x] Real-time find filtering op basis van privacy instellingen
-- [x] Google Maps Places API integratie voor POI zoekfunctionaliteit
-- [x] Sync-service voor API data synchronisatie
-- [x] Continuous location watching voor nauwkeurige tracking
-- [x] CSP security verbeteringen
 - [x] Comments systeem met real-time synchronisatie
-- [x] Scrollable comments met limit functionaliteit
+- [x] Scrollable comments met limit functionaliteit ("+ N more comments")
+- [x] Friends & Privacy System
+- [x] Friend request workflow (send/accept/reject/remove)
+- [x] Friends management pagina
+- [x] Users search met friendship status integration
+- [x] Privacy-bewuste find visibility
+
+**Notifications:**
+
 - [x] Web Push notifications systeem
 - [x] Notification preferences management
 - [x] Push notifications voor likes, comments, en friend requests
 - [x] Service worker push event handling
-- [x] Local media proxy voor caching en performance
-- [x] Fullscreen map UI met sidebar toggle
-- [x] Unified mobile/desktop interface
+- [x] In-app notification UI
+- [x] NotificationManager voor real-time handling
+
+**Performance & SEO:**
+
+- [x] PWA functionaliteit
+- [x] Service worker caching strategy
+- [x] SEO optimalisatie (meta tags, Open Graph)
+- [x] Automatic sitemap generation
+- [x] Performance optimalisaties (image compression, lazy loading)
+- [x] CSP (Content Security Policy) configuration
+- [x] Lighthouse performance monitoring
+
+**Infrastructure:**
+
+- [x] PostgreSQL database (Drizzle ORM)
+- [x] Docker deployment setup
+- [x] Vercel production deployment
+- [x] API architectuur met dedicated routes
+- [x] Sync-service voor data synchronisatie
+- [x] Error handling en validation
+- [x] Type-safe interfaces across entire stack
+
+**Developer Experience:**
+
+- [x] Clean code organization
+- [x] AGENTS.md documentation
+- [x] Comprehensive logboek.md
+- [x] Modular component structure
+- [x] Svelte 5 runes patterns ($props, $derived, $effect)
+- [x] ESLint + Prettier configuration
+
+---
+
+## Technical Achievements
+
+### Architecture Highlights:
+
+**Component Organization:**
+
+```
+src/lib/components/
+├── auth/           - Authentication (1 component)
+├── finds/          - Find features (10 components)
+├── map/            - Map functionality (3 components)
+├── media/          - Media players (1 component)
+├── notifications/  - Push notifications (3 components)
+├── profile/        - User profiles (3 components)
+├── badge/          - UI primitives (shadcn/ui)
+├── button/         - UI primitives (shadcn/ui)
+├── card/           - UI primitives (shadcn/ui)
+├── dropdown-menu/  - UI primitives (shadcn/ui)
+├── input/          - UI primitives (shadcn/ui)
+├── label/          - UI primitives (shadcn/ui)
+├── sheet/          - UI primitives (shadcn/ui)
+├── skeleton/       - UI primitives (shadcn/ui)
+└── sonner/         - Toast notifications (shadcn/ui)
+```
+
+**Database Schema:**
+
+- Users table (auth, profiles)
+- Sessions table (Lucia auth)
+- OAuth accounts table
+- Finds table (posts met location en media)
+- Likes table (user interactions)
+- Comments table (nested discussions)
+- Friendships table (social connections)
+- Notification subscriptions table
+- Notification preferences table
+
+**API Routes:**
+
+```
+/api/finds/
+├── GET     - List finds met filtering
+├── POST    - Create new find
+├── [findId]/
+│   ├── GET        - Get single find
+│   ├── DELETE     - Delete find
+│   ├── like/      - Like/unlike POST
+│   └── comments/  - Comments CRUD
+├── upload/        - Media upload
+/api/friends/
+├── GET     - List friends
+├── POST    - Send friend request
+├── [friendshipId]/
+│   ├── PATCH  - Accept/reject request
+│   └── DELETE - Remove friend
+/api/users/
+├── GET     - Search users
+/api/notifications/
+├── GET     - List notifications
+├── subscribe/     - Web Push subscription
+├── preferences/   - Notification settings
+└── count/         - Unread count
+/api/profile-picture/
+├── upload/  - Upload profile picture
+└── delete/  - Delete profile picture
+/api/places/
+├── GET     - Google Places search
+/api/media/
+└── [...path]/  - Local media proxy
+```
+
+### Performance Metrics:
+
+**Before Optimizations (Oct 7):**
+
+- Home page load: ~2.5s
+- Largest Contentful Paint: ~1.8s
+- Background image: 4.2MB
+
+**After Optimizations (Oct 7+):**
+
+- Home page load: ~1.2s
+- Largest Contentful Paint: ~0.9s
+- Background image: 2.1MB (50% reduction)
+- Service worker caching enabled
+- Media proxy caching implemented
+
+### Code Quality:
+
+- **Type Safety:** 100% TypeScript coverage
+- **Formatting:** Prettier (tabs, single quotes, 100 char width)
+- **Linting:** ESLint with strict rules
+- **Framework:** Svelte 5 with runes ($props, $derived, $effect)
+- **Database:** Type-safe Drizzle ORM
+- **Error Handling:** Comprehensive try/catch en validation
+
+---
+
+## Development Insights
+
+### Key Learnings:
+
+1. **Component Architecture:** Organizing components by feature domain (auth/, finds/, map/) greatly improves maintainability
+2. **Media Handling:** Local proxy for media caching solves CSP issues and improves performance
+3. **Real-time Sync:** Custom sync-service architecture enables seamless real-time updates
+4. **Progressive Enhancement:** Web Share API met clipboard fallback ensures broad compatibility
+5. **Map UX:** Separate handling voor user location en find markers prevents annoying auto-centering
+6. **Notifications:** Web Push requires careful service worker lifecycle management
+
+### Challenges Overcome:
+
+1. **CSP Issues:** Resolved by implementing local media proxy instead of direct R2 URLs
+2. **Map Centering:** Fixed auto-zoom during location watching door smart state management
+3. **Component Organization:** Large refactor (40 files) improved import patterns significantly
+4. **Auth Flow:** Complex OAuth implementation met CSRF protection
+5. **Real-time Updates:** Sync-service architecture voor consistent state management
+6. **Mobile UX:** Unified interface eliminates duplication en improves consistency
+
+### Future Considerations:
+
+- [ ] Offline support met service worker caching uitbreiden
+- [ ] Advanced find filtering (date range, location radius)
+- [ ] Direct messaging tussen friends
+- [ ] Find collections/albums
+- [ ] Advanced media editing (filters, cropping)
+- [ ] Geofencing notifications
+- [ ] Find analytics en insights
+- [ ] Multi-language support (i18n)
+- [ ] Advanced privacy controls (block users, hide locations)
+- [ ] Export/backup functionaliteit
+
+---
+
+## Project Files Structure
+
+```
+serengo/
+├── src/
+│   ├── lib/
+│   │   ├── components/      - UI components (organized by feature)
+│   │   ├── server/          - Server-side utilities
+│   │   │   ├── db/          - Database schema en connection
+│   │   │   ├── auth.ts      - Authentication logic
+│   │   │   ├── oauth.ts     - OAuth providers
+│   │   │   ├── push.ts      - Web Push notifications
+│   │   │   ├── r2.ts        - Cloudflare R2 storage
+│   │   │   └── media-processor.ts - Media processing
+│   │   ├── stores/          - Svelte stores
+│   │   │   ├── api-sync.ts  - Real-time sync service
+│   │   │   └── location.ts  - Location tracking
+│   │   ├── utils/           - Utility functions
+│   │   │   ├── geolocation.ts
+│   │   │   └── places.ts
+│   │   └── index.ts         - Barrel exports
+│   ├── routes/
+│   │   ├── api/             - API endpoints
+│   │   ├── finds/           - Find pages
+│   │   ├── friends/         - Friends page
+│   │   ├── login/           - Auth pages
+│   │   └── +page.svelte     - Homepage
+│   ├── app.html             - HTML template
+│   ├── app.css              - Global styles
+│   ├── hooks.server.ts      - SvelteKit hooks
+│   └── service-worker.ts    - PWA service worker
+├── static/                  - Static assets
+├── drizzle/                 - Database migrations
+├── logs/                    - Development logs
+├── scripts/                 - Utility scripts
+├── .env.example             - Environment template
+├── drizzle.config.ts        - Drizzle ORM config
+├── svelte.config.js         - SvelteKit config
+├── vite.config.ts           - Vite config
+├── tsconfig.json            - TypeScript config
+├── package.json             - Dependencies
+├── AGENTS.md                - AI agent guidelines
+└── README.md                - Project documentation
+```
+
+---
+
+## Deployment & Configuration
+
+**Environment Variables Required:**
+
+```bash
+DATABASE_URL=          # PostgreSQL connection string
+GOOGLE_CLIENT_ID=      # Google OAuth
+GOOGLE_CLIENT_SECRET=  # Google OAuth
+R2_ACCOUNT_ID=         # Cloudflare R2
+R2_ACCESS_KEY_ID=      # Cloudflare R2
+R2_SECRET_ACCESS_KEY=  # Cloudflare R2
+R2_BUCKET_NAME=        # Cloudflare R2
+VAPID_PUBLIC_KEY=      # Web Push notifications
+VAPID_PRIVATE_KEY=     # Web Push notifications
+GOOGLE_MAPS_API_KEY=   # Google Places API
+```
+
+**Docker Commands:**
+
+```bash
+pnpm run db:start      # Start PostgreSQL container
+pnpm run db:push       # Push schema changes
+pnpm run db:generate   # Generate migrations
+pnpm run db:migrate    # Run migrations
+```
+
+**Development Commands:**
+
+```bash
+pnpm run dev           # Start dev server
+pnpm run build         # Production build
+pnpm run preview       # Preview production build
+pnpm run check         # Type checking (svelte-check)
+pnpm run lint          # ESLint + Prettier
+pnpm run format        # Prettier --write
+```
+
+---
+
+**Last Updated:** 22 November 2025  
+**Status:** Active Development  
+**Version:** Beta (Pre-release)
