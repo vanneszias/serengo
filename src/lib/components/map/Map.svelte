@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MapLibre, Marker } from 'svelte-maplibre';
 	import type { StyleSpecification } from 'svelte-maplibre';
+	import { untrack } from 'svelte';
 	import {
 		coordinates,
 		getMapCenter,
@@ -73,6 +74,13 @@
 	let mapLoaded = $state(false);
 	let styleLoaded = $state(false);
 	let isIdle = $state(false);
+	let mapInstance: any = $state(null);
+	let userHasMovedMap = $state(false);
+	let initialCenter: [number, number] = center || [0, 51.505];
+	let initialZoom: number = zoom || 13;
+
+	// Use a plain variable (not reactive) to track programmatic moves
+	let isProgrammaticMove = false;
 
 	// Handle comprehensive map loading events
 	function handleStyleLoad() {
@@ -86,33 +94,89 @@
 	// Map is considered fully ready when it's loaded, style is loaded, and it's idle
 	const mapReady = $derived(mapLoaded && styleLoaded && isIdle);
 
-	// Reactive center and zoom based on location or props
-	// Only recenter when shouldZoomToLocation is true (user clicked location button)
-	// or when autoCenter is true AND coordinates are first loaded
-	const mapCenter = $derived(
-		$coordinates && $shouldZoomToLocation
-			? ([$coordinates.longitude, $coordinates.latitude] as [number, number])
-			: center || $getMapCenter
-	);
+	// Check if map is centered on user location (approximately)
+	const isCenteredOnUser = $derived.by(() => {
+		if (!$coordinates || !mapInstance) return false;
 
-	const mapZoom = $derived(() => {
-		if ($shouldZoomToLocation && $coordinates) {
-			// Force zoom to calculated level when location button is clicked
-			return $getMapZoom;
-		}
-		// Don't auto-zoom on coordinate updates, keep current zoom
-		return zoom || 13;
+		const center = mapInstance.getCenter();
+		const userLng = $coordinates.longitude;
+		const userLat = $coordinates.latitude;
+
+		// Check if within ~100m (roughly 0.001 degrees)
+		const threshold = 0.001;
+		return Math.abs(center.lng - userLng) < threshold && Math.abs(center.lat - userLat) < threshold;
 	});
 
-	// Effect to clear zoom trigger after it's been used
+	// Effect to handle recenter trigger
 	$effect(() => {
-		if ($shouldZoomToLocation) {
-			// Use a timeout to ensure the map has updated before clearing the trigger
-			setTimeout(() => {
-				locationActions.clearZoomTrigger();
-			}, 100);
+		if ($shouldZoomToLocation && mapInstance && $coordinates) {
+			// Use untrack to avoid tracking getMapZoom changes inside this effect
+			untrack(() => {
+				// Mark this as a programmatic move
+				isProgrammaticMove = true;
+				userHasMovedMap = false;
+
+				// Fly to the user's location
+				mapInstance.flyTo({
+					center: [$coordinates.longitude, $coordinates.latitude],
+					zoom: $getMapZoom,
+					duration: 1000
+				});
+
+				// Clear the trigger and reset flag after animation
+				setTimeout(() => {
+					locationActions.clearZoomTrigger();
+					isProgrammaticMove = false;
+				}, 1100);
+			});
 		}
 	});
+
+	// Effect to center on user location when map first loads (if autoCenter is true)
+	let hasInitialCentered = $state(false);
+	$effect(() => {
+		if (autoCenter && mapReady && $coordinates && !hasInitialCentered) {
+			untrack(() => {
+				isProgrammaticMove = true;
+				hasInitialCentered = true;
+				mapInstance.flyTo({
+					center: [$coordinates.longitude, $coordinates.latitude],
+					zoom: $getMapZoom,
+					duration: 1000
+				});
+
+				setTimeout(() => {
+					isProgrammaticMove = false;
+				}, 1100);
+			});
+		}
+	});
+
+	// Effect to attach move listener to map instance (only depends on mapInstance)
+	$effect(() => {
+		if (!mapInstance) return;
+
+		const handleMoveEnd = () => {
+			// Only mark as user move if it's not programmatic
+			if (!isProgrammaticMove) {
+				userHasMovedMap = true;
+			}
+		};
+
+		// Use 'moveend' to capture when user finishes moving the map
+		mapInstance.on('moveend', handleMoveEnd);
+
+		return () => {
+			mapInstance.off('moveend', handleMoveEnd);
+		};
+	});
+
+	function recenterMap() {
+		if (!$coordinates) return;
+
+		// Trigger zoom to location
+		locationActions.getCurrentLocation();
+	}
 </script>
 
 <div class="map-container {className}">
@@ -129,8 +193,9 @@
 	<div class="map-wrapper" class:hidden={!mapReady}>
 		<MapLibre
 			{style}
-			center={mapCenter}
-			zoom={mapZoom()}
+			center={initialCenter}
+			zoom={initialZoom}
+			bind:map={mapInstance}
 			bind:loaded={mapLoaded}
 			onstyleload={handleStyleLoad}
 			onidle={handleIdle}
@@ -176,6 +241,28 @@
 				</Marker>
 			{/each}
 		</MapLibre>
+
+		<!-- Recenter button - only show when user has moved map and has coordinates -->
+		{#if userHasMovedMap && !isCenteredOnUser && $coordinates}
+			<button
+				class="recenter-button"
+				onclick={recenterMap}
+				type="button"
+				aria-label="Recenter on my location"
+			>
+				<svg
+					width="20"
+					height="20"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+				>
+					<circle cx="12" cy="12" r="10"></circle>
+					<circle cx="12" cy="12" r="3"></circle>
+				</svg>
+			</button>
+		{/if}
 	</div>
 </div>
 
@@ -381,6 +468,36 @@
 		object-fit: cover;
 	}
 
+	.recenter-button {
+		position: absolute;
+		top: 100px;
+		right: 20px;
+		width: 44px;
+		height: 44px;
+		background: white;
+		border: 2px solid rgba(0, 0, 0, 0.1);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		transition: all 0.2s ease;
+		z-index: 10;
+		color: #2563eb;
+	}
+
+	.recenter-button:hover {
+		background: #f0f9ff;
+		border-color: #2563eb;
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+	}
+
+	.recenter-button:active {
+		transform: scale(0.95);
+	}
+
 	@media (max-width: 768px) {
 		.map-container {
 			height: 300px;
@@ -389,6 +506,13 @@
 		.location-controls {
 			top: 8px;
 			right: 8px;
+		}
+
+		.recenter-button {
+			bottom: 12px;
+			right: 12px;
+			width: 40px;
+			height: 40px;
 		}
 	}
 </style>
