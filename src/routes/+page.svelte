@@ -253,32 +253,39 @@
 		/>
 	</div>
 
-	<!-- Toggle button -->
-	<button class="sidebar-toggle" onclick={toggleSidebar} aria-label="Toggle finds list">
-		<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-			{#if isSidebarVisible}
-				<path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-			{:else}
-				<path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-			{/if}
-		</svg>
-	</button>
-
-	<!-- Left sidebar with finds list -->
-	<div class="finds-sidebar" class:hidden={!isSidebarVisible}>
-		<div class="finds-header">
-			<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
-			<Button onclick={openCreateModal} class="create-find-button">
-				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
-					<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
-					<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
-				</svg>
-				Create Find
-			</Button>
+	<!-- Sidebar container -->
+	<div class="sidebar-container">
+		<!-- Left sidebar with finds list -->
+		<div class="finds-sidebar" class:hidden={!isSidebarVisible}>
+			<div class="finds-header">
+				<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
+				<Button onclick={openCreateModal} class="create-find-button">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
+						<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
+						<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
+					</svg>
+					Create Find
+				</Button>
+			</div>
+			<div class="finds-list-container">
+				<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
+			</div>
 		</div>
-		<div class="finds-list-container">
-			<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
-		</div>
+		<!-- Toggle button -->
+		<button
+			class="sidebar-toggle"
+			class:collapsed={!isSidebarVisible}
+			onclick={toggleSidebar}
+			aria-label="Toggle finds list"
+		>
+			<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+				{#if isSidebarVisible}
+					<path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				{:else}
+					<path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				{/if}
+			</svg>
+		</button>
 	</div>
 </div>
 
@@ -320,10 +327,14 @@
 		box-shadow: none !important;
 	}
 
+	.sidebar-container {
+		display: flex;
+		flex-direction: row;
+		margin-left: 20px;
+		gap: 12px;
+	}
+
 	.sidebar-toggle {
-		position: fixed;
-		top: 90px;
-		left: 20px;
 		width: 48px;
 		height: 48px;
 		background: rgba(255, 255, 255, 0.95);
@@ -349,9 +360,6 @@
 	}
 
 	.finds-sidebar {
-		position: fixed;
-		top: 80px;
-		left: 80px;
 		width: 40%;
 		max-width: 1000px;
 		min-width: 500px;
@@ -370,6 +378,7 @@
 	}
 
 	.finds-sidebar.hidden {
+		display: none;
 		transform: translateX(-100%);
 		opacity: 0;
 		pointer-events: none;
@@ -395,32 +404,38 @@
 	}
 
 	@media (max-width: 768px) {
-		.sidebar-toggle {
-			top: auto;
-			bottom: 20px;
-			left: 50%;
-			transform: translateX(-50%);
-		}
-
-		.sidebar-toggle svg {
-			transform: rotate(90deg);
-		}
-
-		.finds-sidebar {
-			top: auto;
+		.sidebar-container {
+			position: fixed;
 			bottom: 0;
 			left: 0;
 			right: 0;
+			display: flex;
+			flex-direction: column-reverse;
+			align-items: center;
+			margin: 0;
+		}
+
+		.sidebar-toggle.collapsed {
+			margin: 12px auto;
+		}
+
+		.sidebar-toggle svg {
+			transform: rotate(-90deg);
+		}
+
+		.finds-sidebar {
 			width: 100%;
 			max-width: 100vw;
 			min-width: 0;
-			height: 50vh;
 			border-radius: 20px 20px 0 0;
 			box-sizing: border-box;
 		}
 
 		.finds-sidebar.hidden {
-			transform: translateY(100%);
+			display: none;
+			transform: translateX(-100%);
+			opacity: 0;
+			pointer-events: none;
 		}
 
 		.finds-header {
