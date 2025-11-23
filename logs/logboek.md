@@ -3,13 +3,54 @@
 ## Development Timeline & Activity Log
 
 **Project Start:** 26 September 2025  
-**Total Commits:** 99 commits  
+**Total Commits:** 97 commits  
 **Primary Developer:** Zias van Nes  
 **Tech Stack:** SvelteKit, Drizzle ORM, PostgreSQL, Cloudflare R2, MapLibre GL JS
 
 ---
 
 ## November 2025
+
+### 23 November 2025 - 2 uren
+
+**Werk uitgevoerd:**
+
+- **Dynamic Map Centering Based on Sidebar Visibility**
+- Map center dynamically adjusts when sidebar is opened/closed
+- Intelligent padding calculation for desktop (left sidebar) and mobile (bottom sidebar)
+- Smooth transitions between sidebar states
+- Location always centered in visible map area
+
+**Commits:**
+
+- 0578bf5 - feat:update map position gets changed dynamically according to available space
+
+**Details:**
+
+**Dynamic Map Positioning (0578bf5):**
+
+- Added `sidebarVisible` prop to Map component
+- Implemented `getMapPadding` derived state that calculates appropriate padding:
+  - **Desktop (>768px)**: Left padding of half sidebar width (sidebar is 40% viewport, max 1000px, min 500px)
+  - **Mobile (≤768px)**: Bottom padding of half sidebar height (sidebar is 60vh)
+  - **Sidebar closed**: No padding applied (centered normally)
+- Updated map centering logic to use padding parameter in flyTo calls
+- Added reactive effect to smoothly adjust map when sidebar toggles (300ms easeTo animation)
+- Location marker now always appears centered in actually visible portion of map
+- Improved UX by accounting for sidebar presence in map calculations
+
+**Technical Implementation:**
+
+- Modified `src/routes/+page.svelte` to pass `isSidebarVisible` state to Map component
+- Enhanced `src/lib/components/map/Map.svelte` with:
+  - New `sidebarVisible` prop in Props interface
+  - Derived state for dynamic padding calculation
+  - Updated both initial center and recenter effects
+  - New effect to handle sidebar visibility changes
+- Smooth transitions using MapLibre's `easeTo` method
+- Responsive calculations for both desktop and mobile layouts
+
+---
 
 ### 21-22 November 2025 - 7 uren
 
@@ -584,13 +625,13 @@
 
 ## Totaal Overzicht
 
-**Totale geschatte uren:** 104 uren  
-**Totaal aantal commits:** 99 commits  
+**Totale geschatte uren:** 106 uren  
+**Totaal aantal commits:** 97 commits
 
 ### Git Statistics:
 
 ```
-Total Commits: 99
+Total Commits: 97
 Primary Author: Zias van Nes
 Commit Breakdown by Phase:
   - Initial Setup & Auth (Sept 26-27): 16 commits
@@ -601,7 +642,7 @@ Commit Breakdown by Phase:
   - Social Features (Oct 16-21): 9 commits
   - Places & Sync (Oct 27-29): 5 commits
   - Polish & Refinement (Nov 4-8): 9 commits
-  - Major Overhauls (Nov 17-22): 8 commits
+  - Major Overhauls (Nov 17-23): 9 commits
 ```
 
 ### Project Milestones:
@@ -621,7 +662,7 @@ Commit Breakdown by Phase:
 
 **Phase 4: Advanced Social Features (Nov 4-8)** 29. ProfilePicture component met fallbacks 30. Media layout optimalisaties 31. Comments systeem met real-time sync 32. Scrollable comments met limits 33. Web Push notifications infrastructuur 34. Notification preferences management 35. Push notifications voor likes, comments, friend requests 36. Service worker push event handling
 
-**Phase 5: Major UI/UX Overhauls (Nov 17-22)** 37. Fullscreen map layout met sidebar toggle 38. Local media proxy voor caching 39. Unified mobile/desktop interface 40. Component library reorganizatie 41. Public finds detail pages 42. Native Web Share API integration 43. Enhanced map controls en centering 44. Code structure improvements (40 files reorganized)
+**Phase 5: Major UI/UX Overhauls (Nov 17-23)** 37. Fullscreen map layout met sidebar toggle 38. Local media proxy voor caching 39. Unified mobile/desktop interface 40. Component library reorganizatie 41. Public finds detail pages 42. Native Web Share API integration 43. Enhanced map controls en centering 44. Code structure improvements (40 files reorganized) 45. Dynamic map centering based on sidebar visibility
 
 ### Hoofdfunctionaliteiten geïmplementeerd:
 
@@ -935,6 +976,6 @@ pnpm run format        # Prettier --write
 
 ---
 
-**Last Updated:** 22 November 2025  
+**Last Updated:** 23 November 2025  
 **Status:** Active Development  
 **Version:** Beta (Pre-release)
