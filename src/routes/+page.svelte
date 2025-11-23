@@ -250,6 +250,7 @@
 			center={[$coordinates?.longitude || 0, $coordinates?.latitude || 51.505]}
 			{finds}
 			onFindClick={handleFindClick}
+			sidebarVisible={isSidebarVisible}
 		/>
 	</div>
 

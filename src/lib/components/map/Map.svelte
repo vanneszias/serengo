@@ -42,6 +42,7 @@
 		autoCenter?: boolean;
 		finds?: Find[];
 		onFindClick?: (find: Find) => void;
+		sidebarVisible?: boolean;
 	}
 
 	let {
@@ -68,7 +69,8 @@
 		class: className = '',
 		autoCenter = true,
 		finds = [],
-		onFindClick
+		onFindClick,
+		sidebarVisible = false
 	}: Props = $props();
 
 	let mapLoaded = $state(false);
@@ -81,6 +83,33 @@
 
 	// Use a plain variable (not reactive) to track programmatic moves
 	let isProgrammaticMove = false;
+
+	// Calculate padding for map centering based on sidebar visibility
+	const getMapPadding = $derived.by(() => {
+		if (!sidebarVisible) {
+			return { top: 0, bottom: 0, left: 0, right: 0 };
+		}
+
+		// Check if we're on mobile (sidebar at bottom) or desktop (sidebar on left)
+		const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
+		if (isMobile) {
+			// On mobile, sidebar is at bottom
+			// Sidebar takes up about 60vh, so add padding at bottom to shift center up
+			const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+			const sidebarHeight = viewportHeight * 0.6;
+			return { top: 0, bottom: sidebarHeight / 2, left: 0, right: 0 };
+		} else {
+			// On desktop, sidebar is on left
+			// Calculate sidebar width: 40% of viewport, max 1000px, min 500px
+			const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1920;
+			const sidebarWidth = Math.min(1000, Math.max(500, viewportWidth * 0.4));
+
+			// Add left padding of half sidebar width to shift center to the right
+			// This centers the location in the visible (non-sidebar) area
+			return { top: 0, bottom: 0, left: sidebarWidth / 2, right: 0 };
+		}
+	});
 
 	// Handle comprehensive map loading events
 	function handleStyleLoad() {
@@ -116,10 +145,11 @@
 				isProgrammaticMove = true;
 				userHasMovedMap = false;
 
-				// Fly to the user's location
+				// Fly to the user's location with padding based on sidebar
 				mapInstance.flyTo({
 					center: [$coordinates.longitude, $coordinates.latitude],
 					zoom: $getMapZoom,
+					padding: getMapPadding,
 					duration: 1000
 				});
 
@@ -142,6 +172,7 @@
 				mapInstance.flyTo({
 					center: [$coordinates.longitude, $coordinates.latitude],
 					zoom: $getMapZoom,
+					padding: getMapPadding,
 					duration: 1000
 				});
 
@@ -169,6 +200,29 @@
 		return () => {
 			mapInstance.off('moveend', handleMoveEnd);
 		};
+	});
+
+	// Effect to adjust map center when sidebar visibility changes
+	$effect(() => {
+		if (mapInstance && mapReady && $coordinates) {
+			// React to sidebar visibility changes
+			const padding = getMapPadding;
+
+			untrack(() => {
+				isProgrammaticMove = true;
+
+				// Smoothly adjust the map to account for sidebar
+				mapInstance.easeTo({
+					center: [$coordinates.longitude, $coordinates.latitude],
+					padding: padding,
+					duration: 300
+				});
+
+				setTimeout(() => {
+					isProgrammaticMove = false;
+				}, 350);
+			});
+		}
 	});
 
 	function recenterMap() {
