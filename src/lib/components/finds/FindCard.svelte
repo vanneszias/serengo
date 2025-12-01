@@ -13,6 +13,7 @@
 	import ProfilePicture from '../profile/ProfilePicture.svelte';
 	import CommentsList from './CommentsList.svelte';
 	import { Ellipsis, MessageCircle, Share, Edit, Trash2 } from '@lucide/svelte';
+	import { apiSync } from '$lib/stores/api-sync';
 
 	interface FindCardProps {
 		id: string;
@@ -120,14 +121,7 @@
 
 		isDeleting = true;
 		try {
-			const response = await fetch(`/api/finds/${id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete find');
-			}
-
+			await apiSync.deleteFind(id);
 			onDeleted?.();
 		} catch (error) {
 			console.error('Error deleting find:', error);

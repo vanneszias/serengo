@@ -4,6 +4,7 @@
 	import { Button } from '$lib/components/button';
 	import POISearch from '../map/POISearch.svelte';
 	import type { PlaceResult } from '$lib/utils/places';
+	import { apiSync } from '$lib/stores/api-sync';
 
 	interface FindData {
 		id: string;
@@ -157,27 +158,17 @@
 				...uploadedMedia
 			];
 
-			const response = await fetch(`/api/finds/${find.id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					title: title.trim(),
-					description: description.trim() || null,
-					latitude: lat,
-					longitude: lng,
-					locationName: locationName.trim() || null,
-					category,
-					isPublic,
-					media: allMedia,
-					mediaToDelete
-				})
+			await apiSync.updateFind(find.id, {
+				title: title.trim(),
+				description: description.trim() || null,
+				latitude: lat,
+				longitude: lng,
+				locationName: locationName.trim() || null,
+				category,
+				isPublic,
+				media: allMedia,
+				mediaToDelete
 			});
-
-			if (!response.ok) {
-				throw new Error('Failed to update find');
-			}
 
 			onFindUpdated(new CustomEvent('findUpdated', { detail: { reload: true } }));
 			onClose();
@@ -198,13 +189,7 @@
 		isSubmitting = true;
 
 		try {
-			const response = await fetch(`/api/finds/${find.id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete find');
-			}
+			await apiSync.deleteFind(find.id);
 
 			if (onFindDeleted) {
 				onFindDeleted(new CustomEvent('findDeleted', { detail: { findId: find.id } }));

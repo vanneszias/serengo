@@ -9,6 +9,7 @@
 	import { Button } from '$lib/components/button';
 	import { Edit, Trash2 } from 'lucide-svelte';
 	import type { PageData } from './$types';
+	import { apiSync } from '$lib/stores/api-sync';
 
 	let { data }: { data: PageData } = $props();
 
@@ -98,13 +99,7 @@
 
 		isDeleting = true;
 		try {
-			const response = await fetch(`/api/finds/${data.find.id}`, {
-				method: 'DELETE'
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to delete find');
-			}
+			await apiSync.deleteFind(data.find.id);
 
 			// Redirect to home page after successful deletion
 			goto('/');

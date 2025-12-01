@@ -408,6 +408,23 @@ class APISync {
 					'Content-Type': 'application/json'
 				}
 			});
+		} else if (entityType === 'find' && op === 'update') {
+			// Handle find update
+			response = await fetch(`/api/finds/${entityId}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(data)
+			});
+		} else if (entityType === 'find' && op === 'delete') {
+			// Handle find deletion
+			response = await fetch(`/api/finds/${entityId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
 		} else if (entityType === 'comment' && op === 'create') {
 			// Handle comment creation
 			response = await fetch(`/api/finds/${entityId}/comments`, {
@@ -439,6 +456,14 @@ class APISync {
 		// Update entity state with successful result
 		if (entityType === 'find' && action === 'like') {
 			this.updateFindLikeState(entityId, result.isLiked, result.likeCount);
+		} else if (entityType === 'find' && op === 'update') {
+			// Reload the find data to get the updated state
+			// For now, just clear loading state - the parent component handles refresh
+			// TODO: Ideally, we'd merge the update data into the existing state
+			this.setEntityLoading(entityType, entityId, false);
+		} else if (entityType === 'find' && op === 'delete') {
+			// Find already removed optimistically, just clear loading state
+			this.setEntityLoading(entityType, entityId, false);
 		} else if (entityType === 'comment' && op === 'create') {
 			this.addCommentToState(result.data.findId, result.data);
 		} else if (entityType === 'comment' && op === 'delete') {
@@ -720,6 +745,103 @@ class APISync {
 			subscriptions.forEach((unsubscribe) => unsubscribe());
 			this.subscriptions.delete(key);
 		}
+	}
+
+	/**
+	 * Remove find from state after successful deletion
+	 */
+	private removeFindFromState(findId: string): void {
+		const store = this.getEntityStore('find');
+
+		store.update(($entities) => {
+			const newEntities = new Map($entities);
+			newEntities.delete(findId);
+			return newEntities;
+		});
+
+		// Also clean up associated comments
+		const commentStore = this.getEntityStore('comment');
+		commentStore.update(($entities) => {
+			const newEntities = new Map($entities);
+			newEntities.delete(findId);
+			return newEntities;
+		});
+	}
+
+	/**
+	 * Update a find
+	 */
+	async updateFind(
+		findId: string,
+		data: {
+			title?: string;
+			description?: string | null;
+			latitude?: number;
+			longitude?: number;
+			locationName?: string | null;
+			category?: string;
+			isPublic?: boolean;
+			media?: Array<{ type: string; url: string; thumbnailUrl?: string }>;
+			mediaToDelete?: string[];
+		}
+	): Promise<void> {
+		// Optimistically update the find state
+		const currentState = this.getEntityState<FindState>('find', findId);
+		if (currentState) {
+			const updatedFind: FindState = {
+				...currentState,
+				...(data.title !== undefined && { title: data.title }),
+				...(data.description !== undefined && { description: data.description || undefined }),
+				...(data.latitude !== undefined && { latitude: data.latitude.toString() }),
+				...(data.longitude !== undefined && { longitude: data.longitude.toString() }),
+				...(data.locationName !== undefined && { locationName: data.locationName || undefined }),
+				...(data.category !== undefined && { category: data.category }),
+				...(data.isPublic !== undefined && { isPublic: data.isPublic }),
+				...(data.media !== undefined && {
+					media: data.media.map((m, index) => ({
+						id: (m as any).id || `temp-${index}`,
+						findId: findId,
+						type: m.type,
+						url: m.url,
+						thumbnailUrl: m.thumbnailUrl || null,
+						orderIndex: index
+					}))
+				})
+			};
+			this.setEntityState('find', findId, updatedFind, false);
+		}
+
+		// Queue the operation
+		await this.queueOperation('find', findId, 'update', undefined, data);
+	}
+
+	/**
+	 * Delete a find
+	 */
+	async deleteFind(findId: string): Promise<void> {
+		// Optimistically remove find from state
+		this.removeFindFromState(findId);
+
+		// Queue the operation
+		await this.queueOperation('find', findId, 'delete', undefined, {});
+	}
+
+	/**
+	 * Subscribe to all finds as an array
+	 */
+	subscribeAllFinds(): Readable<FindState[]> {
+		const store = this.getEntityStore('find');
+
+		return derived(store, ($entities) => {
+			const finds: FindState[] = [];
+			$entities.forEach((entity) => {
+				if (entity.data) {
+					finds.push(entity.data as FindState);
+				}
+			});
+			// Sort by creation date, newest first
+			return finds.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+		});
 	}
 }
 

@@ -30,7 +30,6 @@
 		finds: Find[];
 		onFindExplore?: (id: string) => void;
 		currentUserId?: string;
-		onFindsChanged?: () => void;
 		onEdit?: (find: Find) => void;
 		title?: string;
 		showEmpty?: boolean;
@@ -42,7 +41,6 @@
 		finds,
 		onFindExplore,
 		currentUserId,
-		onFindsChanged,
 		onEdit,
 		title = 'Finds',
 		showEmpty = true,
@@ -52,14 +50,6 @@
 
 	function handleFindExplore(id: string) {
 		onFindExplore?.(id);
-	}
-
-	function handleFindDeleted() {
-		onFindsChanged?.();
-	}
-
-	function handleFindUpdated() {
-		onFindsChanged?.();
 	}
 </script>
 
@@ -89,8 +79,6 @@
 					isLiked={find.isLiked}
 					{currentUserId}
 					onExplore={handleFindExplore}
-					onDeleted={handleFindDeleted}
-					onUpdated={handleFindUpdated}
 					onEdit={() => onEdit?.(find)}
 				/>
 			{/each}

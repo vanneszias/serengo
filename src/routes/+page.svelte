@@ -102,8 +102,12 @@
 	let currentFilter = $state('all');
 	let isSidebarVisible = $state(true);
 
+	// Subscribe to all finds from api-sync
+	const allFindsStore = apiSync.subscribeAllFinds();
+	let allFindsFromSync = $state<FindState[]>([]);
+
 	// Initialize API sync with server data on mount
-	onMount(async () => {
+	onMount(() => {
 		if (browser && data.finds && data.finds.length > 0) {
 			const findStates: FindState[] = data.finds.map((serverFind: ServerFind) => ({
 				id: serverFind.id,
@@ -129,34 +133,43 @@
 		}
 	});
 
-	// All finds - convert server format to component format
+	// Subscribe to find updates using $effect
+	$effect(() => {
+		const unsubscribe = allFindsStore.subscribe((finds) => {
+			allFindsFromSync = finds;
+		});
+
+		return unsubscribe;
+	});
+
+	// All finds - convert FindState to MapFind format
 	let allFinds = $derived(
-		(data.finds || ([] as ServerFind[])).map((serverFind: ServerFind) => ({
-			...serverFind,
-			createdAt: new Date(serverFind.createdAt), // Convert string to Date
+		allFindsFromSync.map((findState: FindState) => ({
+			id: findState.id,
+			title: findState.title,
+			description: findState.description,
+			latitude: findState.latitude,
+			longitude: findState.longitude,
+			locationName: findState.locationName,
+			category: findState.category,
+			isPublic: findState.isPublic ? 1 : 0,
+			createdAt: findState.createdAt,
+			userId: findState.userId,
 			user: {
-				id: serverFind.userId,
-				username: serverFind.username,
-				profilePictureUrl: serverFind.profilePictureUrl
+				id: findState.userId,
+				username: findState.username,
+				profilePictureUrl: findState.profilePictureUrl || undefined
 			},
-			likeCount: serverFind.likeCount,
-			isLiked: serverFind.isLikedByUser,
-			isFromFriend: serverFind.isFromFriend,
-			media: serverFind.media?.map(
-				(m: {
-					id: string;
-					type: string;
-					url: string;
-					thumbnailUrl: string | null;
-					orderIndex: number | null;
-				}) => ({
-					id: m.id,
-					type: m.type,
-					url: m.url,
-					thumbnailUrl: m.thumbnailUrl || m.url,
-					orderIndex: m.orderIndex
-				})
-			)
+			likeCount: findState.likeCount,
+			isLiked: findState.isLikedByUser,
+			isFromFriend: findState.isFromFriend,
+			media: findState.media?.map((m) => ({
+				id: m.id,
+				type: m.type,
+				url: m.url,
+				thumbnailUrl: m.thumbnailUrl || m.url,
+				orderIndex: m.orderIndex
+			}))
 		})) as MapFind[]
 	);
 
@@ -267,43 +280,16 @@
 
 	function handleFindUpdated() {
 		closeEditModal();
-		handleFindsChanged();
+		// api-sync handles the update, no manual reload needed
 	}
 
 	function handleFindDeleted() {
 		closeEditModal();
-		handleFindsChanged();
+		// api-sync handles the deletion, no manual reload needed
 	}
 
 	function toggleSidebar() {
 		isSidebarVisible = !isSidebarVisible;
-	}
-
-	async function handleFindsChanged() {
-		// Reload finds data after a find is updated or deleted
-		if (browser) {
-			try {
-				const params = new SvelteURLSearchParams();
-				if ($coordinates) {
-					params.set('lat', $coordinates.latitude.toString());
-					params.set('lng', $coordinates.longitude.toString());
-				}
-				if (data.user) {
-					params.set('includePrivate', 'true');
-					if (currentFilter === 'friends') {
-						params.set('includeFriends', 'true');
-					}
-				}
-
-				const response = await fetch(`/api/finds?${params}`);
-				if (response.ok) {
-					const updatedFinds = await response.json();
-					data.finds = updatedFinds;
-				}
-			} catch (error) {
-				console.error('Error reloading finds:', error);
-			}
-		}
 	}
 </script>
 
@@ -415,7 +401,6 @@
 					}))}
 					onFindExplore={handleFindExplore}
 					currentUserId={data.user?.id}
-					onFindsChanged={handleFindsChanged}
 					onEdit={(find) => {
 						const mapFind = finds.find((f) => f.id === find.id);
 						if (mapFind) openEditModal(mapFind);
