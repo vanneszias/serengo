@@ -7,6 +7,10 @@
 		description?: string;
 		category?: string;
 		locationName?: string;
+		latitude?: string;
+		longitude?: string;
+		isPublic?: number;
+		userId?: string;
 		user: {
 			username: string;
 			profilePictureUrl?: string | null;
@@ -14,15 +18,20 @@
 		likeCount?: number;
 		isLiked?: boolean;
 		media?: Array<{
+			id: string;
 			type: string;
 			url: string;
 			thumbnailUrl: string;
+			orderIndex?: number | null;
 		}>;
 	}
 
 	interface FindsListProps {
 		finds: Find[];
 		onFindExplore?: (id: string) => void;
+		currentUserId?: string;
+		onFindsChanged?: () => void;
+		onEdit?: (find: Find) => void;
 		title?: string;
 		showEmpty?: boolean;
 		emptyMessage?: string;
@@ -32,6 +41,9 @@
 	let {
 		finds,
 		onFindExplore,
+		currentUserId,
+		onFindsChanged,
+		onEdit,
 		title = 'Finds',
 		showEmpty = true,
 		emptyMessage = 'No finds to display',
@@ -40,6 +52,14 @@
 
 	function handleFindExplore(id: string) {
 		onFindExplore?.(id);
+	}
+
+	function handleFindDeleted() {
+		onFindsChanged?.();
+	}
+
+	function handleFindUpdated() {
+		onFindsChanged?.();
 	}
 </script>
 
@@ -59,11 +79,19 @@
 					description={find.description}
 					category={find.category}
 					locationName={find.locationName}
+					latitude={find.latitude}
+					longitude={find.longitude}
+					isPublic={find.isPublic}
+					userId={find.userId}
 					user={find.user}
 					media={find.media}
 					likeCount={find.likeCount}
 					isLiked={find.isLiked}
+					{currentUserId}
 					onExplore={handleFindExplore}
+					onDeleted={handleFindDeleted}
+					onUpdated={handleFindUpdated}
+					onEdit={() => onEdit?.(find)}
 				/>
 			{/each}
 		</div>

@@ -2,6 +2,7 @@
 	import { Map } from '$lib';
 	import FindsList from '$lib/components/finds/FindsList.svelte';
 	import CreateFindModal from '$lib/components/finds/CreateFindModal.svelte';
+	import EditFindModal from '$lib/components/finds/EditFindModal.svelte';
 	import FindPreview from '$lib/components/finds/FindPreview.svelte';
 	import FindsFilter from '$lib/components/finds/FindsFilter.svelte';
 	import type { PageData } from './$types';
@@ -10,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { apiSync, type FindState } from '$lib/stores/api-sync';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 	// Server response type
 	interface ServerFind {
@@ -59,9 +61,11 @@
 		isLiked?: boolean;
 		isFromFriend?: boolean;
 		media?: Array<{
+			id: string;
 			type: string;
 			url: string;
 			thumbnailUrl: string;
+			orderIndex?: number | null;
 		}>;
 	}
 
@@ -92,6 +96,8 @@
 	let { data }: { data: PageData & { finds?: ServerFind[] } } = $props();
 
 	let showCreateModal = $state(false);
+	let showEditModal = $state(false);
+	let editingFind: ServerFind | null = $state(null);
 	let selectedFind: FindPreviewData | null = $state(null);
 	let currentFilter = $state('all');
 	let isSidebarVisible = $state(true);
@@ -137,10 +143,18 @@
 			isLiked: serverFind.isLikedByUser,
 			isFromFriend: serverFind.isFromFriend,
 			media: serverFind.media?.map(
-				(m: { type: string; url: string; thumbnailUrl: string | null }) => ({
+				(m: {
+					id: string;
+					type: string;
+					url: string;
+					thumbnailUrl: string | null;
+					orderIndex: number | null;
+				}) => ({
+					id: m.id,
 					type: m.type,
 					url: m.url,
-					thumbnailUrl: m.thumbnailUrl || m.url
+					thumbnailUrl: m.thumbnailUrl || m.url,
+					orderIndex: m.orderIndex
 				})
 			)
 		})) as MapFind[]
@@ -217,8 +231,79 @@
 		showCreateModal = false;
 	}
 
+	function openEditModal(find: MapFind) {
+		// Convert MapFind type to ServerFind format
+		const serverFind: ServerFind = {
+			id: find.id,
+			title: find.title,
+			description: find.description,
+			latitude: find.latitude || '0',
+			longitude: find.longitude || '0',
+			locationName: find.locationName,
+			category: find.category,
+			isPublic: find.isPublic || 0,
+			createdAt: find.createdAt.toISOString(),
+			userId: find.userId || '',
+			username: find.user?.username || '',
+			profilePictureUrl: find.user?.profilePictureUrl,
+			likeCount: find.likeCount,
+			isLikedByUser: find.isLiked,
+			isFromFriend: find.isFromFriend || false,
+			media: (find.media || []).map((mediaItem) => ({
+				...mediaItem,
+				findId: find.id,
+				thumbnailUrl: mediaItem.thumbnailUrl || null,
+				orderIndex: mediaItem.orderIndex || null
+			}))
+		};
+		editingFind = serverFind;
+		showEditModal = true;
+	}
+
+	function closeEditModal() {
+		showEditModal = false;
+		editingFind = null;
+	}
+
+	function handleFindUpdated() {
+		closeEditModal();
+		handleFindsChanged();
+	}
+
+	function handleFindDeleted() {
+		closeEditModal();
+		handleFindsChanged();
+	}
+
 	function toggleSidebar() {
 		isSidebarVisible = !isSidebarVisible;
+	}
+
+	async function handleFindsChanged() {
+		// Reload finds data after a find is updated or deleted
+		if (browser) {
+			try {
+				const params = new SvelteURLSearchParams();
+				if ($coordinates) {
+					params.set('lat', $coordinates.latitude.toString());
+					params.set('lng', $coordinates.longitude.toString());
+				}
+				if (data.user) {
+					params.set('includePrivate', 'true');
+					if (currentFilter === 'friends') {
+						params.set('includeFriends', 'true');
+					}
+				}
+
+				const response = await fetch(`/api/finds?${params}`);
+				if (response.ok) {
+					const updatedFinds = await response.json();
+					data.finds = updatedFinds;
+				}
+			} catch (error) {
+				console.error('Error reloading finds:', error);
+			}
+		}
 	}
 </script>
 
@@ -248,8 +333,34 @@
 		<Map
 			autoCenter={true}
 			center={[$coordinates?.longitude || 0, $coordinates?.latitude || 51.505]}
-			{finds}
-			onFindClick={handleFindClick}
+			finds={finds.map((find) => ({
+				id: find.id,
+				title: find.title,
+				description: find.description,
+				latitude: find.latitude,
+				longitude: find.longitude,
+				locationName: find.locationName,
+				category: find.category,
+				isPublic: find.isPublic,
+				createdAt: find.createdAt,
+				userId: find.userId,
+				user: {
+					id: find.user.id,
+					username: find.user.username
+				},
+				media: find.media?.map((m) => ({
+					type: m.type,
+					url: m.url,
+					thumbnailUrl: m.thumbnailUrl
+				}))
+			}))}
+			onFindClick={(mapFind) => {
+				// Find the corresponding MapFind from the finds array
+				const originalFind = finds.find((f) => f.id === mapFind.id);
+				if (originalFind) {
+					handleFindClick(originalFind);
+				}
+			}}
 			sidebarVisible={isSidebarVisible}
 		/>
 	</div>
@@ -277,7 +388,40 @@
 				{/if}
 			</div>
 			<div class="finds-list-container">
-				<FindsList {finds} onFindExplore={handleFindExplore} hideTitle={true} />
+				<FindsList
+					finds={finds.map((find) => ({
+						id: find.id,
+						title: find.title,
+						description: find.description,
+						category: find.category,
+						locationName: find.locationName,
+						latitude: find.latitude,
+						longitude: find.longitude,
+						isPublic: find.isPublic,
+						userId: find.userId,
+						user: {
+							username: find.user.username,
+							profilePictureUrl: find.user.profilePictureUrl
+						},
+						likeCount: find.likeCount,
+						isLiked: find.isLiked,
+						media: find.media?.map((m) => ({
+							id: m.id,
+							type: m.type,
+							url: m.url,
+							thumbnailUrl: m.thumbnailUrl,
+							orderIndex: m.orderIndex
+						}))
+					}))}
+					onFindExplore={handleFindExplore}
+					currentUserId={data.user?.id}
+					onFindsChanged={handleFindsChanged}
+					onEdit={(find) => {
+						const mapFind = finds.find((f) => f.id === find.id);
+						if (mapFind) openEditModal(mapFind);
+					}}
+					hideTitle={true}
+				/>
 			</div>
 		</div>
 		<!-- Toggle button -->
@@ -304,6 +448,26 @@
 		isOpen={showCreateModal}
 		onClose={closeCreateModal}
 		onFindCreated={handleFindCreated}
+	/>
+{/if}
+
+{#if showEditModal && editingFind}
+	<EditFindModal
+		isOpen={showEditModal}
+		find={{
+			id: editingFind.id,
+			title: editingFind.title,
+			description: editingFind.description || null,
+			latitude: editingFind.latitude || '0',
+			longitude: editingFind.longitude || '0',
+			locationName: editingFind.locationName || null,
+			category: editingFind.category || null,
+			isPublic: editingFind.isPublic,
+			media: editingFind.media || []
+		}}
+		onClose={closeEditModal}
+		onFindUpdated={handleFindUpdated}
+		onFindDeleted={handleFindDeleted}
 	/>
 {/if}
 

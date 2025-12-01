@@ -1,11 +1,18 @@
 <script lang="ts">
 	import { Button } from '$lib/components/button';
 	import { Badge } from '$lib/components/badge';
+	import {
+		DropdownMenu,
+		DropdownMenuContent,
+		DropdownMenuItem,
+		DropdownMenuTrigger,
+		DropdownMenuSeparator
+	} from '$lib/components/dropdown-menu';
 	import LikeButton from './LikeButton.svelte';
 	import VideoPlayer from '../media/VideoPlayer.svelte';
 	import ProfilePicture from '../profile/ProfilePicture.svelte';
 	import CommentsList from './CommentsList.svelte';
-	import { Ellipsis, MessageCircle, Share } from '@lucide/svelte';
+	import { Ellipsis, MessageCircle, Share, Edit, Trash2 } from '@lucide/svelte';
 
 	interface FindCardProps {
 		id: string;
@@ -13,20 +20,29 @@
 		description?: string;
 		category?: string;
 		locationName?: string;
+		latitude?: string;
+		longitude?: string;
+		isPublic?: number;
+		userId?: string;
 		user: {
 			username: string;
 			profilePictureUrl?: string | null;
 		};
 		media?: Array<{
+			id: string;
 			type: string;
 			url: string;
 			thumbnailUrl: string;
+			orderIndex?: number | null;
 		}>;
 		likeCount?: number;
 		isLiked?: boolean;
 		commentCount?: number;
 		currentUserId?: string;
 		onExplore?: (id: string) => void;
+		onDeleted?: () => void;
+		onUpdated?: () => void;
+		onEdit?: () => void;
 	}
 
 	let {
@@ -35,16 +51,26 @@
 		description,
 		category,
 		locationName,
+		latitude: _latitude,
+		longitude: _longitude,
+		isPublic: _isPublic,
+		userId,
 		user,
 		media,
 		likeCount = 0,
 		isLiked = false,
 		commentCount = 0,
 		currentUserId,
-		onExplore
+		onExplore,
+		onDeleted,
+		onUpdated: _onUpdated,
+		onEdit
 	}: FindCardProps = $props();
 
 	let showComments = $state(false);
+	let isDeleting = $state(false);
+
+	const isOwner = $derived(currentUserId && userId && currentUserId === userId);
 
 	function handleExplore() {
 		onExplore?.(id);
@@ -82,6 +108,34 @@
 				});
 		}
 	}
+
+	function handleEdit() {
+		onEdit?.();
+	}
+
+	async function handleDelete() {
+		if (!confirm('Are you sure you want to delete this find? This action cannot be undone.')) {
+			return;
+		}
+
+		isDeleting = true;
+		try {
+			const response = await fetch(`/api/finds/${id}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to delete find');
+			}
+
+			onDeleted?.();
+		} catch (error) {
+			console.error('Error deleting find:', error);
+			alert('Failed to delete find. Please try again.');
+		} finally {
+			isDeleting = false;
+		}
+	}
 </script>
 
 <div class="find-card">
@@ -112,9 +166,24 @@
 				{/if}
 			</div>
 		</div>
-		<Button variant="ghost" size="sm" class="more-button">
-			<Ellipsis size={16} />
-		</Button>
+		{#if isOwner}
+			<DropdownMenu>
+				<DropdownMenuTrigger class="more-button-trigger">
+					<Ellipsis size={16} />
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem onclick={handleEdit}>
+						<Edit size={16} />
+						<span>Edit</span>
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem onclick={handleDelete} disabled={isDeleting} class="text-destructive">
+						<Trash2 size={16} />
+						<span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		{/if}
 	</div>
 
 	<!-- Post Content -->
@@ -242,6 +311,33 @@
 
 	:global(.more-button) {
 		color: hsl(var(--muted-foreground));
+	}
+
+	:global(.more-button-trigger) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border: none;
+		background: transparent;
+		color: hsl(var(--muted-foreground));
+		border-radius: 6px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	:global(.more-button-trigger:hover) {
+		background: hsl(var(--muted) / 0.5);
+		color: hsl(var(--foreground));
+	}
+
+	:global(.text-destructive) {
+		color: hsl(var(--destructive));
+	}
+
+	:global(.text-destructive:hover) {
+		color: hsl(var(--destructive));
 	}
 
 	/* Post Content */

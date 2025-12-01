@@ -1,15 +1,23 @@
 <script lang="ts">
 	import { Map } from '$lib';
+	import { goto } from '$app/navigation';
 	import LikeButton from '$lib/components/finds/LikeButton.svelte';
 	import VideoPlayer from '$lib/components/media/VideoPlayer.svelte';
 	import ProfilePicture from '$lib/components/profile/ProfilePicture.svelte';
 	import CommentsList from '$lib/components/finds/CommentsList.svelte';
+	import EditFindModal from '$lib/components/finds/EditFindModal.svelte';
+	import { Button } from '$lib/components/button';
+	import { Edit, Trash2 } from 'lucide-svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	let currentMediaIndex = $state(0);
 	let isPanelVisible = $state(true);
+	let showEditModal = $state(false);
+	let isDeleting = $state(false);
+
+	const isOwner = $derived(data.user && data.find && data.user.id === data.find.userId);
 
 	function nextMedia() {
 		if (!data.find?.media) return;
@@ -75,6 +83,47 @@
 
 	function togglePanel() {
 		isPanelVisible = !isPanelVisible;
+	}
+
+	function handleEdit() {
+		showEditModal = true;
+	}
+
+	async function handleDelete() {
+		if (!data.find) return;
+
+		if (!confirm('Are you sure you want to delete this find? This action cannot be undone.')) {
+			return;
+		}
+
+		isDeleting = true;
+		try {
+			const response = await fetch(`/api/finds/${data.find.id}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to delete find');
+			}
+
+			// Redirect to home page after successful deletion
+			goto('/');
+		} catch (error) {
+			console.error('Error deleting find:', error);
+			alert('Failed to delete find. Please try again.');
+			isDeleting = false;
+		}
+	}
+
+	function handleFindUpdated() {
+		showEditModal = false;
+		// Reload the page to get updated data
+		window.location.reload();
+	}
+
+	function handleFindDeleted() {
+		showEditModal = false;
+		goto('/');
 	}
 
 	// Create the map find format
@@ -187,6 +236,23 @@
 								</div>
 							</div>
 						</div>
+						{#if isOwner}
+							<div class="action-buttons-header">
+								<Button variant="outline" size="sm" onclick={handleEdit}>
+									<Edit size={16} />
+									<span>Edit</span>
+								</Button>
+								<Button
+									variant="destructive"
+									size="sm"
+									onclick={handleDelete}
+									disabled={isDeleting}
+								>
+									<Trash2 size={16} />
+									<span>{isDeleting ? 'Deleting...' : 'Delete'}</span>
+								</Button>
+							</div>
+						{/if}
 					</div>
 
 					<div class="panel-body">
@@ -351,6 +417,26 @@
 	</div>
 </div>
 
+{#if showEditModal && isOwner && data.find}
+	<EditFindModal
+		isOpen={showEditModal}
+		find={{
+			id: data.find.id,
+			title: data.find.title,
+			description: data.find.description || null,
+			latitude: data.find.latitude,
+			longitude: data.find.longitude,
+			locationName: data.find.locationName || null,
+			category: data.find.category || null,
+			isPublic: data.find.isPublic ?? 1,
+			media: data.find.media || []
+		}}
+		onClose={() => (showEditModal = false)}
+		onFindUpdated={handleFindUpdated}
+		onFindDeleted={handleFindDeleted}
+	/>
+{/if}
+
 <style>
 	.public-find-page {
 		position: relative;
@@ -444,6 +530,22 @@
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.action-buttons-header {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	.action-buttons-header :global(button) {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		font-size: 0.875rem;
 	}
 
 	.user-section {
