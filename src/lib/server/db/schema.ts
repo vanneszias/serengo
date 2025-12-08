@@ -21,16 +21,28 @@ export type Session = typeof session.$inferSelect;
 
 export type User = typeof user.$inferSelect;
 
-// Finds feature tables
+// Location table - represents geographical points where finds can be made
+export const location = pgTable('location', {
+	id: text('id').primaryKey(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => user.id, { onDelete: 'cascade' }),
+	latitude: text('latitude').notNull(), // Using text for precision
+	longitude: text('longitude').notNull(), // Using text for precision
+	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
+});
+
+// Find table - represents posts/content made at a location
 export const find = pgTable('find', {
 	id: text('id').primaryKey(),
+	locationId: text('location_id')
+		.notNull()
+		.references(() => location.id, { onDelete: 'cascade' }),
 	userId: text('user_id')
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description'),
-	latitude: text('latitude').notNull(), // Using text for precision
-	longitude: text('longitude').notNull(), // Using text for precision
 	locationName: text('location_name'), // e.g., "Café Belga, Brussels"
 	category: text('category'), // e.g., "cafe", "restaurant", "park", "landmark"
 	isPublic: integer('is_public').default(1), // Using integer for boolean (1 = true, 0 = false)
@@ -130,6 +142,7 @@ export const notificationPreferences = pgTable('notification_preferences', {
 });
 
 // Type exports for the tables
+export type Location = typeof location.$inferSelect;
 export type Find = typeof find.$inferSelect;
 export type FindMedia = typeof findMedia.$inferSelect;
 export type FindLike = typeof findLike.$inferSelect;
@@ -139,6 +152,7 @@ export type Notification = typeof notification.$inferSelect;
 export type NotificationSubscription = typeof notificationSubscription.$inferSelect;
 export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
 
+export type LocationInsert = typeof location.$inferInsert;
 export type FindInsert = typeof find.$inferInsert;
 export type FindMediaInsert = typeof findMedia.$inferInsert;
 export type FindLikeInsert = typeof findLike.$inferInsert;

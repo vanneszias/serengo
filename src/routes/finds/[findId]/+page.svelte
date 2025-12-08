@@ -121,40 +121,6 @@
 		goto('/');
 	}
 
-	// Create the map find format
-	let mapFinds = $derived(
-		data.find
-			? [
-					{
-						id: data.find.id,
-						title: data.find.title,
-						description: data.find.description,
-						latitude: data.find.latitude,
-						longitude: data.find.longitude,
-						locationName: data.find.locationName,
-						category: data.find.category,
-						isPublic: data.find.isPublic,
-						createdAt: new Date(data.find.createdAt),
-						userId: data.find.userId,
-						user: {
-							id: data.find.userId,
-							username: data.find.username,
-							profilePictureUrl: data.find.profilePictureUrl
-						},
-						likeCount: data.find.likeCount,
-						isLiked: data.find.isLikedByUser,
-						media: data.find.media?.map(
-							(m: { type: string; url: string; thumbnailUrl: string | null }) => ({
-								type: m.type,
-								url: m.url,
-								thumbnailUrl: m.thumbnailUrl || m.url
-							})
-						)
-					}
-				]
-			: []
-	);
-
 	// Get first media for OG image
 	let ogImage = $derived(data.find?.media?.[0]?.url || '');
 </script>
@@ -200,8 +166,6 @@
 		<Map
 			autoCenter={true}
 			center={[parseFloat(data.find?.longitude || '0'), parseFloat(data.find?.latitude || '0')]}
-			finds={mapFinds}
-			onFindClick={() => {}}
 		/>
 	</div>
 
