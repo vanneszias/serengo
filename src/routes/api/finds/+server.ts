@@ -1,24 +1,26 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { find, findMedia, user, findLike, friendship } from '$lib/server/db/schema';
+import { location, find, findMedia, user, findLike, friendship } from '$lib/server/db/schema';
 import { eq, and, sql, desc, or } from 'drizzle-orm';
 import { encodeBase64url } from '@oslojs/encoding';
 import { getLocalR2Url } from '$lib/server/r2';
 
-function generateFindId(): string {
+function generateId(): string {
 	const bytes = crypto.getRandomValues(new Uint8Array(15));
 	return encodeBase64url(bytes);
 }
 
+// GET endpoint now returns finds for a specific location
 export const GET: RequestHandler = async ({ url, locals }) => {
-	const lat = url.searchParams.get('lat');
-	const lng = url.searchParams.get('lng');
-	const radius = url.searchParams.get('radius') || '50';
+	const locationId = url.searchParams.get('locationId');
 	const includePrivate = url.searchParams.get('includePrivate') === 'true';
 	const order = url.searchParams.get('order') || 'desc';
-
 	const includeFriends = url.searchParams.get('includeFriends') === 'true';
+
+	if (!locationId) {
+		throw error(400, 'locationId is required');
+	}
 
 	try {
 		// Get user's friends if needed and user is logged in
@@ -58,39 +60,16 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			);
 		}
 
-		const baseCondition = sql`(${sql.join(conditions, sql` OR `)})`;
+		const privacyCondition = sql`(${sql.join(conditions, sql` OR `)})`;
+		const whereConditions = and(eq(find.locationId, locationId), privacyCondition);
 
-		let whereConditions = baseCondition;
-
-		// Add location filtering if coordinates provided
-		if (lat && lng) {
-			const radiusKm = parseFloat(radius);
-			const latOffset = radiusKm / 111;
-			const lngOffset = radiusKm / (111 * Math.cos((parseFloat(lat) * Math.PI) / 180));
-
-			const locationConditions = and(
-				baseCondition,
-				sql`${find.latitude} BETWEEN ${parseFloat(lat) - latOffset} AND ${
-					parseFloat(lat) + latOffset
-				}`,
-				sql`${find.longitude} BETWEEN ${parseFloat(lng) - lngOffset} AND ${
-					parseFloat(lng) + lngOffset
-				}`
-			);
-
-			if (locationConditions) {
-				whereConditions = locationConditions;
-			}
-		}
-
-		// Get all finds with filtering, like counts, and user's liked status
+		// Get all finds at this location with filtering, like counts, and user's liked status
 		const finds = await db
 			.select({
 				id: find.id,
+				locationId: find.locationId,
 				title: find.title,
 				description: find.description,
-				latitude: find.latitude,
-				longitude: find.longitude,
 				locationName: find.locationName,
 				category: find.category,
 				isPublic: find.isPublic,
@@ -122,8 +101,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			.leftJoin(findLike, eq(find.id, findLike.findId))
 			.where(whereConditions)
 			.groupBy(find.id, user.username, user.profilePictureUrl)
-			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt)
-			.limit(100);
+			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt);
 
 		// Get media for all finds
 		const findIds = finds.map((f) => f.id);
@@ -176,12 +154,11 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				// Generate signed URLs for all media items
 				const mediaWithSignedUrls = await Promise.all(
 					findMedia.map(async (mediaItem) => {
-						// URLs in database are now paths, generate local proxy URLs
 						const localUrl = getLocalR2Url(mediaItem.url);
 						const localThumbnailUrl =
 							mediaItem.thumbnailUrl && !mediaItem.thumbnailUrl.startsWith('/')
 								? getLocalR2Url(mediaItem.thumbnailUrl)
-								: mediaItem.thumbnailUrl; // Keep static placeholder paths as-is
+								: mediaItem.thumbnailUrl;
 
 						return {
 							...mediaItem,
@@ -214,16 +191,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 	}
 };
 
+// POST endpoint creates a find (post) at a location
 export const POST: RequestHandler = async ({ request, locals }) => {
 	if (!locals.user) {
 		throw error(401, 'Unauthorized');
 	}
 
 	const data = await request.json();
-	const { title, description, latitude, longitude, locationName, category, isPublic, media } = data;
+	const { locationId, title, description, locationName, category, isPublic, media } = data;
 
-	if (!title || !latitude || !longitude) {
-		throw error(400, 'Title, latitude, and longitude are required');
+	if (!title || !locationId) {
+		throw error(400, 'Title and locationId are required');
 	}
 
 	if (title.length > 100) {
@@ -234,18 +212,28 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		throw error(400, 'Description must be 500 characters or less');
 	}
 
-	const findId = generateFindId();
+	// Verify location exists
+	const locationExists = await db
+		.select({ id: location.id })
+		.from(location)
+		.where(eq(location.id, locationId))
+		.limit(1);
+
+	if (locationExists.length === 0) {
+		throw error(404, 'Location not found');
+	}
+
+	const findId = generateId();
 
 	// Create find
 	const newFind = await db
 		.insert(find)
 		.values({
 			id: findId,
+			locationId,
 			userId: locals.user.id,
 			title,
 			description,
-			latitude: latitude.toString(),
-			longitude: longitude.toString(),
 			locationName,
 			category,
 			isPublic: isPublic ? 1 : 0
@@ -256,7 +244,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	if (media && media.length > 0) {
 		const mediaRecords = media.map(
 			(item: { type: string; url: string; thumbnailUrl?: string }, index: number) => ({
-				id: generateFindId(),
+				id: generateId(),
 				findId,
 				type: item.type,
 				url: item.url,

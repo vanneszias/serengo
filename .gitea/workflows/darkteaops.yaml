@@ -1,0 +1,30 @@
+name: DarkTeaOps PR Summary
+run-name: Summoning DarkTeaOps for PR #${{ github.event.pull_request.number }}
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  summarize:
+    runs-on: ollama-runner
+    steps:
+      - name: 🔮 Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: 🫖 Invoke DarkTeaOps
+        env:
+          GITEA_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITEA_API_URL: ${{ gitea.server_url }}/api/v1
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          OLLAMA_URL: 'http://host.docker.internal:11434/api/generate'
+          OLLAMA_MODEL: 'gemma3'
+        run: |-
+          echo "🫖 DarkTeaOps awakens…"
+          node .gitea/workflows/reviewer.js
+          if [ $? -ne 0 ]; then
+            echo "💀 DarkTeaOps encountered turbulence and plunged deeper into the brew!"
+            exit 1
+          fi

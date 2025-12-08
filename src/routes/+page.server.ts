@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, url, fetch, request }) => {
 	// Build API URL with query parameters
-	const apiUrl = new URL('/api/finds', url.origin);
+	const apiUrl = new URL('/api/locations', url.origin);
 
 	// Forward location filtering parameters
 	const lat = url.searchParams.get('lat');
@@ -32,15 +32,15 @@ export const load: PageServerLoad = async ({ locals, url, fetch, request }) => {
 			throw new Error(`API request failed: ${response.status}`);
 		}
 
-		const finds = await response.json();
+		const locations = await response.json();
 
 		return {
-			finds
+			locations
 		};
 	} catch (err) {
-		console.error('Error loading finds:', err);
+		console.error('Error loading locations:', err);
 		return {
-			finds: []
+			locations: []
 		};
 	}
 };

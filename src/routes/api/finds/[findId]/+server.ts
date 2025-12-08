@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
-import { find, findMedia, user, findLike, findComment } from '$lib/server/db/schema';
+import { find, findMedia, user, findLike, findComment, location } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { getLocalR2Url, deleteFromR2 } from '$lib/server/r2';
 
@@ -19,8 +19,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 				id: find.id,
 				title: find.title,
 				description: find.description,
-				latitude: find.latitude,
-				longitude: find.longitude,
+				latitude: location.latitude,
+				longitude: location.longitude,
 				locationName: find.locationName,
 				category: find.category,
 				isPublic: find.isPublic,
@@ -42,10 +42,17 @@ export const GET: RequestHandler = async ({ params, locals }) => {
 					: sql<boolean>`0`
 			})
 			.from(find)
+			.innerJoin(location, eq(find.locationId, location.id))
 			.innerJoin(user, eq(find.userId, user.id))
 			.leftJoin(findLike, eq(find.id, findLike.findId))
 			.where(eq(find.id, findId))
-			.groupBy(find.id, user.username, user.profilePictureUrl)
+			.groupBy(
+				find.id,
+				location.latitude,
+				location.longitude,
+				user.username,
+				user.profilePictureUrl
+			)
 			.limit(1);
 
 		if (findResult.length === 0) {
@@ -143,21 +150,11 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 
 		// Parse request body
 		const data = await request.json();
-		const {
-			title,
-			description,
-			latitude,
-			longitude,
-			locationName,
-			category,
-			isPublic,
-			media,
-			mediaToDelete
-		} = data;
+		const { title, description, category, isPublic, media, mediaToDelete } = data;
 
 		// Validate required fields
-		if (!title || !latitude || !longitude) {
-			throw error(400, 'Title, latitude, and longitude are required');
+		if (!title) {
+			throw error(400, 'Title is required');
 		}
 
 		if (title.length > 100) {
@@ -209,9 +206,6 @@ export const PUT: RequestHandler = async ({ params, request, locals }) => {
 			.set({
 				title,
 				description: description || null,
-				latitude: latitude.toString(),
-				longitude: longitude.toString(),
-				locationName: locationName || null,
 				category: category || null,
 				isPublic: isPublic ? 1 : 0,
 				updatedAt: new Date()

@@ -2,29 +2,24 @@
 	import { Input } from '$lib/components/input';
 	import { Label } from '$lib/components/label';
 	import { Button } from '$lib/components/button';
-	import { coordinates } from '$lib/stores/location';
-	import POISearch from '../map/POISearch.svelte';
-	import type { PlaceResult } from '$lib/utils/places';
 
 	interface Props {
 		isOpen: boolean;
+		locationId: string;
 		onClose: () => void;
 		onFindCreated: (event: CustomEvent) => void;
 	}
 
-	let { isOpen, onClose, onFindCreated }: Props = $props();
+	let { isOpen, locationId, onClose, onFindCreated }: Props = $props();
 
 	let title = $state('');
 	let description = $state('');
-	let latitude = $state('');
-	let longitude = $state('');
 	let locationName = $state('');
 	let category = $state('cafe');
 	let isPublic = $state(true);
 	let selectedFiles = $state<FileList | null>(null);
 	let isSubmitting = $state(false);
 	let uploadedMedia = $state<Array<{ type: string; url: string; thumbnailUrl: string }>>([]);
-	let useManualLocation = $state(false);
 
 	const categories = [
 		{ value: 'cafe', label: 'Café' },
@@ -49,13 +44,6 @@
 		window.addEventListener('resize', checkIsMobile);
 
 		return () => window.removeEventListener('resize', checkIsMobile);
-	});
-
-	$effect(() => {
-		if (isOpen && $coordinates) {
-			latitude = $coordinates.latitude.toString();
-			longitude = $coordinates.longitude.toString();
-		}
 	});
 
 	function handleFileChange(event: Event) {
@@ -85,10 +73,7 @@
 	}
 
 	async function handleSubmit() {
-		const lat = parseFloat(latitude);
-		const lng = parseFloat(longitude);
-
-		if (!title.trim() || isNaN(lat) || isNaN(lng)) {
+		if (!title.trim()) {
 			return;
 		}
 
@@ -105,10 +90,9 @@
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify({
+					locationId,
 					title: title.trim(),
 					description: description.trim() || null,
-					latitude: lat,
-					longitude: lng,
 					locationName: locationName.trim() || null,
 					category,
 					isPublic,
@@ -131,31 +115,14 @@
 		}
 	}
 
-	function handlePlaceSelected(place: PlaceResult) {
-		locationName = place.name;
-		latitude = place.latitude.toString();
-		longitude = place.longitude.toString();
-	}
-
-	function toggleLocationMode() {
-		useManualLocation = !useManualLocation;
-		if (!useManualLocation && $coordinates) {
-			latitude = $coordinates.latitude.toString();
-			longitude = $coordinates.longitude.toString();
-		}
-	}
-
 	function resetForm() {
 		title = '';
 		description = '';
 		locationName = '';
-		latitude = '';
-		longitude = '';
 		category = 'cafe';
 		isPublic = true;
 		selectedFiles = null;
 		uploadedMedia = [];
-		useManualLocation = false;
 
 		const fileInput = document.querySelector('#media-files') as HTMLInputElement;
 		if (fileInput) {
@@ -210,31 +177,13 @@
 						></textarea>
 					</div>
 
-					<div class="location-section">
-						<div class="location-header">
-							<Label>Location</Label>
-							<button type="button" onclick={toggleLocationMode} class="toggle-button">
-								{useManualLocation ? 'Use Search' : 'Manual Entry'}
-							</button>
-						</div>
-
-						{#if useManualLocation}
-							<div class="field">
-								<Label for="location-name">Location name</Label>
-								<Input
-									name="location-name"
-									placeholder="Café Central, Brussels"
-									bind:value={locationName}
-								/>
-							</div>
-						{:else}
-							<POISearch
-								onPlaceSelected={handlePlaceSelected}
-								placeholder="Search for cafés, restaurants, landmarks..."
-								label=""
-								showNearbyButton={true}
-							/>
-						{/if}
+					<div class="field">
+						<Label for="location-name">Location name (optional)</Label>
+						<Input
+							name="location-name"
+							placeholder="Café Central, Brussels"
+							bind:value={locationName}
+						/>
 					</div>
 
 					<div class="field-group">
@@ -307,34 +256,6 @@
 							</div>
 						{/if}
 					</div>
-
-					{#if useManualLocation || (!latitude && !longitude)}
-						<div class="field-group">
-							<div class="field">
-								<Label for="latitude">Latitude</Label>
-								<Input name="latitude" type="text" required bind:value={latitude} />
-							</div>
-							<div class="field">
-								<Label for="longitude">Longitude</Label>
-								<Input name="longitude" type="text" required bind:value={longitude} />
-							</div>
-						</div>
-					{:else if latitude && longitude}
-						<div class="coordinates-display">
-							<Label>Selected coordinates</Label>
-							<div class="coordinates-info">
-								<span class="coordinate">Lat: {parseFloat(latitude).toFixed(6)}</span>
-								<span class="coordinate">Lng: {parseFloat(longitude).toFixed(6)}</span>
-								<button
-									type="button"
-									onclick={() => (useManualLocation = true)}
-									class="edit-coords-button"
-								>
-									Edit
-								</button>
-							</div>
-						</div>
-					{/if}
 				</div>
 
 				<div class="modal-footer">
@@ -613,76 +534,6 @@
 
 	.modal-footer :global(button) {
 		flex: 1;
-	}
-
-	.location-section {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.location-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-	}
-
-	.toggle-button {
-		font-size: 0.75rem;
-		padding: 0.375rem 0.75rem;
-		height: auto;
-		background: hsl(var(--secondary));
-		border: 1px solid hsl(var(--border));
-		border-radius: 6px;
-		color: hsl(var(--secondary-foreground));
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-	}
-
-	.toggle-button:hover {
-		background: hsl(var(--secondary) / 0.8);
-	}
-
-	.coordinates-display {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.coordinates-info {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem;
-		background: hsl(var(--muted) / 0.5);
-		border: 1px solid hsl(var(--border));
-		border-radius: 8px;
-		font-size: 0.875rem;
-	}
-
-	.coordinate {
-		color: hsl(var(--muted-foreground));
-		font-family: monospace;
-		font-size: 0.8125rem;
-	}
-
-	.edit-coords-button {
-		margin-left: auto;
-		font-size: 0.75rem;
-		padding: 0.375rem 0.75rem;
-		height: auto;
-		background: hsl(var(--secondary));
-		border: 1px solid hsl(var(--border));
-		border-radius: 6px;
-		color: hsl(var(--secondary-foreground));
-		cursor: pointer;
-		transition: all 0.2s ease;
-		font-weight: 500;
-	}
-
-	.edit-coords-button:hover {
-		background: hsl(var(--secondary) / 0.8);
 	}
 
 	/* Mobile specific adjustments */

@@ -1,65 +1,30 @@
 <script lang="ts">
 	import { Map } from '$lib';
-	import FindsList from '$lib/components/finds/FindsList.svelte';
-	import CreateFindModal from '$lib/components/finds/CreateFindModal.svelte';
-	import EditFindModal from '$lib/components/finds/EditFindModal.svelte';
-	import FindPreview from '$lib/components/finds/FindPreview.svelte';
-	import FindsFilter from '$lib/components/finds/FindsFilter.svelte';
+	import {
+		LocationsList,
+		SelectLocationModal,
+		LocationFindsModal
+	} from '$lib/components/locations';
 	import type { PageData } from './$types';
 	import { coordinates } from '$lib/stores/location';
 	import { Button } from '$lib/components/button';
-	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
-	import { apiSync, type FindState } from '$lib/stores/api-sync';
-	import { SvelteURLSearchParams } from 'svelte/reactivity';
+	import { calculateDistance } from '$lib/utils/distance';
 
-	// Server response type
-	interface ServerFind {
+	interface Find {
 		id: string;
+		locationId: string;
 		title: string;
 		description?: string;
-		latitude: string;
-		longitude: string;
-		locationName?: string;
 		category?: string;
+		locationName?: string;
 		isPublic: number;
-		createdAt: string; // Will be converted to Date type, but is a string from api
 		userId: string;
 		username: string;
 		profilePictureUrl?: string | null;
 		likeCount?: number;
 		isLikedByUser?: boolean;
 		isFromFriend?: boolean;
-		media: Array<{
-			id: string;
-			findId: string;
-			type: string;
-			url: string;
-			thumbnailUrl: string | null;
-			orderIndex: number | null;
-		}>;
-	}
-
-	// Map component type
-	interface MapFind {
-		id: string;
-		title: string;
-		description?: string;
-		latitude: string;
-		longitude: string;
-		locationName?: string;
-		category?: string;
-		isPublic: number;
-		createdAt: Date;
-		userId: string;
-		user: {
-			id: string;
-			username: string;
-			profilePictureUrl?: string | null;
-		};
-		likeCount?: number;
-		isLiked?: boolean;
-		isFromFriend?: boolean;
+		createdAt: string;
 		media?: Array<{
 			id: string;
 			type: string;
@@ -69,223 +34,130 @@
 		}>;
 	}
 
-	// Interface for FindPreview component
-	interface FindPreviewData {
+	interface Location {
 		id: string;
-		title: string;
-		description?: string;
 		latitude: string;
 		longitude: string;
-		locationName?: string;
-		category?: string;
 		createdAt: string;
+		userId: string;
+		username: string;
+		profilePictureUrl?: string | null;
+		findCount: number;
+		finds?: Find[];
+		distance?: number;
+	}
+
+	interface MapLocation {
+		id: string;
+		latitude: string;
+		longitude: string;
+		createdAt: Date;
+		userId: string;
 		user: {
 			id: string;
 			username: string;
-			profilePictureUrl?: string | null;
 		};
-		likeCount?: number;
-		isLiked?: boolean;
-		media?: Array<{
-			type: string;
-			url: string;
-			thumbnailUrl: string;
+		finds: Array<{
+			id: string;
+			title: string;
+			description?: string;
+			isPublic: number;
+			media?: Array<{
+				type: string;
+				url: string;
+				thumbnailUrl: string;
+			}>;
 		}>;
+		distance?: number;
 	}
 
-	let { data }: { data: PageData & { finds?: ServerFind[] } } = $props();
+	let { data }: { data: PageData & { locations?: Location[] } } = $props();
 
-	let showCreateModal = $state(false);
-	let showEditModal = $state(false);
-	let editingFind: ServerFind | null = $state(null);
-	let selectedFind: FindPreviewData | null = $state(null);
-	let currentFilter = $state('all');
+	let showCreateFindModal = $state(false);
+	let showLocationFindsModal = $state(false);
+	let selectedLocation: Location | null = $state(null);
 	let isSidebarVisible = $state(true);
 
-	// Subscribe to all finds from api-sync
-	const allFindsStore = apiSync.subscribeAllFinds();
-	let allFindsFromSync = $state<FindState[]>([]);
+	// Process locations with distance
+	let locations = $derived.by(() => {
+		if (!data.locations || !$coordinates) return data.locations || [];
 
-	// Initialize API sync with server data on mount
-	onMount(() => {
-		if (browser && data.finds && data.finds.length > 0) {
-			const findStates: FindState[] = data.finds.map((serverFind: ServerFind) => ({
-				id: serverFind.id,
-				title: serverFind.title,
-				description: serverFind.description,
-				latitude: serverFind.latitude,
-				longitude: serverFind.longitude,
-				locationName: serverFind.locationName,
-				category: serverFind.category,
-				isPublic: Boolean(serverFind.isPublic),
-				createdAt: new Date(serverFind.createdAt),
-				userId: serverFind.userId,
-				username: serverFind.username,
-				profilePictureUrl: serverFind.profilePictureUrl || undefined,
-				media: serverFind.media,
-				isLikedByUser: Boolean(serverFind.isLikedByUser),
-				likeCount: serverFind.likeCount || 0,
-				commentCount: 0,
-				isFromFriend: Boolean(serverFind.isFromFriend)
-			}));
-
-			apiSync.initializeFindData(findStates);
-		}
-	});
-
-	// Subscribe to find updates using $effect
-	$effect(() => {
-		const unsubscribe = allFindsStore.subscribe((finds) => {
-			allFindsFromSync = finds;
-		});
-
-		return unsubscribe;
-	});
-
-	// All finds - convert FindState to MapFind format
-	let allFinds = $derived(
-		allFindsFromSync.map((findState: FindState) => ({
-			id: findState.id,
-			title: findState.title,
-			description: findState.description,
-			latitude: findState.latitude,
-			longitude: findState.longitude,
-			locationName: findState.locationName,
-			category: findState.category,
-			isPublic: findState.isPublic ? 1 : 0,
-			createdAt: findState.createdAt,
-			userId: findState.userId,
-			user: {
-				id: findState.userId,
-				username: findState.username,
-				profilePictureUrl: findState.profilePictureUrl || undefined
-			},
-			likeCount: findState.likeCount,
-			isLiked: findState.isLikedByUser,
-			isFromFriend: findState.isFromFriend,
-			media: findState.media?.map((m) => ({
-				id: m.id,
-				type: m.type,
-				url: m.url,
-				thumbnailUrl: m.thumbnailUrl || m.url,
-				orderIndex: m.orderIndex
+		return data.locations
+			.map((loc: Location) => ({
+				...loc,
+				distance: calculateDistance(
+					$coordinates.latitude,
+					$coordinates.longitude,
+					parseFloat(loc.latitude),
+					parseFloat(loc.longitude)
+				)
 			}))
-		})) as MapFind[]
+			.sort(
+				(a: Location & { distance?: number }, b: Location & { distance?: number }) =>
+					(a.distance || 0) - (b.distance || 0)
+			);
+	});
+
+	// Convert locations to map markers - keep the full location object
+	let mapLocations: MapLocation[] = $derived(
+		locations.map(
+			(loc: Location): MapLocation => ({
+				id: loc.id,
+				latitude: loc.latitude,
+				longitude: loc.longitude,
+				createdAt: new Date(loc.createdAt),
+				userId: loc.userId,
+				user: {
+					id: loc.userId,
+					username: loc.username
+				},
+				finds: (loc.finds || []).map((find) => ({
+					id: find.id,
+					title: find.title,
+					description: find.description,
+					isPublic: find.isPublic,
+					media: find.media || []
+				})),
+				distance: loc.distance
+			})
+		)
 	);
 
-	// Filtered finds based on current filter
-	let finds = $derived.by(() => {
-		if (!data.user) return allFinds;
-
-		switch (currentFilter) {
-			case 'public':
-				return allFinds.filter((find) => find.isPublic === 1);
-			case 'friends':
-				return allFinds.filter((find) => find.isFromFriend === true);
-			case 'mine':
-				return allFinds.filter((find) => find.userId === data.user!.id);
-			case 'all':
-			default:
-				return allFinds;
-		}
-	});
-
-	function handleFilterChange(filter: string) {
-		currentFilter = filter;
-	}
-
-	function handleFindCreated(event: CustomEvent) {
-		// For now, just close modal and refresh page as in original implementation
-		showCreateModal = false;
-		if (event.detail?.reload) {
-			window.location.reload();
+	function handleLocationExplore(id: string) {
+		const location = locations.find((l: Location) => l.id === id);
+		if (location) {
+			selectedLocation = location;
+			showLocationFindsModal = true;
 		}
 	}
 
-	function handleFindClick(find: MapFind) {
-		// Convert MapFind to FindPreviewData format
-		selectedFind = {
-			id: find.id,
-			title: find.title,
-			description: find.description,
-			latitude: find.latitude,
-			longitude: find.longitude,
-			locationName: find.locationName,
-			category: find.category,
-			createdAt: find.createdAt.toISOString(),
-			user: find.user,
-			likeCount: find.likeCount,
-			isLiked: find.isLiked,
-			media: find.media?.map((m) => ({
-				type: m.type,
-				url: m.url,
-				thumbnailUrl: m.thumbnailUrl || m.url
-			}))
-		};
+	function handleMapLocationClick(location: MapLocation) {
+		handleLocationExplore(location.id);
 	}
 
-	function handleFindExplore(id: string) {
-		// Find the specific find and show preview
-		const find = finds.find((f) => f.id === id);
-		if (find) {
-			handleFindClick(find);
-		}
+	function openCreateFindModal() {
+		showCreateFindModal = true;
 	}
 
-	function closeFindPreview() {
-		selectedFind = null;
+	function closeCreateFindModal() {
+		showCreateFindModal = false;
 	}
 
-	function openCreateModal() {
-		showCreateModal = true;
+	function closeLocationFindsModal() {
+		showLocationFindsModal = false;
+		selectedLocation = null;
 	}
 
-	function closeCreateModal() {
-		showCreateModal = false;
+	function handleFindCreated() {
+		closeCreateFindModal();
+		// Reload page to show new find
+		window.location.reload();
 	}
 
-	function openEditModal(find: MapFind) {
-		// Convert MapFind type to ServerFind format
-		const serverFind: ServerFind = {
-			id: find.id,
-			title: find.title,
-			description: find.description,
-			latitude: find.latitude || '0',
-			longitude: find.longitude || '0',
-			locationName: find.locationName,
-			category: find.category,
-			isPublic: find.isPublic || 0,
-			createdAt: find.createdAt.toISOString(),
-			userId: find.userId || '',
-			username: find.user?.username || '',
-			profilePictureUrl: find.user?.profilePictureUrl,
-			likeCount: find.likeCount,
-			isLikedByUser: find.isLiked,
-			isFromFriend: find.isFromFriend || false,
-			media: (find.media || []).map((mediaItem) => ({
-				...mediaItem,
-				findId: find.id,
-				thumbnailUrl: mediaItem.thumbnailUrl || null,
-				orderIndex: mediaItem.orderIndex || null
-			}))
-		};
-		editingFind = serverFind;
-		showEditModal = true;
-	}
-
-	function closeEditModal() {
-		showEditModal = false;
-		editingFind = null;
-	}
-
-	function handleFindUpdated() {
-		closeEditModal();
-		// api-sync handles the update, no manual reload needed
-	}
-
-	function handleFindDeleted() {
-		closeEditModal();
-		// api-sync handles the deletion, no manual reload needed
+	function handleCreateFindFromLocation() {
+		// Close location modal and open create find modal
+		showLocationFindsModal = false;
+		showCreateFindModal = true;
 	}
 
 	function toggleSidebar() {
@@ -319,46 +191,20 @@
 		<Map
 			autoCenter={true}
 			center={[$coordinates?.longitude || 0, $coordinates?.latitude || 51.505]}
-			finds={finds.map((find) => ({
-				id: find.id,
-				title: find.title,
-				description: find.description,
-				latitude: find.latitude,
-				longitude: find.longitude,
-				locationName: find.locationName,
-				category: find.category,
-				isPublic: find.isPublic,
-				createdAt: find.createdAt,
-				userId: find.userId,
-				user: {
-					id: find.user.id,
-					username: find.user.username
-				},
-				media: find.media?.map((m) => ({
-					type: m.type,
-					url: m.url,
-					thumbnailUrl: m.thumbnailUrl
-				}))
-			}))}
-			onFindClick={(mapFind) => {
-				// Find the corresponding MapFind from the finds array
-				const originalFind = finds.find((f) => f.id === mapFind.id);
-				if (originalFind) {
-					handleFindClick(originalFind);
-				}
-			}}
+			locations={mapLocations}
+			onLocationClick={handleMapLocationClick}
 			sidebarVisible={isSidebarVisible}
 		/>
 	</div>
 
 	<!-- Sidebar container -->
 	<div class="sidebar-container">
-		<!-- Left sidebar with finds list -->
+		<!-- Left sidebar with locations list -->
 		<div class="finds-sidebar" class:hidden={!isSidebarVisible}>
 			<div class="finds-header">
 				{#if data.user}
-					<FindsFilter {currentFilter} onFilterChange={handleFilterChange} />
-					<Button onclick={openCreateModal} class="create-find-button">
+					<h3 class="header-title">Locations</h3>
+					<Button onclick={openCreateFindModal} class="create-find-button">
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="mr-2">
 							<line x1="12" y1="5" x2="12" y2="19" stroke="currentColor" stroke-width="2" />
 							<line x1="5" y1="12" x2="19" y2="12" stroke="currentColor" stroke-width="2" />
@@ -374,39 +220,7 @@
 				{/if}
 			</div>
 			<div class="finds-list-container">
-				<FindsList
-					finds={finds.map((find) => ({
-						id: find.id,
-						title: find.title,
-						description: find.description,
-						category: find.category,
-						locationName: find.locationName,
-						latitude: find.latitude,
-						longitude: find.longitude,
-						isPublic: find.isPublic,
-						userId: find.userId,
-						user: {
-							username: find.user.username,
-							profilePictureUrl: find.user.profilePictureUrl
-						},
-						likeCount: find.likeCount,
-						isLiked: find.isLiked,
-						media: find.media?.map((m) => ({
-							id: m.id,
-							type: m.type,
-							url: m.url,
-							thumbnailUrl: m.thumbnailUrl,
-							orderIndex: m.orderIndex
-						}))
-					}))}
-					onFindExplore={handleFindExplore}
-					currentUserId={data.user?.id}
-					onEdit={(find) => {
-						const mapFind = finds.find((f) => f.id === find.id);
-						if (mapFind) openEditModal(mapFind);
-					}}
-					hideTitle={true}
-				/>
+				<LocationsList {locations} onLocationExplore={handleLocationExplore} hideTitle={true} />
 			</div>
 		</div>
 		<!-- Toggle button -->
@@ -414,7 +228,7 @@
 			class="sidebar-toggle"
 			class:collapsed={!isSidebarVisible}
 			onclick={toggleSidebar}
-			aria-label="Toggle finds list"
+			aria-label="Toggle locations list"
 		>
 			<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
 				{#if isSidebarVisible}
@@ -428,36 +242,22 @@
 </div>
 
 <!-- Modals -->
-{#if showCreateModal}
-	<CreateFindModal
-		isOpen={showCreateModal}
-		onClose={closeCreateModal}
+{#if showCreateFindModal}
+	<SelectLocationModal
+		isOpen={showCreateFindModal}
+		onClose={closeCreateFindModal}
 		onFindCreated={handleFindCreated}
 	/>
 {/if}
 
-{#if showEditModal && editingFind}
-	<EditFindModal
-		isOpen={showEditModal}
-		find={{
-			id: editingFind.id,
-			title: editingFind.title,
-			description: editingFind.description || null,
-			latitude: editingFind.latitude || '0',
-			longitude: editingFind.longitude || '0',
-			locationName: editingFind.locationName || null,
-			category: editingFind.category || null,
-			isPublic: editingFind.isPublic,
-			media: editingFind.media || []
-		}}
-		onClose={closeEditModal}
-		onFindUpdated={handleFindUpdated}
-		onFindDeleted={handleFindDeleted}
+{#if showLocationFindsModal && selectedLocation}
+	<LocationFindsModal
+		isOpen={showLocationFindsModal}
+		location={selectedLocation}
+		currentUserId={data.user?.id}
+		onClose={closeLocationFindsModal}
+		onCreateFind={handleCreateFindFromLocation}
 	/>
-{/if}
-
-{#if selectedFind}
-	<FindPreview find={selectedFind} onClose={closeFindPreview} currentUserId={data.user?.id} />
 {/if}
 
 <style>
@@ -545,10 +345,19 @@
 	.finds-header {
 		display: flex;
 		justify-content: space-between;
+		align-items: center;
 		padding: 20px;
 		border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 		background: rgba(255, 255, 255, 0.5);
 		flex-shrink: 0;
+	}
+
+	.header-title {
+		font-family: 'Washington', serif;
+		font-size: 1.5rem;
+		font-weight: 600;
+		margin: 0;
+		color: hsl(var(--foreground));
 	}
 
 	.login-prompt {
@@ -596,6 +405,10 @@
 
 	:global(.create-find-button) {
 		flex-shrink: 0;
+	}
+
+	:global(.mr-2) {
+		margin-right: 0.5rem;
 	}
 
 	@media (max-width: 768px) {

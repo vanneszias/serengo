@@ -12,25 +12,26 @@
 	} from '$lib/stores/location';
 	import { Skeleton } from '$lib/components/skeleton';
 
-	interface Find {
+	interface Location {
 		id: string;
-		title: string;
-		description?: string;
 		latitude: string;
 		longitude: string;
-		locationName?: string;
-		category?: string;
-		isPublic: number;
 		createdAt: Date;
 		userId: string;
 		user: {
 			id: string;
 			username: string;
 		};
-		media?: Array<{
-			type: string;
-			url: string;
-			thumbnailUrl: string;
+		finds: Array<{
+			id: string;
+			title: string;
+			description?: string;
+			isPublic: number;
+			media?: Array<{
+				type: string;
+				url: string;
+				thumbnailUrl: string;
+			}>;
 		}>;
 	}
 
@@ -40,8 +41,8 @@
 		zoom?: number;
 		class?: string;
 		autoCenter?: boolean;
-		finds?: Find[];
-		onFindClick?: (find: Find) => void;
+		locations?: Location[];
+		onLocationClick?: (location: Location) => void;
 		sidebarVisible?: boolean;
 	}
 
@@ -68,8 +69,8 @@
 		zoom,
 		class: className = '',
 		autoCenter = true,
-		finds = [],
-		onFindClick,
+		locations = [],
+		onLocationClick,
 		sidebarVisible = false
 	}: Props = $props();
 
@@ -268,27 +269,31 @@
 				</Marker>
 			{/if}
 
-			{#each finds as find (find.id)}
-				<Marker lngLat={[parseFloat(find.longitude), parseFloat(find.latitude)]}>
+			{#each locations as location (location.id)}
+				<Marker lngLat={[parseFloat(location.longitude), parseFloat(location.latitude)]}>
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<div
-						class="find-marker"
+						class="location-pin-marker"
 						role="button"
 						tabindex="0"
-						onclick={() => onFindClick?.(find)}
-						title={find.title}
+						onclick={() => onLocationClick?.(location)}
+						title={`${location.finds.length} find${location.finds.length !== 1 ? 's' : ''}`}
 					>
-						<div class="find-marker-icon">
-							<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+						<div class="location-pin-icon">
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none">
 								<path
-									d="M12 2L13.09 8.26L19 9.27L13.09 10.28L12 16.54L10.91 10.28L5 9.27L10.91 8.26L12 2Z"
+									d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
 									fill="currentColor"
 								/>
+								<circle cx="12" cy="9" r="2.5" fill="white" />
 							</svg>
 						</div>
-						{#if find.media && find.media.length > 0}
-							<div class="find-marker-preview">
-								<img src={find.media[0].thumbnailUrl} alt={find.title} />
+						<div class="location-find-count">
+							{location.finds.length}
+						</div>
+						{#if location.finds.length > 0 && location.finds[0].media && location.finds[0].media.length > 0}
+							<div class="location-marker-preview">
+								<img src={location.finds[0].media[0].thumbnailUrl} alt="Preview" />
 							</div>
 						{/if}
 					</div>
@@ -473,42 +478,62 @@
 		}
 	}
 
-	/* Find marker styles */
-	:global(.find-marker) {
-		width: 40px;
-		height: 40px;
+	/* Location pin marker styles */
+	:global(.location-pin-marker) {
+		width: 50px;
+		height: 50px;
 		cursor: pointer;
 		position: relative;
-		transform: translate(-50%, -50%);
+		transform: translate(-50%, -100%);
 		transition: all 0.2s ease;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
-	:global(.find-marker:hover) {
-		transform: translate(-50%, -50%) scale(1.1);
+	:global(.location-pin-marker:hover) {
+		transform: translate(-50%, -100%) scale(1.1);
 		z-index: 100;
 	}
 
-	:global(.find-marker-icon) {
-		width: 32px;
-		height: 32px;
-		background: #ff6b35;
-		border: 3px solid white;
-		border-radius: 50%;
+	:global(.location-pin-icon) {
+		width: 36px;
+		height: 36px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		color: white;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+		color: #ff6b35;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 		position: relative;
 		z-index: 2;
 	}
 
-	:global(.find-marker-preview) {
+	:global(.location-find-count) {
 		position: absolute;
-		top: -8px;
-		right: -8px;
-		width: 20px;
-		height: 20px;
+		top: 2px;
+		left: 50%;
+		transform: translateX(-50%);
+		background: white;
+		color: #ff6b35;
+		font-weight: 600;
+		font-size: 11px;
+		min-width: 18px;
+		height: 18px;
+		border-radius: 9px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 4px;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		z-index: 3;
+	}
+
+	:global(.location-marker-preview) {
+		position: absolute;
+		top: -2px;
+		right: -4px;
+		width: 24px;
+		height: 24px;
 		border-radius: 50%;
 		overflow: hidden;
 		border: 2px solid white;
@@ -516,7 +541,7 @@
 		z-index: 3;
 	}
 
-	:global(.find-marker-preview img) {
+	:global(.location-marker-preview img) {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
