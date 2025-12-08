@@ -19,18 +19,12 @@ jobs:
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          OLLAMA_URL: "http://host.docker.internal:11434/api/generate"
-          OLLAMA_MODEL: "gemma3"
+          OLLAMA_URL: 'http://host.docker.internal:11434/api/generate'
+          OLLAMA_MODEL: 'gemma3'
         run: |-
           echo "🫖 DarkTeaOps awakens…"
-          node <<'EOF'
-          require("child_process").spawn("node", [".gitea/workflows/reviewer.js"], {
-            stdio: "inherit"
-          }).on("exit", code => {
-            if (code !== 0) {
-              console.error("💀 DarkTeaOps encountered turbulence and plunged deeper into the brew!");
-              process.exit(code);
-            }
-          });
-          EOF
-
+          node .gitea/workflows/reviewer.js
+          if [ $? -ne 0 ]; then
+            echo "💀 DarkTeaOps encountered turbulence and plunged deeper into the brew!"
+            exit 1
+          fi
