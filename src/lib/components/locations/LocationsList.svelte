@@ -104,6 +104,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
+		max-height: calc(100vh - 200px);
+		overflow-y: auto;
 	}
 
 	.empty-state {
