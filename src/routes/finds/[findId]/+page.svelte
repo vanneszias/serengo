@@ -123,6 +123,34 @@
 
 	// Get first media for OG image
 	let ogImage = $derived(data.find?.media?.[0]?.url || '');
+
+	// Convert find to location format for map marker
+	let findAsLocation = $derived(
+		data.find
+			? [
+					{
+						id: data.find.id,
+						latitude: data.find.latitude,
+						longitude: data.find.longitude,
+						createdAt: new Date(data.find.createdAt),
+						userId: data.find.userId,
+						user: {
+							id: data.find.userId,
+							username: data.find.username
+						},
+						finds: [
+							{
+								id: data.find.id,
+								title: data.find.title,
+								description: data.find.description || undefined,
+								isPublic: data.find.isPublic ?? 1,
+								media: data.find.media || []
+							}
+						]
+					}
+				]
+			: []
+	);
 </script>
 
 <svelte:head>
@@ -164,8 +192,10 @@
 	<!-- Fullscreen map -->
 	<div class="map-section">
 		<Map
-			autoCenter={true}
+			autoCenter={false}
 			center={[parseFloat(data.find?.longitude || '0'), parseFloat(data.find?.latitude || '0')]}
+			zoom={15}
+			locations={findAsLocation}
 		/>
 	</div>
 
