@@ -1,6 +1,8 @@
 <script lang="ts">
 	import FindsList from '../finds/FindsList.svelte';
 	import { Button } from '$lib/components/button';
+	import { goto } from '$app/navigation';
+	import EditFindModal from '../finds/EditFindModal.svelte';
 
 	interface Find {
 		id: string;
@@ -16,6 +18,8 @@
 		likeCount?: number;
 		isLikedByUser?: boolean;
 		isFromFriend?: boolean;
+		latitude?: string;
+		longitude?: string;
 		media?: Array<{
 			id: string;
 			type: string;
@@ -47,6 +51,8 @@
 	let { isOpen, location, currentUserId, onClose, onCreateFind }: Props = $props();
 
 	let isMobile = $state(false);
+	let showEditModal = $state(false);
+	let findToEdit = $state<Find | null>(null);
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
@@ -63,6 +69,35 @@
 
 	function handleCreateFind() {
 		onCreateFind?.();
+	}
+
+	function handleFindExplore(findId: string) {
+		goto(`/finds/${findId}`);
+	}
+
+	function handleFindEdit(findData: any) {
+		const find = location?.finds?.find((f) => f.id === findData.id);
+		if (find) {
+			findToEdit = find;
+			showEditModal = true;
+		}
+	}
+
+	function handleEditModalClose() {
+		showEditModal = false;
+		findToEdit = null;
+	}
+
+	function handleFindUpdated() {
+		showEditModal = false;
+		findToEdit = null;
+		window.location.reload();
+	}
+
+	function handleFindDeleted() {
+		showEditModal = false;
+		findToEdit = null;
+		window.location.reload();
 	}
 </script>
 
@@ -94,12 +129,17 @@
 					<FindsList
 						finds={location.finds.map((find) => ({
 							id: find.id,
+							locationId: find.locationId,
 							title: find.title,
 							description: find.description,
 							category: find.category,
 							locationName: find.locationName,
+							latitude: find.latitude,
+							longitude: find.longitude,
 							isPublic: find.isPublic,
 							userId: find.userId,
+							username: find.username,
+							profilePictureUrl: find.profilePictureUrl,
 							user: {
 								username: find.username,
 								profilePictureUrl: find.profilePictureUrl
@@ -110,6 +150,8 @@
 						}))}
 						hideTitle={true}
 						{currentUserId}
+						onFindExplore={handleFindExplore}
+						onEdit={handleFindEdit}
 					/>
 				{:else}
 					<div class="empty-state">
@@ -147,6 +189,32 @@
 	</div>
 {/if}
 
+{#if showEditModal && findToEdit}
+	<EditFindModal
+		isOpen={showEditModal}
+		find={{
+			id: findToEdit.id,
+			title: findToEdit.title,
+			description: findToEdit.description || null,
+			latitude: findToEdit.latitude || location?.latitude || '0',
+			longitude: findToEdit.longitude || location?.longitude || '0',
+			locationName: findToEdit.locationName || null,
+			category: findToEdit.category || null,
+			isPublic: findToEdit.isPublic ?? 1,
+			media: (findToEdit.media || []).map((m) => ({
+				id: m.id,
+				type: m.type,
+				url: m.url,
+				thumbnailUrl: m.thumbnailUrl || null,
+				orderIndex: m.orderIndex ?? null
+			}))
+		}}
+		onClose={handleEditModalClose}
+		onFindUpdated={handleFindUpdated}
+		onFindDeleted={handleFindDeleted}
+	/>
+{/if}
+
 <style>
 	.modal-container {
 		position: fixed;
@@ -155,7 +223,6 @@
 		width: 40%;
 		max-width: 600px;
 		min-width: 500px;
-		height: calc(100vh - 100px);
 		backdrop-filter: blur(10px);
 		border-radius: 12px;
 		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);

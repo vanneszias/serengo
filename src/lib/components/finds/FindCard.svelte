@@ -254,6 +254,7 @@
 <style>
 	.find-card {
 		backdrop-filter: blur(10px);
+		margin-top: 1rem;
 		margin-bottom: 1rem;
 	}
 
