@@ -14,7 +14,6 @@
 
 	let title = $state('');
 	let description = $state('');
-	let locationName = $state('');
 	let category = $state('cafe');
 	let isPublic = $state(true);
 	let selectedFiles = $state<FileList | null>(null);
@@ -93,7 +92,6 @@
 					locationId,
 					title: title.trim(),
 					description: description.trim() || null,
-					locationName: locationName.trim() || null,
 					category,
 					isPublic,
 					media: uploadedMedia
@@ -118,7 +116,6 @@
 	function resetForm() {
 		title = '';
 		description = '';
-		locationName = '';
 		category = 'cafe';
 		isPublic = true;
 		selectedFiles = null;
@@ -175,15 +172,6 @@
 							maxlength="500"
 							bind:value={description}
 						></textarea>
-					</div>
-
-					<div class="field">
-						<Label for="location-name">Location name (optional)</Label>
-						<Input
-							name="location-name"
-							placeholder="Café Central, Brussels"
-							bind:value={locationName}
-						/>
 					</div>
 
 					<div class="field-group">

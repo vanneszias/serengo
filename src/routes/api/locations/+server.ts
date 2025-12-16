@@ -66,6 +66,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				id: location.id,
 				latitude: location.latitude,
 				longitude: location.longitude,
+				locationName: location.locationName,
 				createdAt: location.createdAt,
 				userId: location.userId,
 				username: user.username,
@@ -109,7 +110,6 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 						id: find.id,
 						title: find.title,
 						description: find.description,
-						locationName: find.locationName,
 						category: find.category,
 						isPublic: find.isPublic,
 						createdAt: find.createdAt,
@@ -239,7 +239,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const data = await request.json();
-	const { latitude, longitude } = data;
+	const { latitude, longitude, locationName } = data;
 
 	if (!latitude || !longitude) {
 		throw error(400, 'Latitude and longitude are required');
@@ -254,7 +254,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			id: locationId,
 			userId: locals.user.id,
 			latitude: latitude.toString(),
-			longitude: longitude.toString()
+			longitude: longitude.toString(),
+			locationName: locationName || null
 		})
 		.returning();
 

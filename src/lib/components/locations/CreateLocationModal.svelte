@@ -16,6 +16,7 @@
 
 	let latitude = $state('');
 	let longitude = $state('');
+	let locationName = $state('');
 	let isSubmitting = $state(false);
 	let useManualLocation = $state(false);
 
@@ -59,7 +60,8 @@
 				},
 				body: JSON.stringify({
 					latitude: lat,
-					longitude: lng
+					longitude: lng,
+					locationName: locationName.trim() || null
 				})
 			});
 
@@ -85,6 +87,7 @@
 	}
 
 	function handlePlaceSelected(place: PlaceResult) {
+		locationName = place.name;
 		latitude = place.latitude.toString();
 		longitude = place.longitude.toString();
 	}
@@ -100,6 +103,7 @@
 	function resetForm() {
 		latitude = '';
 		longitude = '';
+		locationName = '';
 		useManualLocation = false;
 	}
 
@@ -156,6 +160,16 @@
 								showNearbyButton={true}
 							/>
 						{/if}
+					</div>
+
+					<div class="field">
+						<Label for="location-name">Location Name (Optional)</Label>
+						<Input
+							name="location-name"
+							type="text"
+							placeholder="Café Central, Brussels"
+							bind:value={locationName}
+						/>
 					</div>
 
 					{#if useManualLocation || (!latitude && !longitude)}

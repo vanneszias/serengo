@@ -70,7 +70,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				locationId: find.locationId,
 				title: find.title,
 				description: find.description,
-				locationName: find.locationName,
+				locationName: location.locationName,
 				category: find.category,
 				isPublic: find.isPublic,
 				createdAt: find.createdAt,
@@ -98,9 +98,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			})
 			.from(find)
 			.innerJoin(user, eq(find.userId, user.id))
+			.innerJoin(location, eq(find.locationId, location.id))
 			.leftJoin(findLike, eq(find.id, findLike.findId))
 			.where(whereConditions)
-			.groupBy(find.id, user.username, user.profilePictureUrl)
+			.groupBy(find.id, user.username, user.profilePictureUrl, location.locationName)
 			.orderBy(order === 'desc' ? desc(find.createdAt) : find.createdAt);
 
 		// Get media for all finds
@@ -198,7 +199,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 
 	const data = await request.json();
-	const { locationId, title, description, locationName, category, isPublic, media } = data;
+	const { locationId, title, description, category, isPublic, media } = data;
 
 	if (!title || !locationId) {
 		throw error(400, 'Title and locationId are required');
@@ -234,7 +235,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			userId: locals.user.id,
 			title,
 			description,
-			locationName,
 			category,
 			isPublic: isPublic ? 1 : 0
 		})

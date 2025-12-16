@@ -29,6 +29,7 @@ export const location = pgTable('location', {
 		.references(() => user.id, { onDelete: 'cascade' }),
 	latitude: text('latitude').notNull(), // Using text for precision
 	longitude: text('longitude').notNull(), // Using text for precision
+	locationName: text('location_name'), // e.g., "Café Belga, Brussels"
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull()
 });
 
@@ -43,7 +44,6 @@ export const find = pgTable('find', {
 		.references(() => user.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	description: text('description'),
-	locationName: text('location_name'), // e.g., "Café Belga, Brussels"
 	category: text('category'), // e.g., "cafe", "restaurant", "park", "landmark"
 	isPublic: integer('is_public').default(1), // Using integer for boolean (1 = true, 0 = false)
 	createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
